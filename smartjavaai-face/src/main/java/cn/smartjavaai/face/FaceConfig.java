@@ -2,7 +2,6 @@ package cn.smartjavaai.face;
 
 /**
  * @author dwj
- * @date 2025/2/20
  */
 public class FaceConfig {
 

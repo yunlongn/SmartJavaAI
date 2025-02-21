@@ -5,7 +5,6 @@ import java.io.InputStream;
 /**
  * 人脸识别算法
  * @author dwj
- * @date 2025/2/20
  */
 public abstract class AbstractFaceAlgorithm implements FaceAlgorithm{
     @Override

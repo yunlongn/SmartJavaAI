@@ -8,7 +8,6 @@ import java.util.List;
 /**
  * 人脸检测结果
  * @author dwj
- * @date 2025/2/19
  */
 public class FaceDetectedResult {
 

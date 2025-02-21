@@ -10,7 +10,6 @@ import java.io.InputStream;
 /**
  * 人脸识别算法
  * @author dwj
- * @date 2025/2/19
  */
 public interface FaceAlgorithm {
 

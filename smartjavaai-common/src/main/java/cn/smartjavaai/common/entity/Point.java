@@ -7,7 +7,6 @@ import java.io.Serializable;
 /**
  * 点
  * @author dwj
- * @date 2025/2/19
  */
 public class Point implements Serializable {
     private static final long serialVersionUID = 1L;

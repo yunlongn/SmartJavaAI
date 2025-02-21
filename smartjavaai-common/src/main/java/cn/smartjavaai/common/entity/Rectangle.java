@@ -5,7 +5,6 @@ import java.util.List;
 /**
  * 矩形区域
  * @author dwj
- * @date 2025/2/19
  */
 public class Rectangle {
 

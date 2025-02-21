@@ -3,7 +3,6 @@ package cn.smartjavaai.face;
 /**
  * 模型配置
  * @author dwj
- * @date 2025/2/19
  */
 
 public class ModelConfig {

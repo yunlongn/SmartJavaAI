@@ -31,7 +31,6 @@ import java.util.stream.StreamSupport;
 /**
  * RetinaFace实现
  * @author dwj
- * @date 2025/2/19
  */
 public class RetinaFace extends AbstractFaceAlgorithm {
 

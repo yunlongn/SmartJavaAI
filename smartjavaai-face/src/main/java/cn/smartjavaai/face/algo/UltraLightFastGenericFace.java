@@ -22,7 +22,6 @@ import java.util.stream.Collectors;
 
 /**
  * @author dwj
- * @date 2025/2/19
  */
 public class UltraLightFastGenericFace extends AbstractFaceAlgorithm {
 
