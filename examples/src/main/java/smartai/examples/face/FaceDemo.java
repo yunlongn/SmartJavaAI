@@ -32,7 +32,7 @@ public class FaceDemo {
 
     public static void main(String[] args) {
         try {
-            //detectFace();
+            detectFace();
             //verifyIDCard();
         } catch (Exception e) {
             e.printStackTrace();
@@ -52,9 +52,9 @@ public class FaceDemo {
         FaceDetectedResult result = currentAlgorithm.detect("src/main/resources/largest_selfie.jpg");
         logger.info("人脸检测结果：{}", JSONObject.toJSONString(result));
         //使用图片流检测
-        //File imageFile = new File("/Users/wenjie/Downloads/djl-master/examples/src/test/resources/largest_selfie.jpg");
-        //FaceDetectedResult result = currentAlgorithm.detect(new FileInputStream(imageFile));
-        File input = new File("src/main/resources/largest_selfie.jpg");
+        //File input = new File("src/main/resources/largest_selfie.jpg");
+        //FaceDetectedResult result = currentAlgorithm.detect(new FileInputStream(input));
+        //logger.info("人脸检测结果：{}", JSONObject.toJSONString(result));
         BufferedImage image = ImageIO.read(input);
         //创建保存路径
         Path imagePath = Paths.get("output").resolve("retinaface_detected.jpg");
@@ -96,8 +96,8 @@ public class FaceDemo {
         //提取身份证人脸特征（图片仅供测试）
         float[] featureIdCard = currentAlgorithm.featureExtraction("src/main/resources/kana1.jpg");
         //提取身份证人脸特征（从图片流获取）
-        //File imageFile = new File("/Users/wenjie/Downloads/djl-master/examples/src/test/resources/largest_selfie.jpg");
-        //float[] featureIdCard = currentAlgorithm.featureExtraction(new FileInputStream(imageFile));
+        //File input = new File("src/main/resources/kana1.jpg");
+        //float[] featureIdCard = currentAlgorithm.featureExtraction(new FileInputStream(input));
         logger.info("身份证人脸特征：{}", JSONObject.toJSONString(featureIdCard));
         //提取实时人脸特征（图片仅供测试）
         float[] realTimeFeature = currentAlgorithm.featureExtraction("src/main/resources/kana2.jpg");

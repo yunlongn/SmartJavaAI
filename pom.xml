@@ -6,8 +6,9 @@
 
     <groupId>ink.numberone</groupId>
     <artifactId>smartjavaai-parent</artifactId>
-    <version>1.0.0</version>
+    <version>1.0.1</version>
     <packaging>pom</packaging>
+    <description>SmartJavaAI</description>
     <modules>
         <module>smartjavaai-face</module>
         <module>smartjavaai-common</module>
@@ -16,10 +17,8 @@
     <properties>
         <maven.compiler.source>11</maven.compiler.source>
         <maven.compiler.target>11</maven.compiler.target>
-       <!-- <maven.compiler.source>8</maven.compiler.source>
-        <maven.compiler.target>8</maven.compiler.target>-->
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <djl.version>0.32.0-SNAPSHOT</djl.version>
+        <djl.version>0.32.0</djl.version>
     </properties>
 
     <dependencyManagement>
@@ -31,7 +30,20 @@
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
+
+            <dependency>
+                <groupId>ink.numberone</groupId>
+                <artifactId>smartjavaai-common</artifactId>
+                <version>1.0.1</version>
+            </dependency>
+
+            <dependency>
+                <groupId>ink.numberone</groupId>
+                <artifactId>smartjavaai-face</artifactId>
+                <version>1.0.1</version>
+            </dependency>
         </dependencies>
+
     </dependencyManagement>
     <dependencies>
         <dependency>
@@ -52,46 +64,56 @@
         <dependency>
             <groupId>ai.djl</groupId>
             <artifactId>api</artifactId>
+            <version>${djl.version}</version>
         </dependency>
         <dependency>
             <groupId>ai.djl</groupId>
             <artifactId>basicdataset</artifactId>
+            <version>${djl.version}</version>
         </dependency>
         <dependency>
             <groupId>ai.djl</groupId>
             <artifactId>model-zoo</artifactId>
+            <version>${djl.version}</version>
         </dependency>
         <dependency>
             <groupId>ai.djl.timeseries</groupId>
             <artifactId>timeseries</artifactId>
+            <version>${djl.version}</version>
         </dependency>
         <dependency>
             <groupId>ai.djl.huggingface</groupId>
             <artifactId>tokenizers</artifactId>
+            <version>${djl.version}</version>
         </dependency>
         <dependency>
             <groupId>ai.djl.audio</groupId>
             <artifactId>audio</artifactId>
+            <version>${djl.version}</version>
         </dependency>
         <!-- MXNet -->
         <dependency>
             <groupId>ai.djl.mxnet</groupId>
             <artifactId>mxnet-model-zoo</artifactId>
+            <version>${djl.version}</version>
         </dependency>
         <!-- Pytorch -->
         <dependency>
             <groupId>ai.djl.pytorch</groupId>
             <artifactId>pytorch-model-zoo</artifactId>
+            <version>${djl.version}</version>
         </dependency>
         <!-- TensorFlow -->
         <dependency>
             <groupId>ai.djl.tensorflow</groupId>
             <artifactId>tensorflow-model-zoo</artifactId>
+            <version>${djl.version}</version>
         </dependency>
         <!-- ONNXRuntime -->
         <dependency>
             <groupId>ai.djl.onnxruntime</groupId>
             <artifactId>onnxruntime-engine</artifactId>
+            <version>${djl.version}</version>
         </dependency>
         <dependency>
             <groupId>org.testng</groupId>
@@ -106,5 +128,112 @@
             <version>1.9.4</version>
         </dependency>
     </dependencies>
+
+    <url>https://github.com/geekwenjie/SmartJavaAI</url>
+    <licenses>
+        <license>
+            <name>The Apache Software License, Version 2.0</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+        </license>
+    </licenses>
+
+    <build>
+        <plugins>
+
+            <plugin>
+                <groupId>org.sonatype.central</groupId>
+                <artifactId>central-publishing-maven-plugin</artifactId>
+                <version>0.4.0</version>
+                <extensions>true</extensions>
+                <configuration>
+                    <publishingServerId>dengwenjie</publishingServerId>
+                    <tokenAuth>true</tokenAuth>
+                    <deploymentName>${project.groupId}:${project.artifactId}:${project.version}</deploymentName>
+                </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-source-plugin</artifactId>
+                <version>3.1.0</version>
+                <executions>
+                    <execution>
+                        <id>attach-sources</id>
+                        <goals>
+                            <goal>jar-no-fork</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <version>3.1.0</version>
+                <configuration>
+                    <javadocExecutable>${java.home}/bin/javadoc</javadocExecutable>
+                    <doclint>none</doclint>
+                    <additionalJOptions>
+                        <additionalJOption>-Xdoclint:none</additionalJOption>
+                    </additionalJOptions>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>attach-javadocs</id>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-gpg-plugin</artifactId>
+                <version>3.1.0</version>
+                <executions>
+                    <execution>
+                        <id>sign-artifacts</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>sign</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+
+
+
+
+
+    <!-- 必须添加：SCM信息 -->
+    <scm>
+        <connection>scm:git:git://github.com/geekwenjie/SmartJavaAI.git</connection>
+        <developerConnection>scm:git:ssh://github.com/geekwenjie/SmartJavaAI.git</developerConnection>
+        <url>http://github.com/geekwenjie/SmartJavaAI/tree/master</url>
+    </scm>
+
+
+    <distributionManagement>
+        <snapshotRepository>
+            <id>dengwenjie</id>
+            <url>https://s01.oss.sonatype.org/content/repositories/snapshots</url>
+        </snapshotRepository>
+        <repository>
+            <id>dengwenjie</id>
+            <url>https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+        </repository>
+    </distributionManagement>
+
+    <developers>
+        <developer>
+            <name>dengwenjie</name>
+            <email>775747758@qq.com</email>
+            <roles>
+                <role>Project Manager</role>
+                <role>Architect</role>
+            </roles>
+        </developer>
+    </developers>
 
 </project>
