@@ -144,4 +144,12 @@ if(realTimeFeature != null){
 ## 完整代码
 
 `📁 examples/src/main/java/smartai/examples/face`  
- └── 📄[FaceDemo.java](https://github.com/geekwenjie/SmartJavaAI/blob/master/examples/src/main/java/smartai/examples/face/FaceDemo.java)  <sub>*（基于JDK11构建的完整可执行示例）*</sub>
+└── 📄[FaceDemo.java](https://github.com/geekwenjie/SmartJavaAI/blob/master/examples/src/main/java/smartai/examples/face/FaceDemo.java)  <sub>*（基于JDK11构建的完整可执行示例）*</sub>
+
+
+## 联系方式
+
+如果您有任何问题或建议，欢迎联系：
+
+- **微信**: deng775747758 （请备注：SmartJavaAI）
+- **Email**: 775747758@qq.com
