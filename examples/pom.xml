@@ -13,7 +13,7 @@
         <maven.compiler.target>11</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <smartjavaai.version>1.0.0-SNAPSHOT</smartjavaai.version>
-        <exec.mainClass>ai.djl.examples.inference.cv.ObjectDetection</exec.mainClass>
+        <exec.mainClass>smartai.examples.face.FaceDemo</exec.mainClass>
     </properties>
 
 
@@ -43,7 +43,7 @@
         <dependency>
             <groupId>ink.numberone</groupId>
             <artifactId>smartjavaai-face</artifactId>
-            <version>1.0.1</version>
+            <version>1.0.2</version>
         </dependency>
 
         <dependency>

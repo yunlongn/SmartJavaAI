@@ -73,7 +73,7 @@
      <dependency>
         <groupId>ink.numberone</groupId>
         <artifactId>smartjavaai-face</artifactId>
-        <version>1.0.1</version>
+        <version>1.0.2</version>
      </dependency>
 </dependencies>
 ```
@@ -134,8 +134,14 @@ if(realTimeFeature != null){
     }
 }
 ```
-## 快速体验指南
 
-▌**人脸识别快速运行**  
+### 6. 离线下载模型
+
+​	**SmartJavaAI**如果未指定模型地址，系统将自动下载模型至本地。因此，无论模型是否通过离线方式下载，SmartJavaAI 最终都会在离线环境下运行模型。
+
+- [离线使用模型使用教程](example/face_offline.md)
+
+## 完整代码
+
 `📁 examples/src/main/java/smartai/examples/face`  
  └── 📄[FaceDemo.java](https://github.com/geekwenjie/SmartJavaAI/blob/master/examples/src/main/java/smartai/examples/face/FaceDemo.java)  <sub>*（基于JDK11构建的完整可执行示例）*</sub>

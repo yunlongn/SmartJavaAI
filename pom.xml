@@ -6,7 +6,7 @@
 
     <groupId>ink.numberone</groupId>
     <artifactId>smartjavaai-parent</artifactId>
-    <version>1.0.1</version>
+    <version>1.0.2</version>
     <packaging>pom</packaging>
     <description>SmartJavaAI</description>
     <modules>
@@ -34,13 +34,13 @@
             <dependency>
                 <groupId>ink.numberone</groupId>
                 <artifactId>smartjavaai-common</artifactId>
-                <version>1.0.1</version>
+                <version>1.0.2</version>
             </dependency>
 
             <dependency>
                 <groupId>ink.numberone</groupId>
                 <artifactId>smartjavaai-face</artifactId>
-                <version>1.0.1</version>
+                <version>1.0.2</version>
             </dependency>
         </dependencies>
 
@@ -127,13 +127,19 @@
             <artifactId>commons-beanutils</artifactId>
             <version>1.9.4</version>
         </dependency>
+
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+            <version>3.9</version>
+        </dependency>
     </dependencies>
 
     <url>https://github.com/geekwenjie/SmartJavaAI</url>
     <licenses>
         <license>
-            <name>The Apache Software License, Version 2.0</name>
-            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+            <name>MIT License</name>
+            <url>https://opensource.org/licenses/MIT</url>
         </license>
     </licenses>
 

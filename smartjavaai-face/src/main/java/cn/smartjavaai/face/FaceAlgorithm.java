@@ -21,6 +21,13 @@ public interface FaceAlgorithm {
     void loadModel(ModelConfig config) throws Exception; // 加载模型
 
     /**
+     * 加载人脸特征提取模型
+     * @param config
+     * @throws Exception
+     */
+    void loadFaceFeatureModel(ModelConfig config) throws Exception; // 加载模型
+
+    /**
      * 人脸检测
      * @param imagePath 图片路径
      * @return

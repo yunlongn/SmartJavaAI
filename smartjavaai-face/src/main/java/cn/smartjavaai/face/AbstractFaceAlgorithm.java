@@ -13,6 +13,11 @@ public abstract class AbstractFaceAlgorithm implements FaceAlgorithm{
     }
 
     @Override
+    public void loadFaceFeatureModel(ModelConfig config) throws Exception {
+        throw new UnsupportedOperationException("默认不支持该功能");
+    }
+
+    @Override
     public FaceDetectedResult detect(String imagePath) throws Exception {
         throw new UnsupportedOperationException("默认不支持该功能");
     }

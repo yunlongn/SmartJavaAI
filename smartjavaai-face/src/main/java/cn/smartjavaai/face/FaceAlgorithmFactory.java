@@ -1,5 +1,6 @@
 package cn.smartjavaai.face;
 
+import cn.smartjavaai.face.algo.FeatureExtractionAlgo;
 import cn.smartjavaai.face.algo.RetinaFace;
 import cn.smartjavaai.face.algo.UltraLightFastGenericFace;
 
@@ -55,13 +56,7 @@ public class FaceAlgorithmFactory {
         config.setConfidenceThreshold(FaceConfig.DEFAULT_CONFIDENCE_THRESHOLD);
         config.setMaxFaceCount(FaceConfig.MAX_FACE_LIMIT);
         config.setNmsThresh(FaceConfig.NMS_THRESHOLD);
-        Class<?> clazz = registry.get(config.getAlgorithmName().toLowerCase());
-        if(clazz == null){
-            throw new IllegalArgumentException("Unsupported algorithm");
-        }
-        FaceAlgorithm algorithm = (FaceAlgorithm) clazz.newInstance();
-        algorithm.loadModel(config);
-        return algorithm;
+        return createFaceAlgorithm(config);
     }
 
     /**
@@ -85,10 +80,40 @@ public class FaceAlgorithmFactory {
         return algorithm;
     }
 
+    /**
+     * 使用ModelConfig创建人脸特征提取算法
+     * @param config
+     * @return
+     * @throws Exception
+     */
+    public static FaceAlgorithm createFaceFeatureAlgorithm(ModelConfig config) throws Exception {
+        Class<?> clazz = registry.get(config.getAlgorithmName().toLowerCase());
+        if(clazz == null){
+            throw new IllegalArgumentException("Unsupported algorithm");
+        }
+        FaceAlgorithm algorithm = (FaceAlgorithm) clazz.newInstance();
+        algorithm.loadFaceFeatureModel(config);
+        return algorithm;
+    }
+
+    /**
+     * 创建人脸特征提取算法
+     * @return
+     * @throws Exception
+     */
+    public static FaceAlgorithm createFaceFeatureAlgorithm() throws Exception {
+        // 初始化配置
+        ModelConfig config = new ModelConfig();
+        config.setAlgorithmName("featureExtraction");
+        return createFaceFeatureAlgorithm(config);
+    }
+
     // 初始化默认算法
     static {
         registerAlgorithm("retinaface", RetinaFace.class);
         registerAlgorithm("ultralightfastgenericface", UltraLightFastGenericFace.class);
+        //人脸特征提取
+        registerAlgorithm("featureExtraction", FeatureExtractionAlgo.class);
     }
 
 }

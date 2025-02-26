@@ -27,6 +27,12 @@ public class ModelConfig {
      */
     private int maxFaceCount;
 
+    /**
+     * 模型路径
+     */
+    private String modelPath;
+
+
     public String getAlgorithmName() {
         return algorithmName;
     }
@@ -57,5 +63,13 @@ public class ModelConfig {
 
     public void setMaxFaceCount(int maxFaceCount) {
         this.maxFaceCount = maxFaceCount;
+    }
+
+    public String getModelPath() {
+        return modelPath;
+    }
+
+    public void setModelPath(String modelPath) {
+        this.modelPath = modelPath;
     }
 }
