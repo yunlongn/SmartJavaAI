@@ -139,7 +139,7 @@ if(realTimeFeature != null){
 
 ​	**SmartJavaAI**如果未指定模型地址，系统将自动下载模型至本地。因此，无论模型是否通过离线方式下载，SmartJavaAI 最终都会在离线环境下运行模型。
 
-- [离线使用模型使用教程](examples/face_offline.md)
+- [离线下载模型代码示例](examples/face_offline.md)
 
 ## 完整代码
 
