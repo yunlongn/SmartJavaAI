@@ -115,7 +115,7 @@ public class FaceDemo {
         //提取身份证人脸特征（图片仅供测试）
         float[] featureIdCard = currentAlgorithm.featureExtraction("src/main/resources/kana1.jpg");
         sw.stop();
-        logger.info("人脸检测耗时：" + sw.getTime() + "ms");
+        logger.info("人脸特征提取耗时：" + sw.getTime() + "ms");
         //提取身份证人脸特征（从图片流获取）
         //File input = new File("src/main/resources/kana1.jpg");
         //float[] featureIdCard = currentAlgorithm.featureExtraction(new FileInputStream(input));

@@ -6,11 +6,11 @@
     <parent>
         <groupId>ink.numberone</groupId>
         <artifactId>smartjavaai-parent</artifactId>
-        <version>1.0.2</version>
+        <version>1.0.3</version>
     </parent>
 
     <artifactId>smartjavaai-face</artifactId>
-    <version>1.0.2</version>
+    <version>1.0.3</version>
     <name>smartjavaai-face</name>
     <description>SmartJavaAI</description>
     <url>https://github.com/geekwenjie/SmartJavaAI</url>

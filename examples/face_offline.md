@@ -11,7 +11,7 @@
      <dependency>
         <groupId>ink.numberone</groupId>
         <artifactId>smartjavaai-face</artifactId>
-        <version>1.0.2</version>
+        <version>1.0.3</version>
      </dependency>
 </dependencies>
 ```
@@ -56,7 +56,7 @@ Path imagePath = Paths.get("output").resolve("retinaface_detected.jpg");
 ImageUtils.drawBoundingBoxes(image, result, imagePath.toAbsolutePath().toString());
 ```
 
-### 3. 人证核验示例（离线下载模型）
+### 4. 人证核验示例（离线下载模型）
 
 人证核验步骤：
 

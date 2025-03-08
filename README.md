@@ -73,7 +73,7 @@
      <dependency>
         <groupId>ink.numberone</groupId>
         <artifactId>smartjavaai-face</artifactId>
-        <version>1.0.2</version>
+        <version>1.0.3</version>
      </dependency>
 </dependencies>
 ```
@@ -140,6 +140,25 @@ if(realTimeFeature != null){
 ​	**SmartJavaAI**如果未指定模型地址，系统将自动下载模型至本地。因此，无论模型是否通过离线方式下载，SmartJavaAI 最终都会在离线环境下运行模型。
 
 - [离线下载模型代码示例](examples/face_offline.md)
+
+### 7. 测试结果
+
+不同电脑环境下例图的识别时间
+
+| 电脑环境                  | **RetinaFace 模型** | 轻量模型  | 人证核验  |
+| ------------------------- | ------------------- | --------- | --------- |
+| windows intel i5 8400 8核 | 2s左右              | 700ms左右 | 600ms左右 |
+| macOS M1 Pro芯片          | 800ms左右           | 400ms左右 | 300ms左右 |
+
+测试说明：
+
+（1）使用默认方法创建人脸算法，会先下载人脸模型及相关文件，所以首次运行会比较慢
+
+（2）目前SmartJavaAI默认使用CPU识别，所以CPU性能越高，识别速度越快
+
+（3）由于例图中人脸数量多，所以识别的速度会稍慢
+
+（4）测试结果中的时间不包含创建算法时间（加载模型），实际生产环境使用，只需系统系统时创建一次算法即可
 
 ## 完整代码
 
