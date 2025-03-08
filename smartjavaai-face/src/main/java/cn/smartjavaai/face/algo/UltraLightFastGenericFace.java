@@ -1,17 +1,20 @@
 package cn.smartjavaai.face.algo;
 
+import ai.djl.MalformedModelException;
 import ai.djl.inference.Predictor;
 import ai.djl.modality.cv.Image;
 import ai.djl.modality.cv.ImageFactory;
 import ai.djl.modality.cv.output.DetectedObjects;
 import ai.djl.modality.cv.translator.ImageFeatureExtractorFactory;
 import ai.djl.repository.zoo.Criteria;
+import ai.djl.repository.zoo.ModelNotFoundException;
 import ai.djl.repository.zoo.ZooModel;
 import ai.djl.training.util.ProgressBar;
 import cn.smartjavaai.common.entity.Point;
 import cn.smartjavaai.common.entity.Rectangle;
 import cn.smartjavaai.face.*;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -41,6 +44,10 @@ public class UltraLightFastGenericFace extends AbstractFaceAlgorithm {
      */
     private static final double[] variance = {0.1f, 0.2f};
 
+    private Predictor<Image, DetectedObjects> predictor;
+
+    private ZooModel<Image, DetectedObjects> model;
+
 
 
 
@@ -49,7 +56,7 @@ public class UltraLightFastGenericFace extends AbstractFaceAlgorithm {
      * @param config
      */
     @Override
-    public void loadModel(ModelConfig config) {
+    public void loadModel(ModelConfig config) throws ModelNotFoundException, MalformedModelException, IOException {
         FaceDetectionTranslator translator =
                 new FaceDetectionTranslator(config.getConfidenceThreshold(), config.getNmsThresh(), variance, config.getMaxFaceCount(), scales, steps);
         criteria =
@@ -60,6 +67,8 @@ public class UltraLightFastGenericFace extends AbstractFaceAlgorithm {
                         .optProgress(new ProgressBar())
                         .optEngine("PyTorch") // Use PyTorch engine
                         .build();
+        model = criteria.loadModel();
+        predictor = model.newPredictor();
     }
 
     /**
@@ -72,11 +81,8 @@ public class UltraLightFastGenericFace extends AbstractFaceAlgorithm {
     public FaceDetectedResult detect(String imagePath) throws Exception{
         Path facePath = Paths.get(imagePath);
         Image img = ImageFactory.getInstance().fromFile(facePath);
-        try (ZooModel<Image, DetectedObjects> model = criteria.loadModel();
-             Predictor<Image, DetectedObjects> predictor = model.newPredictor()) {
-            DetectedObjects detection = predictor.predict(img);
-            return convertToFaceDetectedResult(detection,img);
-        }
+        DetectedObjects detection = predictor.predict(img);
+        return convertToFaceDetectedResult(detection,img);
     }
 
     /**
@@ -88,13 +94,8 @@ public class UltraLightFastGenericFace extends AbstractFaceAlgorithm {
     @Override
     public FaceDetectedResult detect(InputStream imageInputStream) throws Exception {
         Image img = ImageFactory.getInstance().fromInputStream(imageInputStream);
-        try (ZooModel<Image, DetectedObjects> model = criteria.loadModel();
-             Predictor<Image, DetectedObjects> predictor = model.newPredictor()) {
-            DetectedObjects detection = predictor.predict(img);
-            return convertToFaceDetectedResult(detection,img);
-            /*saveBoundingBoxImage(img, detection);
-            return detection;*/
-        }
+        DetectedObjects detection = predictor.predict(img);
+        return convertToFaceDetectedResult(detection,img);
     }
 
     /**

@@ -3,6 +3,7 @@ package smartai.examples.face;
 import cn.smartjavaai.common.entity.Rectangle;
 import cn.smartjavaai.face.*;
 import com.alibaba.fastjson.JSONObject;
+import org.apache.commons.lang3.time.StopWatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import smartai.examples.utils.ImageUtils;
@@ -28,7 +29,7 @@ public class FaceDemo {
 
     public static void main(String[] args) {
         try {
-            //detectFace();
+            //detectFace2();
             verifyIDCard();
         } catch (Exception e) {
             e.printStackTrace();
@@ -42,10 +43,18 @@ public class FaceDemo {
      * 应用场景：如监控摄像头、智能安防系统等需要高精度检测的场合
      */
     public static void detectFace() throws Exception {
+        // 创建并启动计时器
+        StopWatch sw = StopWatch.createStarted();
         //创建人脸算法
         FaceAlgorithm currentAlgorithm = FaceAlgorithmFactory.createFaceAlgorithm();
+        sw.stop();
+        logger.info("创建人脸算法耗时：" + sw.getTime() + "ms");
+        sw.reset();
+        sw.start();
         //使用图片路径检测
         FaceDetectedResult result = currentAlgorithm.detect("src/main/resources/largest_selfie.jpg");
+        sw.stop();
+        logger.info("人脸检测耗时：" + sw.getTime() + "ms");
         logger.info("人脸检测结果：{}", JSONObject.toJSONString(result));
         //使用图片流检测
         File input = new File("src/main/resources/largest_selfie.jpg");
@@ -66,10 +75,18 @@ public class FaceDemo {
      * 应用场景：如监控摄像头、智能安防系统等需要高精度检测的场合
      */
     public static void detectFace2() throws Exception {
+        // 创建并启动计时器
+        StopWatch sw = StopWatch.createStarted();
         //创建轻量人脸算法
         FaceAlgorithm currentAlgorithm = FaceAlgorithmFactory.createLightFaceAlgorithm();
+        sw.stop();
+        logger.info("创建人脸算法耗时：" + sw.getTime() + "ms");
+        sw.reset();
+        sw.start();
         //使用图片路径检测
         FaceDetectedResult result = currentAlgorithm.detect("src/main/resources/largest_selfie.jpg");
+        sw.stop();
+        logger.info("人脸检测耗时：" + sw.getTime() + "ms");
         logger.info("轻量人脸检测结果：{}", JSONObject.toJSONString(result));
         //使用图片流检测
         //File imageFile = new File("/Users/wenjie/Downloads/djl-master/examples/src/test/resources/largest_selfie.jpg");
@@ -87,10 +104,18 @@ public class FaceDemo {
      * @throws Exception
      */
     public static void verifyIDCard() throws Exception {
+        // 创建并启动计时器
+        StopWatch sw = StopWatch.createStarted();
         //创建脸算法
         FaceAlgorithm currentAlgorithm = FaceAlgorithmFactory.createFaceFeatureAlgorithm();
+        sw.stop();
+        logger.info("创建人脸算法耗时：" + sw.getTime() + "ms");
+        sw.reset();
+        sw.start();
         //提取身份证人脸特征（图片仅供测试）
         float[] featureIdCard = currentAlgorithm.featureExtraction("src/main/resources/kana1.jpg");
+        sw.stop();
+        logger.info("人脸检测耗时：" + sw.getTime() + "ms");
         //提取身份证人脸特征（从图片流获取）
         //File input = new File("src/main/resources/kana1.jpg");
         //float[] featureIdCard = currentAlgorithm.featureExtraction(new FileInputStream(input));

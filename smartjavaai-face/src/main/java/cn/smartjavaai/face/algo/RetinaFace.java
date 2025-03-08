@@ -38,6 +38,10 @@ public class RetinaFace extends AbstractFaceAlgorithm {
 
     private Criteria<Image, float[]> faceFeatureCriteria;
 
+    private Predictor<Image, DetectedObjects> predictor;
+
+    private ZooModel<Image, DetectedObjects> model;
+
     /**
      * 特征图层的基础缩放比例
      */
@@ -57,7 +61,7 @@ public class RetinaFace extends AbstractFaceAlgorithm {
      * @param config
      */
     @Override
-    public void loadModel(ModelConfig config) {
+    public void loadModel(ModelConfig config) throws ModelNotFoundException, MalformedModelException, IOException {
         FaceDetectionTranslator translator =
                 new FaceDetectionTranslator(config.getConfidenceThreshold(), config.getNmsThresh(), variance, config.getMaxFaceCount(), scales, steps);
         criteria =
@@ -71,6 +75,8 @@ public class RetinaFace extends AbstractFaceAlgorithm {
                         .optProgress(new ProgressBar())
                         .optEngine("PyTorch") // Use PyTorch engine
                         .build();
+        model = criteria.loadModel();
+        predictor = model.newPredictor();
     }
 
 
@@ -85,11 +91,8 @@ public class RetinaFace extends AbstractFaceAlgorithm {
     public FaceDetectedResult detect(String imagePath) throws Exception{
         Path facePath = Paths.get(imagePath);
         Image img = ImageFactory.getInstance().fromFile(facePath);
-        try (ZooModel<Image, DetectedObjects> model = criteria.loadModel();
-             Predictor<Image, DetectedObjects> predictor = model.newPredictor()) {
-            DetectedObjects detection = predictor.predict(img);
-            return convertToFaceDetectedResult(detection,img);
-        }
+        DetectedObjects detection = predictor.predict(img);
+        return convertToFaceDetectedResult(detection,img);
     }
 
     /**
@@ -101,13 +104,8 @@ public class RetinaFace extends AbstractFaceAlgorithm {
     @Override
     public FaceDetectedResult detect(InputStream imageInputStream) throws Exception {
         Image img = ImageFactory.getInstance().fromInputStream(imageInputStream);
-        try (ZooModel<Image, DetectedObjects> model = criteria.loadModel();
-             Predictor<Image, DetectedObjects> predictor = model.newPredictor()) {
-            DetectedObjects detection = predictor.predict(img);
-            return convertToFaceDetectedResult(detection,img);
-            /*saveBoundingBoxImage(img, detection);
-            return detection;*/
-        }
+        DetectedObjects detection = predictor.predict(img);
+        return convertToFaceDetectedResult(detection,img);
     }
 
     /**

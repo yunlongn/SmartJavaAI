@@ -33,6 +33,10 @@ public class FeatureExtractionAlgo extends AbstractFaceAlgorithm {
 
     private Criteria<Image, float[]> faceFeatureCriteria;
 
+    private Predictor<Image, float[]> predictor;
+
+    private ZooModel<Image, float[]> model;
+
     public static final List<Float> mean =
             Arrays.asList(
                     127.5f / 255.0f,
@@ -62,6 +66,8 @@ public class FeatureExtractionAlgo extends AbstractFaceAlgorithm {
                         .optProgress(new ProgressBar())
                         .optEngine("PyTorch") // Use PyTorch engine
                         .build();
+        model = faceFeatureCriteria.loadModel();
+        predictor = model.newPredictor();
     }
 
 
@@ -76,10 +82,7 @@ public class FeatureExtractionAlgo extends AbstractFaceAlgorithm {
         Path imageFile = Paths.get(imagePath);
         Image img = ImageFactory.getInstance().fromFile(imageFile);
         img.getWrappedImage();
-        try (ZooModel<Image, float[]> model = faceFeatureCriteria.loadModel()) {
-            Predictor<Image, float[]> predictor = model.newPredictor();
-            return predictor.predict(img);
-        }
+        return predictor.predict(img);
     }
 
     /**
@@ -92,10 +95,7 @@ public class FeatureExtractionAlgo extends AbstractFaceAlgorithm {
     public float[] featureExtraction(InputStream inputStream) throws Exception {
         Image img = ImageFactory.getInstance().fromInputStream(inputStream);
         img.getWrappedImage();
-        try (ZooModel<Image, float[]> model = faceFeatureCriteria.loadModel()) {
-            Predictor<Image, float[]> predictor = model.newPredictor();
-            return predictor.predict(img);
-        }
+        return predictor.predict(img);
     }
 
     /**
