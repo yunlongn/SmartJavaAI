@@ -1,5 +1,11 @@
 # SmartJavaAI：JAVA深度学习算法工具包
 
+
+
+![retinaface_detected](examples/output/retinaface_detected.jpg)
+
+
+
 **SmartJavaAI**是基于 **DJL（Deep Java Library）** 封装的轻量级深度学习算法库，依托DJL的自动模型管理和跨框架特性，**无需安装Python环境**且无需手动下载模型文件（模型由DJL内部自动从云端加载），该库致力于构建Java生态与AI模型之间的高效桥梁。针对Java开发者面临的两大痛点：
 
 - 🐍 主流AI框架（PyTorch/TensorFlow）的Python生态与Java工程体系割裂
@@ -10,6 +16,8 @@
 ✅ **开箱即用** - 两行代码完成人脸检测/识别  
 ✅ **多模型支持** - 集成RetinaFace/Ultra-Light-Fast-Generic-Face-Detector双检测模型（即将支持OCR/目标检测）  
 ✅ **跨平台兼容** - 完美支持Windows/Linux/macOS系统（x86 & ARM架构）  
+
+
 
 ## 🌟 核心优势
 | 维度        | Python生态           | 原生DJL          | 本工具包         |
