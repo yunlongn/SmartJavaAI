@@ -11,7 +11,7 @@
      <dependency>
         <groupId>ink.numberone</groupId>
         <artifactId>smartjavaai-face</artifactId>
-        <version>1.0.3</version>
+        <version>1.0.4</version>
      </dependency>
 </dependencies>
 ```

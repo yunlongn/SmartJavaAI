@@ -29,8 +29,9 @@ public class FaceDemo {
 
     public static void main(String[] args) {
         try {
-            //detectFace2();
             verifyIDCard();
+            //detectFace2();
+            //verifyIDCard();
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -113,7 +114,7 @@ public class FaceDemo {
         sw.reset();
         sw.start();
         //提取身份证人脸特征（图片仅供测试）
-        float[] featureIdCard = currentAlgorithm.featureExtraction("src/main/resources/kana1.jpg");
+        float[] featureIdCard = currentAlgorithm.featureExtraction("src/main/resources/MJ_20250213_155245.png");
         sw.stop();
         logger.info("人脸特征提取耗时：" + sw.getTime() + "ms");
         //提取身份证人脸特征（从图片流获取）
@@ -121,9 +122,10 @@ public class FaceDemo {
         //float[] featureIdCard = currentAlgorithm.featureExtraction(new FileInputStream(input));
         logger.info("身份证人脸特征：{}", JSONObject.toJSONString(featureIdCard));
         //提取实时人脸特征（图片仅供测试）
-        float[] realTimeFeature = currentAlgorithm.featureExtraction("src/main/resources/kana2.jpg");
+        float[] realTimeFeature = currentAlgorithm.featureExtraction("src/main/resources/MJ_20250213_155228.png");
         logger.info("实时人脸特征：{}", JSONObject.toJSONString(realTimeFeature));
         if(realTimeFeature != null){
+            System.out.println("相似度：" + currentAlgorithm.calculSimilar(featureIdCard, realTimeFeature));
             if(currentAlgorithm.calculSimilar(featureIdCard, realTimeFeature) > 0.8){
                 logger.info("人脸核验通过");
             }else{
@@ -151,7 +153,7 @@ public class FaceDemo {
         //retinaface: https://resources.djl.ai/test-models/pytorch/retinaface.zip
         //ultralightfastgenericface: https://resources.djl.ai/test-models/pytorch/ultranet.zip
         //改为模型存放路径
-        config.setModelPath("/Users/xxx/Documents/develop/face_model/retinaface.pt");
+        config.setModelPath("/Users/wenjie/Documents/develop/face_model/retinaface.pt");
         //创建人脸算法
         FaceAlgorithm currentAlgorithm = FaceAlgorithmFactory.createFaceAlgorithm(config);
         //使用图片路径检测

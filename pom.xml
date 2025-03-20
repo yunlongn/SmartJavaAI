@@ -6,7 +6,7 @@
 
     <groupId>ink.numberone</groupId>
     <artifactId>smartjavaai-parent</artifactId>
-    <version>1.0.3</version>
+    <version>1.0.4</version>
     <packaging>pom</packaging>
     <description>SmartJavaAI</description>
     <modules>
@@ -34,13 +34,13 @@
             <dependency>
                 <groupId>ink.numberone</groupId>
                 <artifactId>smartjavaai-common</artifactId>
-                <version>1.0.3</version>
+                <version>1.0.4</version>
             </dependency>
 
             <dependency>
                 <groupId>ink.numberone</groupId>
                 <artifactId>smartjavaai-face</artifactId>
-                <version>1.0.3</version>
+                <version>1.0.4</version>
             </dependency>
         </dependencies>
 
@@ -133,6 +133,49 @@
             <artifactId>commons-lang3</artifactId>
             <version>3.9</version>
         </dependency>
+
+        <dependency>
+            <groupId>ai.djl.pytorch</groupId>
+            <artifactId>pytorch-engine</artifactId>
+            <version>0.32.0</version>
+            <scope>runtime</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>ai.djl.pytorch</groupId>
+            <artifactId>pytorch-native-cpu</artifactId>
+            <classifier>win-x86_64</classifier>
+            <scope>runtime</scope>
+            <version>2.5.1</version>
+        </dependency>
+        <dependency>
+            <groupId>ai.djl.pytorch</groupId>
+            <artifactId>pytorch-native-cpu</artifactId>
+            <classifier>linux-x86_64</classifier>
+            <scope>runtime</scope>
+            <version>2.5.1</version>
+        </dependency>
+        <dependency>
+            <groupId>ai.djl.pytorch</groupId>
+            <artifactId>pytorch-native-cpu-precxx11</artifactId>
+            <classifier>linux-aarch64</classifier>
+            <scope>runtime</scope>
+            <version>2.5.1</version>
+        </dependency>
+        <dependency>
+            <groupId>ai.djl.pytorch</groupId>
+            <artifactId>pytorch-native-cpu</artifactId>
+            <classifier>osx-aarch64</classifier>
+            <version>2.5.1</version>
+            <scope>runtime</scope>
+        </dependency>
+        <dependency>
+            <groupId>ai.djl.pytorch</groupId>
+            <artifactId>pytorch-jni</artifactId>
+            <version>2.5.1-0.32.0</version>
+            <scope>runtime</scope>
+        </dependency>
+
     </dependencies>
 
     <url>https://github.com/geekwenjie/SmartJavaAI</url>
