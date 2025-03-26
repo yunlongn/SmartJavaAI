@@ -37,10 +37,10 @@
 - **人脸特征提取**  
   基于深度学习算法生成512维特征向量
 
-- **人脸特征比对**  
+- **人脸特征比对** （1：1） 
   
-- **人证核验**  
-  人脸照片与实时人脸画面特征比对
+- **人脸查询** （1：N） 
+  人脸库注册/人脸库查询/人脸库删除
 
 ### ⌛ 规划中功能
 
@@ -56,21 +56,34 @@
   基于Transformer的语音转文本引擎，支持中文/英文多语种识别
 
 
-## 人脸算法模型
+## 目前已集成的人脸算法模型
 
-- server模型-**RetinaFace 模型**[[GitHub]](https://github.com/deepinsight/insightface/tree/master/detection/retinaface)：一个高效的深度学习人脸检测模型，支持高精度的人脸检测。
-- 轻量模型-**Ultra-Light-Fast-Generic-Face-Detector-1MB ** [[GitHub\]](https://github.com/Linzaer/Ultra-Light-Fast-Generic-Face-Detector-1MB)：一个轻量级的人脸检测模型，适用于需要较低延迟和较小模型尺寸的应用场景。
+- **RetinaFace 模型**[[GitHub]](https://github.com/deepinsight/insightface/tree/master/detection/retinaface)：一个高效的深度学习人脸检测模型，支持高精度的人脸检测，但目前不支持人脸比对
+- **Ultra-Light-Fast-Generic-Face-Detector-1MB ** [[GitHub\]](https://github.com/Linzaer/Ultra-Light-Fast-Generic-Face-Detector-1MB)：一个轻量级的人脸检测模型，适用于需要较低延迟和较小模型尺寸的应用场景。
+- **Seetaface6**  [[GitHub\]](https://github.com/seetafaceengine/SeetaFace6)：是中科视拓最新开放的商业正式级版本，支持人脸检测、关键点定位、人脸识别。同时增加了活体检测、质量评估、年龄性别估计。并且响应时事，开放了口罩检测以及戴口罩的人脸识别模型
+
+### 模型对比及下载地址
+
+|         模型名称          |                           下载地址                           | 文件大小 |     适用场景      | 兼容系统            |
+| :-----------------------: | :----------------------------------------------------------: | :------: | :---------------: | ------------------- |
+|        retinaface         | [下载](https://resources.djl.ai/test-models/pytorch/retinaface.zip) |  110MB   |  高精度人脸检测   | Windows/Linux/MacOS |
+| ultralightfastgenericface | [下载](https://resources.djl.ai/test-models/pytorch/ultranet.zip) |  1.7MB   |   高速人脸检测    | Windows/Linux       |
+|        seetaface6         | [下载](https://pan.baidu.com/s/1hfNacA8ISV2qHrycjOkgqA?pwd=1234) |  288MB   | 人脸检测/人脸识别 | Windows/Linux       |
 
 ## 环境要求
 
 - Java 版本：**JDK 11或更高版本**
-- 操作系统：支持的操作系统（如 Windows、Linux 或 macOS）
+- 操作系统：不同模型支持的系统不一样，具体请查看文档
 
 ## 使用步骤
 
-📌 **运行提示**：首次启动时将自动完成模型下载及依赖项配置，建议保持网络畅通。初始化完成后，后续启动将恢复毫秒级响应速度。
-
-无网络环境下可指定本地模型路径（需提前预下载模型包）
+> [!CAUTION]
+>
+> 📌 **运行提示**：
+>
+> （1）默认算法（RetinaFace）或轻量算法（Ultra-Light-Fast-Generic-Face-Detector ）都为python算法，兼容 Windows、Linux、MacOS，Android 等系统，SmartJavaAI首次启动将自动下载模型到及依赖库到本地（.djl.ai隐藏文件夹），建议保持网络畅通。初始化完成后，后续启动可实现毫秒级响应。在无网络环境下，可指定本地模型路径（需提前下载模型包）。目前，这两种算法不支持人脸识别或人脸比对功能。
+>
+> （2）Seetaface6 采用 C++ 编写，兼容 Windows、CentOS、Ubuntu 等系统。创建算法时，将自动加载对应系统的依赖库。Seetaface6 支持全功能人脸处理（人脸检测、人脸比对 1:1 或 1:N）。SmartJavaAI 通过 JNI 调用 C++ 接口，不支持在线下载模型，需手动下载并存储至本地。使用人脸比对等功能时，需要将项目中db/faces-data.db存放到您本地路径下并在config中指定人脸库路径。
 
 ### 1. 安装人脸算法依赖
 
@@ -81,7 +94,7 @@
      <dependency>
         <groupId>ink.numberone</groupId>
         <artifactId>smartjavaai-face</artifactId>
-        <version>1.0.4</version>
+        <version>1.0.5</version>
      </dependency>
 </dependencies>
 ```
@@ -112,66 +125,124 @@ File input = new File("src/main/resources/largest_selfie.jpg");
 FaceDetectedResult result = currentAlgorithm.detect(new FileInputStream(input));
 ```
 
-### 5. 人证核验
+### 5. 人脸比对（1：1）
 
-人证核验步骤：
-
-（1）提取身份证人脸特征，
-
-（2）提取实时人脸特征
-
-（3）特征比对
+> [!CAUTION]
+>
+> （1）将项目中db/faces-data.db存放到您本地路径下
+>
+> （2）下载模型到本地路径，下载地址：https://pan.baidu.com/s/1hfNacA8ISV2qHrycjOkgqA?pwd=1234 提取码：1234
+>
+> （3）如果网盘地址请联系本人，文档最后有联系方式
 
 ```java
-//创建脸算法
-FaceAlgorithm currentAlgorithm = FaceAlgorithmFactory.createFaceAlgorithm();
-//提取身份证人脸特征（图片仅供测试）
-float[] featureIdCard = currentAlgorithm.featureExtraction("src/main/resources/kana1.jpg");
-//提取身份证人脸特征（从图片流获取）
-//File input = new File("src/main/resources/kana1.jpg");
-//float[] featureIdCard = currentAlgorithm.featureExtraction(new FileInputStream(input));
-logger.info("身份证人脸特征：{}", JSONObject.toJSONString(featureIdCard));
-//提取实时人脸特征（图片仅供测试）
-float[] realTimeFeature = currentAlgorithm.featureExtraction("src/main/resources/kana2.jpg");
-logger.info("实时人脸特征：{}", JSONObject.toJSONString(realTimeFeature));
-if(realTimeFeature != null){
-    if(currentAlgorithm.calculSimilar(featureIdCard, realTimeFeature) > 0.8){
-        logger.info("人脸核验通过");
-    }else{
-        logger.info("人脸核验不通过");
-    }
+// 初始化配置
+ModelConfig config = new ModelConfig();
+config.setAlgorithmName("seetaface6");//目前支持人脸比对的算法只有：seetaface6
+//人脸库路径 如果不指定人脸库，无法使用 1:N人脸搜索
+config.setFaceDbPath("C:/Users/Administrator/Downloads/faces-data.db");
+//改为模型存放路径
+config.setModelPath("/opt/sf3.0_models");
+//创建人脸算法
+FaceAlgorithm currentAlgorithm = FaceAlgorithmFactory.createFaceAlgorithm(config);
+//自动裁剪人脸并比对人脸特征
+float similar = currentAlgorithm.featureComparison("src/main/resources/kana1.jpg","src/main/resources/kana2.jpg");
+log.info("相似度：{}", similar);
+```
+
+
+
+### 6. 人脸特征提取及比对
+
+```java
+// 初始化配置
+ModelConfig config = new ModelConfig();
+config.setAlgorithmName("seetaface6");
+//人脸库路径 如果不指定人脸库，无法使用 1:N人脸搜索
+config.setFaceDbPath("C:/Users/Administrator/Downloads/faces-data.db");
+//改为模型存放路径
+config.setModelPath("C:/Users/Administrator/Downloads/sf3.0_models/sf3.0_models");
+//创建人脸算法
+FaceAlgorithm currentAlgorithm = FaceAlgorithmFactory.createFaceAlgorithm(config);
+//提取图像中最大人脸的特征
+float[] feature1 = currentAlgorithm.featureExtraction("src/main/resources/kana1.jpg");
+float[] feature2 = currentAlgorithm.featureExtraction("src/main/resources/kana2.jpg");
+float similar = currentAlgorithm.calculSimilar(feature1, feature2);
+log.info("相似度：{}", similar);
+```
+
+### 7. 注册及搜索人脸（1：N）
+
+```java
+// 初始化配置
+ModelConfig config = new ModelConfig();
+config.setAlgorithmName("seetaface6");
+//人脸库路径 如果不指定人脸库，无法使用 1:N人脸搜索
+config.setFaceDbPath("C:/Users/Administrator/Downloads/faces-data.db");
+//改为模型存放路径
+config.setModelPath("C:/Users/Administrator/Downloads/sf3.0_models/sf3.0_models");
+//创建人脸算法 自动将人脸库加载到内存中
+FaceAlgorithm currentAlgorithm = FaceAlgorithmFactory.createFaceAlgorithm(config);
+//等待人脸库加载完毕
+Thread.sleep(1000);
+//注册kana1人脸，参数key建议设置为人名
+boolean isSuccss = currentAlgorithm.register("kana1","src/main/resources/kana1.jpg");
+//注册jsy人脸，参数key建议设置为人名
+isSuccss = currentAlgorithm.register("jsy","src/main/resources/jsy.jpg");
+FaceResult faceResult = currentAlgorithm.search("src/main/resources/kana2.jpg");
+if(faceResult != null){
+    log.info("查询到人脸：{}", faceResult.toString());
+}else{
+    log.info("未查询到人脸");
 }
 ```
 
-### 6. 离线下载模型
+### 8. 人脸检测（离线下载模型）
 
-​	**SmartJavaAI**如果未指定模型地址，系统将自动下载模型至本地。因此，无论模型是否通过离线方式下载，SmartJavaAI 最终都会在离线环境下运行模型。
-
-- [离线下载模型代码示例](examples/face_offline.md)
-
-### 7. 测试结果
-
-不同电脑环境下例图的识别时间
-
-| 电脑环境                  | **RetinaFace 模型** | 轻量模型  | 人证核验  |
-| ------------------------- | ------------------- | --------- | --------- |
-| windows intel i5 8400 8核 | 2s左右              | 700ms左右 | 600ms左右 |
-| macOS M1 Pro芯片          | 800ms左右           | 400ms左右 | 300ms左右 |
-
-测试说明：
-
-（1）使用默认方法创建人脸算法，会先下载人脸模型及相关文件，所以首次运行会比较慢
-
-（2）目前SmartJavaAI默认使用CPU识别，所以CPU性能越高，识别速度越快
-
-（3）由于例图中人脸数量多，所以识别的速度会稍慢
-
-（4）测试结果中的时间不包含创建算法时间（加载模型），实际生产环境使用，只需系统系统时创建一次算法即可
+```java
+// 初始化配置
+ModelConfig config = new ModelConfig();
+config.setAlgorithmName("retinaface");//人脸算法模型，目前支持：retinaface/ultralightfastgenericface/seetaface6
+//config.setAlgorithmName("ultralightfastgenericface");//轻量模型
+config.setConfidenceThreshold(FaceConfig.DEFAULT_CONFIDENCE_THRESHOLD);//置信度阈值
+config.setMaxFaceCount(FaceConfig.MAX_FACE_LIMIT);//每张特征图保留的最大候选框数量
+//nms阈值:控制重叠框的合并程度,取值越低，合并越多重叠框（减少误检但可能漏检）；取值越高，保留更多框（增加检出但可能引入冗余）
+config.setNmsThresh(FaceConfig.NMS_THRESHOLD);
+//模型下载地址：
+//retinaface: https://resources.djl.ai/test-models/pytorch/retinaface.zip
+//ultralightfastgenericface: https://resources.djl.ai/test-models/pytorch/ultranet.zip
+//改为模型存放路径
+config.setModelPath("/Users/xxx/Documents/develop/face_model/retinaface.pt");
+//创建人脸算法
+FaceAlgorithm currentAlgorithm = FaceAlgorithmFactory.createFaceAlgorithm(config);
+//使用图片路径检测
+FaceDetectedResult result = currentAlgorithm.detect("src/main/resources/largest_selfie.jpg");
+logger.info("人脸检测结果：{}", JSONObject.toJSONString(result));
+//使用图片流检测
+File input = new File("src/main/resources/largest_selfie.jpg");
+//FaceDetectedResult result = currentAlgorithm.detect(new FileInputStream(input));
+//logger.info("人脸检测结果：{}", JSONObject.toJSONString(result));
+BufferedImage image = ImageIO.read(input);
+//创建保存路径
+Path imagePath = Paths.get("output").resolve("retinaface_detected.jpg");
+//绘制人脸框
+ImageUtils.drawBoundingBoxes(image, result, imagePath.toAbsolutePath().toString());
+```
 
 ## 完整代码
 
 `📁 examples/src/main/java/smartai/examples/face`  
 └── 📄[FaceDemo.java](https://github.com/geekwenjie/SmartJavaAI/blob/master/examples/src/main/java/smartai/examples/face/FaceDemo.java)  <sub>*（基于JDK11构建的完整可执行示例）*</sub>
+
+
+
+
+## 🙏 鸣谢
+
+本项目在开发过程中借鉴或使用了以下优秀开源项目，特此致谢：
+
+- **[Seetaface6JNI](https://gitee.com/cnsugar/seetaface6JNI)**
+---
 
 
 ## 联系方式

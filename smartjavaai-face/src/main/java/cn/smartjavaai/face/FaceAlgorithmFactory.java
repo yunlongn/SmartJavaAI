@@ -2,6 +2,7 @@ package cn.smartjavaai.face;
 
 import cn.smartjavaai.face.algo.FeatureExtractionAlgo;
 import cn.smartjavaai.face.algo.RetinaFace;
+import cn.smartjavaai.face.algo.SeetaFace6Algo;
 import cn.smartjavaai.face.algo.UltraLightFastGenericFace;
 
 import java.util.Map;
@@ -37,6 +38,7 @@ public class FaceAlgorithmFactory {
     public static FaceAlgorithm createFaceAlgorithm(ModelConfig config) throws Exception {
         Class<?> clazz = registry.get(config.getAlgorithmName().toLowerCase());
         if(clazz == null){
+            System.out.println("No such algorithm: " + config.getAlgorithmName().toLowerCase());
             throw new IllegalArgumentException("Unsupported algorithm");
         }
         FaceAlgorithm algorithm = (FaceAlgorithm) clazz.newInstance();
@@ -114,6 +116,7 @@ public class FaceAlgorithmFactory {
         registerAlgorithm("ultralightfastgenericface", UltraLightFastGenericFace.class);
         //人脸特征提取
         registerAlgorithm("featureExtraction", FeatureExtractionAlgo.class);
+        registerAlgorithm("seetaface6", SeetaFace6Algo.class);
     }
 
 }

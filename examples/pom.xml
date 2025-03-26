@@ -43,7 +43,7 @@
         <dependency>
             <groupId>ink.numberone</groupId>
             <artifactId>smartjavaai-face</artifactId>
-            <version>1.0.4</version>
+            <version>1.0.5</version>
         </dependency>
 
         <dependency>
@@ -62,6 +62,54 @@
             <artifactId>fastjson</artifactId>
             <version>1.2.83</version>
         </dependency>
+
+        <dependency>
+            <groupId>ai.djl.onnxruntime</groupId>
+            <artifactId>onnxruntime-engine</artifactId>
+            <version>0.20.0</version>
+        </dependency>
     </dependencies>
+
+    <build>
+        <finalName>example</finalName>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <version>2.3</version>
+                <configuration>
+                    <!--如果不想在打包的后缀加上assembly.xml中设置的id，可以加上下面的配置-->
+                    <appendAssemblyId>false</appendAssemblyId>
+                    <descriptorRefs>
+                        <descriptorRef>jar-with-dependencies</descriptorRef>
+                    </descriptorRefs>
+                    <archive>
+                        <manifest>
+                            <!-- 是否绑定依赖，将外部jar包依赖加入到classPath中 -->
+                            <addClasspath>true</addClasspath>
+                            <!-- 依赖前缀，与之前设置的文件夹路径要匹配 -->
+                            <classpathPrefix>lib/</classpathPrefix>
+                            <!-- 执行的主程序入口 -->
+                            <mainClass>smartai.examples.face.FaceDemo</mainClass>
+                        </manifest>
+                    </archive>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>make-assembly</id>
+                        <!--绑定的maven操作-->
+                        <phase>package</phase>
+                        <goals>
+                            <goal>assembly</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+
+
+
+
 
 </project>

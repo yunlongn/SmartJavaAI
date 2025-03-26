@@ -32,6 +32,11 @@ public class ModelConfig {
      */
     private String modelPath;
 
+    /**
+     * 人脸库路径
+     */
+    private String faceDbPath;
+
 
     public String getAlgorithmName() {
         return algorithmName;
@@ -71,5 +76,13 @@ public class ModelConfig {
 
     public void setModelPath(String modelPath) {
         this.modelPath = modelPath;
+    }
+
+    public String getFaceDbPath() {
+        return faceDbPath;
+    }
+
+    public void setFaceDbPath(String faceDbPath) {
+        this.faceDbPath = faceDbPath;
     }
 }

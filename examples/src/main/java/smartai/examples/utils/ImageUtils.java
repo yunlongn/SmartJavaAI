@@ -48,7 +48,7 @@ public class ImageUtils {
         int width = metrics.stringWidth(text) + padding * 2 - stroke / 2;
         int height = metrics.getHeight() + metrics.getDescent();
         int ascent = metrics.getAscent();
-        java.awt.Rectangle background = new java.awt.Rectangle(x, y, width, height);
+        Rectangle background = new Rectangle(x, y, width, height);
         g.fill(background);
         g.setPaint(Color.WHITE);
         g.drawString(text, x + padding, y + ascent);

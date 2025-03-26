@@ -3,7 +3,9 @@ package cn.smartjavaai.face;
 import ai.djl.MalformedModelException;
 import ai.djl.repository.zoo.ModelNotFoundException;
 import ai.djl.translate.TranslateException;
+import cn.smartjavaai.face.entity.FaceResult;
 
+import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.InputStream;
 
@@ -85,5 +87,47 @@ public interface FaceAlgorithm {
      * @throws Exception
      */
     float featureComparison(InputStream inputStream1, InputStream inputStream2) throws Exception;
+
+    /**
+     * 注册人脸
+     * @param key
+     * @param imagePath
+     * @return
+     */
+    boolean register(String key, String imagePath) throws Exception;
+
+    /**
+     * 注册人脸
+     * @param key
+     * @param inputStream
+     * @return
+     */
+    boolean register(String key, InputStream inputStream) throws Exception;
+
+    /**
+     * 查询人脸
+     * @param imagePath
+     * @return
+     */
+    FaceResult search(String imagePath) throws Exception;
+
+    /**
+     * 查询人脸
+     * @param inputStream
+     * @return
+     */
+    FaceResult search(InputStream inputStream) throws Exception;
+
+    /**
+     * 删除已标记人脸
+     * @param keys
+     * @return
+     */
+    long removeRegister(String... keys) throws Exception;
+
+    /**
+     * 清空人脸库数据
+     */
+    long clearFace() throws Exception;
 
 }
