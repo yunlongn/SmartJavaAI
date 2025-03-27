@@ -59,7 +59,7 @@
 ## 目前已集成的人脸算法模型
 
 - **RetinaFace 模型**[[GitHub]](https://github.com/deepinsight/insightface/tree/master/detection/retinaface)：一个高效的深度学习人脸检测模型，支持高精度的人脸检测，但目前不支持人脸比对
-- **Ultra-Light-Fast-Generic-Face-Detector-1MB ** [[GitHub\]](https://github.com/Linzaer/Ultra-Light-Fast-Generic-Face-Detector-1MB)：一个轻量级的人脸检测模型，适用于需要较低延迟和较小模型尺寸的应用场景。
+- **Ultra-Light-Fast-Generic-Face-Detector-1MB** [[GitHub\]](https://github.com/Linzaer/Ultra-Light-Fast-Generic-Face-Detector-1MB)：一个轻量级的人脸检测模型，适用于需要较低延迟和较小模型尺寸的应用场景。
 - **Seetaface6**  [[GitHub\]](https://github.com/seetafaceengine/SeetaFace6)：是中科视拓最新开放的商业正式级版本，支持人脸检测、关键点定位、人脸识别。同时增加了活体检测、质量评估、年龄性别估计。并且响应时事，开放了口罩检测以及戴口罩的人脸识别模型
 
 ### 模型对比及下载地址
@@ -77,7 +77,6 @@
 
 ## 使用步骤
 
-> [!CAUTION]
 >
 > 📌 **运行提示**：
 >
@@ -127,7 +126,6 @@ FaceDetectedResult result = currentAlgorithm.detect(new FileInputStream(input));
 
 ### 5. 人脸比对（1：1）
 
-> [!CAUTION]
 >
 > （1）将项目中db/faces-data.db存放到您本地路径下
 >
@@ -251,3 +249,8 @@ ImageUtils.drawBoundingBoxes(image, result, imagePath.toAbsolutePath().toString(
 
 - **微信**: deng775747758 （请备注：SmartJavaAI）
 - **Email**: 775747758@qq.com
+
+
+
+🚀 **如果这个项目对你有帮助，别忘了点个 Star ⭐！你的支持是我持续优化升级的动力！** ❤️
+
