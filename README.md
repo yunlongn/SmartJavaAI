@@ -61,14 +61,16 @@
 - **RetinaFace 模型**[[GitHub]](https://github.com/deepinsight/insightface/tree/master/detection/retinaface)：一个高效的深度学习人脸检测模型，支持高精度的人脸检测，但目前不支持人脸比对
 - **Ultra-Light-Fast-Generic-Face-Detector-1MB** [[GitHub\]](https://github.com/Linzaer/Ultra-Light-Fast-Generic-Face-Detector-1MB)：一个轻量级的人脸检测模型，适用于需要较低延迟和较小模型尺寸的应用场景。
 - **Seetaface6**  [[GitHub\]](https://github.com/seetafaceengine/SeetaFace6)：是中科视拓最新开放的商业正式级版本，支持人脸检测、关键点定位、人脸识别。同时增加了活体检测、质量评估、年龄性别估计。并且响应时事，开放了口罩检测以及戴口罩的人脸识别模型
+- **[facenet-pytorch](https://github.com/timesler/facenet-pytorch)**  [[GitHub\]](https://github.com/seetafaceengine/SeetaFace6)：这是 pytorch 中 Inception Resnet (V1) 模型的存储库，在 VGGFace2 和 CASIA-Webface 上进行了预训练。Pytorch 模型权重使用从 David Sandberg 的 [tensorflow Facenet repo](https://github.com/davidsandberg/facenet) 移植的参数进行初始化。该存储库中还包含 MTCNN 的高效 pytorch 实现，用于推理之前的人脸检测。这些模型也是经过预训练的。据我们所知，这是最快的 MTCNN 实现。
 
-### 模型对比及下载地址
+### 人脸模型对比及下载地址
 
 |         模型名称          |                           下载地址                           | 文件大小 |     适用场景      | 兼容系统            |
 | :-----------------------: | :----------------------------------------------------------: | :------: | :---------------: | ------------------- |
 |        retinaface         | [下载](https://resources.djl.ai/test-models/pytorch/retinaface.zip) |  110MB   |  高精度人脸检测   | Windows/Linux/MacOS |
-| ultralightfastgenericface | [下载](https://resources.djl.ai/test-models/pytorch/ultranet.zip) |  1.7MB   |   高速人脸检测    | Windows/Linux       |
-|        seetaface6         | [下载](https://pan.baidu.com/s/1hfNacA8ISV2qHrycjOkgqA?pwd=1234) |  288MB   | 人脸检测/人脸识别 | Windows/Linux       |
+| ultralightfastgenericface | [下载](https://resources.djl.ai/test-models/pytorch/ultranet.zip) |  1.7MB   |   高速人脸检测    | Windows/Linux/MacOS |
+|        seetaface6         | [下载](https://pan.baidu.com/s/1hfNacA8ISV2qHrycjOkgqA?pwd=1234) |  288MB   | 人脸检测/人脸识别 | Windows             |
+|      facenet-pytorch      | [下载](https://resources.djl.ai/test-models/pytorch/face_feature.zip) |  104MB   |     人脸识别      | Windows/Linux/MacOS |
 
 ## 环境要求
 
@@ -82,7 +84,7 @@
 >
 > （1）默认算法（RetinaFace）或轻量算法（Ultra-Light-Fast-Generic-Face-Detector ）都为python算法，兼容 Windows、Linux、MacOS，Android 等系统，SmartJavaAI首次启动将自动下载模型到及依赖库到本地（.djl.ai隐藏文件夹），建议保持网络畅通。初始化完成后，后续启动可实现毫秒级响应。在无网络环境下，可指定本地模型路径（需提前下载模型包）。目前，这两种算法不支持人脸识别或人脸比对功能。
 >
-> （2）Seetaface6 采用 C++ 编写，兼容 Windows、CentOS、Ubuntu 等系统。创建算法时，将自动加载对应系统的依赖库。Seetaface6 支持全功能人脸处理（人脸检测、人脸比对 1:1 或 1:N）。SmartJavaAI 通过 JNI 调用 C++ 接口，不支持在线下载模型，需手动下载并存储至本地。使用人脸比对等功能时，需要将项目中db/faces-data.db存放到您本地路径下并在config中指定人脸库路径。
+> （2）Seetaface6 采用 C++ 编写，兼容 Windows、CentOS、Ubuntu 等系统，虽然Seetaface6 支持linux，但是我们目前仅实现了windows，如果后续对linux需求多，我们将兼容linux。Seetaface6 支持全功能人脸处理（人脸检测、人脸比对 1:1 或 1:N）。SmartJavaAI 通过 JNI 调用 C++ 接口，不支持在线下载模型，需手动下载并存储至本地。使用人脸比对等功能时，需要将项目中db/faces-data.db存放到您本地路径下并在config中指定人脸库路径。
 
 ### 1. 安装人脸算法依赖
 
@@ -93,7 +95,7 @@
      <dependency>
         <groupId>ink.numberone</groupId>
         <artifactId>smartjavaai-face</artifactId>
-        <version>1.0.5</version>
+        <version>1.0.6</version>
      </dependency>
 </dependencies>
 ```
@@ -150,7 +152,7 @@ log.info("相似度：{}", similar);
 
 
 
-### 6. 人脸特征提取及比对
+### 6. 人脸特征提取及比对（seetaface6）
 
 ```java
 // 初始化配置
@@ -169,7 +171,24 @@ float similar = currentAlgorithm.calculSimilar(feature1, feature2);
 log.info("相似度：{}", similar);
 ```
 
-### 7. 注册及搜索人脸（1：N）
+### 7. 人脸特征提取及比对（facenet-pytorch）
+
+```java
+//创建脸算法
+FaceAlgorithm featureAlgorithm = FaceAlgorithmFactory.createFaceFeatureAlgorithm();
+//提取身份证人脸特征
+float[] feature1 = featureAlgorithm.featureExtraction("src/main/resources/kana1.jpg");
+float[] feature2 = featureAlgorithm.featureExtraction("src/main/resources/kana2.jpg");
+if (feature1 != null && feature2 != null) {
+    //相似度在0.8至0.85及以上时，可判定为同一人，但具体阈值可能因图片而异，存在一定误差。
+    float similar = featureAlgorithm.calculSimilar(feature1, feature2);
+    log.info("相似度：{}", similar);
+} else {
+    log.warn("人脸特征提取失败");
+}
+```
+
+### 8. 注册及搜索人脸（1：N）
 
 ```java
 // 初始化配置
@@ -195,7 +214,7 @@ if(faceResult != null){
 }
 ```
 
-### 8. 人脸检测（离线下载模型）
+### 9. 人脸检测（离线下载模型）
 
 ```java
 // 初始化配置
@@ -250,7 +269,16 @@ ImageUtils.drawBoundingBoxes(image, result, imagePath.toAbsolutePath().toString(
 - **微信**: deng775747758 （请备注：SmartJavaAI）
 - **Email**: 775747758@qq.com
 
-
-
 🚀 **如果这个项目对你有帮助，别忘了点个 Star ⭐！你的支持是我持续优化升级的动力！** ❤️
+
+
+
+
+## 更新日志
+
+## [v1.0.6] - 2025-04-01
+-  修复人脸识别算法facenet-pytorch实现方式
+-  优化Seetaface6算法，兼容jdk高版本
+
+
 
