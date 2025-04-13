@@ -62,14 +62,14 @@
 
 ## 🛠️包含组件
 
-| 模块                |     介绍                                                                          |
-| -------------------|---------------------------------------------------------------------------------- |
-| smartjavaai-common |     基础通用模块，封装了公共功能，供各算法模块共享使用           |
-| smartjavaai-face |     人脸功能模块                                        |
+| 模块                          |     介绍                                                                          |
+|-----------------------------|---------------------------------------------------------------------------------- |
+| smartjavaai-common          |     基础通用模块，封装了公共功能，供各算法模块共享使用           |
+| smartjavaai-face            |     人脸功能模块                                        |
 | smartjavaai-objectdetection |     目标检测模块                                                               |
-| smartjavaai-seetaface6-lib |     seetaface6人脸算法JNI接口封装              |
+| smartjavaai-seetaface6-lib  |     seetaface6人脸算法JNI接口封装              |
 
-可以根据需求对每个模块单独引入
+可以根据需求对每个模块单独引入，也可以通过引入`smartjavaai-all`方式引入所有模块。
 
 -------------------------------------------------------------------------------
 
@@ -115,7 +115,7 @@
 
 https://gitee.com/dengwenjie/SmartJavaAI-Demo
 
-`📁 src/main/java/smartai/examples/face
+📁 src/main/java/smartai/examples/face
 └── 📄[RetinaFaceDemo.java](https://gitee.com/dengwenjie/SmartJavaAI-Demo/blob/master/src/main/java/smartai/examples/face/RetinaFaceDemo.java)  <sub>*（人脸模型：RetinaFace示例代码）*</sub>
 
 └── 📄[LightFaceDemo](https://gitee.com/dengwenjie/SmartJavaAI-Demo/blob/master/src/main/java/smartai/examples/face/LightFaceDemo.java)  <sub>*（人脸模型：UltraLightFastGenericFaceModel示例代码）*</sub>
@@ -146,7 +146,7 @@ https://gitee.com/dengwenjie/SmartJavaAI-Demo
 
 https://gitee.com/dengwenjie/SmartJavaAI-Demo
 
-`📁 src/main/java/smartai/examples/objectdetection
+📁 src/main/java/smartai/examples/objectdetection
 └── 📄[ObjectDetection.java](https://gitee.com/dengwenjie/SmartJavaAI-Demo/blob/master/src/main/java/smartai/examples/objectdetection/ObjectDetection.java)  <sub>*（目标检测示例代码）*</sub>
 
 
