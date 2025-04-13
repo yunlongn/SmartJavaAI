@@ -12,7 +12,7 @@ import ai.djl.translate.Translator;
 import ai.djl.translate.TranslatorContext;
 
 /**
- * @author 邓文杰
+ * @author dwj
  * @date 2025/3/31
  */
 public final class FaceFeatureTranslator implements Translator<Image, float[]> {

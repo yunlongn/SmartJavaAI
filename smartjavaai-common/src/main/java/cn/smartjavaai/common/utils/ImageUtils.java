@@ -1,8 +1,12 @@
 package cn.smartjavaai.common.utils;
 
+import javax.imageio.ImageIO;
+import java.awt.*;
 import java.awt.image.BufferedImage;
 //import java.awt.image.ColorConvertOp;
 import java.awt.image.ComponentSampleModel;
+import java.io.File;
+import java.io.IOException;
 import java.util.Arrays;
 
 /**
@@ -73,5 +77,19 @@ public class ImageUtils {
         image.getRaster().setDataElements(0, 0, width, height, data);
         return image;
     }
+
+    /**
+     * 检查图像是否有效
+     * @param image
+     * @return
+     */
+    public static boolean isImageValid(BufferedImage image) {
+        // 检查是否为 null 或尺寸异常（如宽高为0）
+        return image != null && image.getWidth() > 0 && image.getHeight() > 0;
+    }
+
+
+
+
 
 }

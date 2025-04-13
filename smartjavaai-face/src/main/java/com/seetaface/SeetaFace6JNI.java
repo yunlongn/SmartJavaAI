@@ -124,4 +124,12 @@ public class SeetaFace6JNI {
      */
     public native int predictImage(SeetaImageData img);
 
+    public native void dispose();
+
+    @Override
+    protected void finalize() throws Throwable {
+        super.finalize();
+        this.dispose();
+    }
+
 }
