@@ -32,12 +32,15 @@
 
 
 ## 🌟 AI集成方式对比
-| 维度        | Python生态           | 原生DJL          | 本工具包         |
-|------------|---------------------|-----------------|----------------|
-| 开发效率    | 需搭建Python环境     | 需实现完整AI Pipeline | 提供即用API    |
-| 学习成本    | 需掌握Python/C++混合编程 | 需深入理解AI框架机制 | Java语法即可调用 |
-| 部署复杂度  | 需维护多语言服务      | 需处理底层资源调度 | 单一Jar包集成   |
-| 性能表现    | 原生高性能           | 依赖开发者优化经验 | 内置生产级调优  |
+
+| 方案                | 技术特点                                                                 | 优点                                                                 | 缺点                                                                 |
+|---------------------|--------------------------------------------------------------------------|----------------------------------------------------------------------|----------------------------------------------------------------------|
+| **OpenCV**         | 传统图像处理方案                                                        | ✅ 提供java接口<br>✅ 轻量级部署<br>✅ 社区资源丰富                   | ❌ 基于传统算法精度低(60%-75%)<br>❌ 需本地安装环境 |
+| &zwnj;**虹软SDK**&zwnj;         | 商业级闭源解决方案                                                      | ✅ 开箱即用<br>✅ 提供完整文档和SDK<br>✅ 支持离线活体检测      | ❌ 免费版需年度授权更新<br>❌ 商业授权费用高<br>❌ 代码不可控 |
+| &zwnj;**云API(阿里云)**&zwnj;   | SaaS化云端服务                                                          | ✅ 零部署成本<br>✅ 支持高并发<br>✅ 自带模型迭代        | ❌ 网络延迟风险(200-800ms)<br>❌ 按调用量计费<br>❌ 有数据安全风险 |
+| &zwnj;**Python混合调用**&zwnj;  | 跨语言调用方案                                                          | ✅ 可集成PyTorch/TF等框架<br>✅ 支持自定义算法<br>✅ 识别精度高  | ❌ 需维护双语言环境<br>❌ 进程通信性能损耗(30%+)<br>❌ 异常处理复杂度翻倍 |
+| &zwnj;**DJL框架**&zwnj;         | 深度学习框架                                                            | ✅ 纯Java实现<br>✅ 支持主流深度学习框架<br>✅ 可加载预训练模型(99%+)    | ❌ 需掌握DL知识<br>❌ 需处理模型加载、预处理、后处理等复杂技术细节       |
+| &zwnj;**SmartJavaAI**&zwnj;         | java深度学习工具包                                                            | ✅ 支持主流深度学习框架<br>✅ 提供丰富、开箱即用API<br>  ✅ 上手简单，单一Jar包集成 |   ❌要求JDK版本11及以上  |
 
 
 
@@ -116,6 +119,7 @@
 https://gitee.com/dengwenjie/SmartJavaAI-Demo
 
 📁 src/main/java/smartai/examples/face
+
 └── 📄[RetinaFaceDemo.java](https://gitee.com/dengwenjie/SmartJavaAI-Demo/blob/master/src/main/java/smartai/examples/face/RetinaFaceDemo.java)  <sub>*（人脸模型：RetinaFace示例代码）*</sub>
 
 └── 📄[LightFaceDemo](https://gitee.com/dengwenjie/SmartJavaAI-Demo/blob/master/src/main/java/smartai/examples/face/LightFaceDemo.java)  <sub>*（人脸模型：UltraLightFastGenericFaceModel示例代码）*</sub>
