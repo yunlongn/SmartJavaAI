@@ -96,7 +96,9 @@
 </dependency>
 ```
 ### 3、人脸检测运行流程
-
+<p align="center">
+	<a href="https://gitee.com/dengwenjie/SmartJavaAI"><img src="https://cdn.jsdelivr.net/gh/geekwenjie/SmartJavaAI-Site/images/face.jpg" width="60%"></a>
+</p>
 （1）人脸模型下载（使用人脸相关功能）
 
 如果在有网环境下使用，不需要下载模型(SeetaFace6模型除外)
@@ -146,11 +148,16 @@ https://gitee.com/dengwenjie/SmartJavaAI-Demo
 
 ### 4、目标检测运行流程
 
+<p align="center">
+	<a href="https://gitee.com/dengwenjie/SmartJavaAI"><img src="https://cdn.jsdelivr.net/gh/geekwenjie/SmartJavaAI-Site/images/object_detection_detected.png" width="60%"></a>
+</p>
+
 （1）下载示例代码
 
 https://gitee.com/dengwenjie/SmartJavaAI-Demo
 
 📁 src/main/java/smartai/examples/objectdetection
+
 └── 📄[ObjectDetection.java](https://gitee.com/dengwenjie/SmartJavaAI-Demo/blob/master/src/main/java/smartai/examples/objectdetection/ObjectDetection.java)  <sub>*（目标检测示例代码）*</sub>
 
 
@@ -167,7 +174,7 @@ https://gitee.com/dengwenjie/SmartJavaAI-Demo
 
 ## 联系方式
 
-如果您有任何问题或建议，欢迎联系：
+如您在使用过程中有任何问题或建议，欢迎添加微信，与我们交流并加入用户交流群
 
 - **微信**: deng775747758 （请备注：SmartJavaAI）
 - **Email**: 775747758@qq.com
