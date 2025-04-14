@@ -95,7 +95,9 @@
     <version>1.0.8</version>
 </dependency>
 ```
+
 ### 3、人脸检测运行流程
+
 <p align="center">
 	<a href="https://gitee.com/dengwenjie/SmartJavaAI"><img src="https://cdn.jsdelivr.net/gh/geekwenjie/SmartJavaAI-Site/images/face.jpg" width="60%"></a>
 </p>
@@ -161,6 +163,30 @@ https://gitee.com/dengwenjie/SmartJavaAI-Demo
 └── 📄[ObjectDetection.java](https://gitee.com/dengwenjie/SmartJavaAI-Demo/blob/master/src/main/java/smartai/examples/objectdetection/ObjectDetection.java)  <sub>*（目标检测示例代码）*</sub>
 
 
+### 5、运行设备
+默认将使用CPU运行模型，如果需要使用GPU，需要在创建模型接口中手动指定运行设备
+
+GPU中运行需要满足如下条件：
+
+（1）安装CUDA v12.4及cuDNN v8.9.7
+
+（2）将缓存目录加入到环境变量中，并删除其他cuda环境变量
+
+​	windows配置如下：
+
+<p align="center">
+	<a href="https://gitee.com/dengwenjie/SmartJavaAI"><img src="https://cdn.jsdelivr.net/gh/geekwenjie/SmartJavaAI-Site/images/path.jpg" width="60%"></a>
+</p>
+
+
+（3）示例代码：
+
+```java
+FaceModelConfig config = new FaceModelConfig();
+config.setModelEnum(FaceModelEnum.RETINA_FACE);//人脸模型
+config.setDevice(DeviceEnum.GPU);//指定GPU
+FaceModel faceModel = FaceModelFactory.getInstance().getModel(config);
+```
 
 
 ## 🙏 鸣谢
