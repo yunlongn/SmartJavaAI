@@ -138,11 +138,11 @@ https://gitee.com/dengwenjie/SmartJavaAI-Demo
 
 \{user}需要替换成您当前登录的用户名
 
-|         | 依赖库及缓存目录         |
-| ------- | ------------------------ |
+|         | 依赖库及缓存目录                |
+| ------- |-------------------------|
 | windows | C:/Users/\{user}/.djl.ai |
-| linux   | /home/{user}/.djl.ai     |
-| macos   | /Users/{user}/.djl.ai    |
+| linux   | /root/.djl.ai     |
+| macos   | /Users/{user}/.djl.ai   |
 
 对于需要在离线环境中使用的情况，可以在联网环境中运行程序一次，确保所需的依赖库已下载。然后，将上述缓存目录复制到离线环境中相同的路径下，即可实现离线使用。
 
