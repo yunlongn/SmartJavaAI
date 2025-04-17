@@ -4,10 +4,34 @@
 <p align="center">
 	<strong>🍬JAVA轻量级深度学习算法库，该库致力于构建Java生态与AI模型之间的高效桥梁</strong>
 </p>
+<p align="center">
+	<a target="_blank" href="https://central.sonatype.com/artifact/ink.numberone/smartjavaai-all">
+		<img src="https://img.shields.io/maven-central/v/ink.numberone/smartjavaai-all.svg?label=Maven%20Central" />
+	</a>
+	<a target="_blank" href="https://license.coscl.org.cn/MulanPSL2">
+		<img src="https://img.shields.io/:license-MulanPSL2-blue.svg" />
+	</a>
+	<a target="_blank" href="https://www.oracle.com/java/technologies/javase/javase-jdk11-downloads.html">
+		<img src="https://img.shields.io/badge/JDK-11+-green.svg" />
+	</a>
+	<a target="_blank" href='https://gitee.com/dengwenjie/SmartJavaAI/stargazers'>
+		<img src='https://gitee.com/dengwenjie/SmartJavaAI/badge/star.svg?theme=gvp' alt='star'/>
+	</a>
+	<a target="_blank" href='https://github.com/geekwenjie/SmartJavaAI'>
+		<img src="https://img.shields.io/github/stars/geekwenjie/SmartJavaAI.svg?style=social" alt="github star"/>
+	</a>
+</p>
+
+-------------------------------------------------------------------------------
+
+[**开发文档**](http://doc.numberone.ink)
+
+-------------------------------------------------------------------------------
 
 ## 📚简介
 
 `SmartJavaAI`是专为Java 开发者打造的一个功能丰富、开箱即用的 Java 算法工具包，致力于帮助Java开发者高效集成各类智能算法。SmartJavaAI通过对多种主流算法的统一封装，开发者无需深入了解底层实现，即可轻松在 Java 代码中调用人脸识别、目标检测、OCR 等功能。目前已支持部分人脸识别与目标检测算法，底层实现涵盖了 C++、Python 等语言的深度学习模型。后续将持续扩展更多算法，最终将构建一个面向 Java 开发者的通用智能工具库。
+
 
 
 
@@ -80,6 +104,7 @@
 
 ## 📦 安装
 
+
 ### 1、环境要求
 
 - Java 版本：**JDK 11或更高版本**
@@ -95,98 +120,10 @@
     <version>1.0.8</version>
 </dependency>
 ```
+### 3、完整示例代码
 
-### 3、人脸检测运行流程
+[示例代码](https://gitee.com/dengwenjie/SmartJavaAI-Demo)
 
-<p align="center">
-	<a href="https://gitee.com/dengwenjie/SmartJavaAI"><img src="https://cdn.jsdelivr.net/gh/geekwenjie/SmartJavaAI-Site/images/face.jpg" width="60%"></a>
-</p>
-（1）人脸模型下载（使用人脸相关功能）
-
-如果在有网环境下使用，不需要下载模型(SeetaFace6模型除外)
-
-|         模型名称          |                           下载地址                           | 文件大小 |                  适用场景                  | 兼容系统            |
-| :-----------------------: | :----------------------------------------------------------: | :------: | :----------------------------------------: | ------------------- |
-|        retinaface         | [下载](https://resources.djl.ai/test-models/pytorch/retinaface.zip) |  110MB   |               高精度人脸检测               | Windows/Linux/MacOS |
-| ultralightfastgenericface | [下载](https://resources.djl.ai/test-models/pytorch/ultranet.zip) |  1.7MB   |                高速人脸检测                | Windows/Linux/MacOS |
-|        seetaface6         | [下载](https://pan.baidu.com/s/1hfNacA8ISV2qHrycjOkgqA?pwd=1234) |  288MB   | 人脸检测、人脸比对、人脸库注册、人脸库查询 | Windows             |
-|          facenet          | [下载](https://resources.djl.ai/test-models/pytorch/face_feature.zip) |  104MB   |           人脸特征提取、人脸比对           | Windows/Linux/MacOS |
-
-（2）人脸库下载（使用人脸库相关功能：人脸注册、人脸查询）
-
-目前仅SeetaFace6人脸算法支持人脸库注册，查询等功能，所以只有使用SeetaFace6模型时才需要下载`face.db`，`face.db` 是 一个SQLite 数据库，程序启动并使用相关功能时会自动操作该数据库，用于存储人脸特征数据及其对应的唯一标识 Key，支持后续的人脸注册、查询和比对等操作。
-
-下载链接: https://pan.baidu.com/s/1DzE1rDkFnjEXQbIasIdFrA?pwd=1234 提取码: 1234
-
-（3）下载示例代码
-
-https://gitee.com/dengwenjie/SmartJavaAI-Demo
-
-📁 src/main/java/smartai/examples/face
-
-└── 📄[RetinaFaceDemo.java](https://gitee.com/dengwenjie/SmartJavaAI-Demo/blob/master/src/main/java/smartai/examples/face/RetinaFaceDemo.java)  <sub>*（人脸模型：RetinaFace示例代码）*</sub>
-
-└── 📄[LightFaceDemo](https://gitee.com/dengwenjie/SmartJavaAI-Demo/blob/master/src/main/java/smartai/examples/face/LightFaceDemo.java)  <sub>*（人脸模型：UltraLightFastGenericFaceModel示例代码）*</sub>
-
-└── 📄[SeetaFace6Demo.java](https://gitee.com/dengwenjie/SmartJavaAI-Demo/blob/master/src/main/java/smartai/examples/face/SeetaFace6Demo.java)  <sub>*（人脸模型：SeetaFace6示例代码）*</sub>
-
-└── 📄[FaceNetDemo.java](https://gitee.com/dengwenjie/SmartJavaAI-Demo/blob/master/src/main/java/smartai/examples/face/FaceNetDemo.java)  <sub>*（人脸模型：FaceNet示例代码）*</sub>
-
-（4）离线使用方法
-
-程序首次运行时，会自动下载所需的底层依赖库到默认的缓存路径。不同操作系统的默认缓存路径如下：
-
-\{user}需要替换成您当前登录的用户名
-
-|         | 依赖库及缓存目录                |
-| ------- |-------------------------|
-| windows | C:/Users/\{user}/.djl.ai |
-| linux   | /root/.djl.ai     |
-| macos   | /Users/{user}/.djl.ai   |
-
-对于需要在离线环境中使用的情况，可以在联网环境中运行程序一次，确保所需的依赖库已下载。然后，将上述缓存目录复制到离线环境中相同的路径下，即可实现离线使用。
-
-请注意，SeetaFace6 默认支持离线使用，无需上述操作即可在离线环境中运行。
-
-### 4、目标检测运行流程
-
-<p align="center">
-	<a href="https://gitee.com/dengwenjie/SmartJavaAI"><img src="https://cdn.jsdelivr.net/gh/geekwenjie/SmartJavaAI-Site/images/object_detection_detected.png" width="60%"></a>
-</p>
-
-（1）下载示例代码
-
-https://gitee.com/dengwenjie/SmartJavaAI-Demo
-
-📁 src/main/java/smartai/examples/objectdetection
-
-└── 📄[ObjectDetection.java](https://gitee.com/dengwenjie/SmartJavaAI-Demo/blob/master/src/main/java/smartai/examples/objectdetection/ObjectDetection.java)  <sub>*（目标检测示例代码）*</sub>
-
-
-### 5、运行设备
-默认将使用CPU运行模型，如果需要使用GPU，需要在创建模型接口中手动指定运行设备
-
-GPU中运行需要满足如下条件：
-
-（1）安装CUDA v12.4及cuDNN v8.9.7
-
-（2）将缓存目录加入到环境变量中，并删除其他cuda环境变量
-
-​	windows配置如下：
-
-<p align="center">
-	<a href="https://gitee.com/dengwenjie/SmartJavaAI"><img src="https://cdn.jsdelivr.net/gh/geekwenjie/SmartJavaAI-Site/images/path.jpg" width="60%"></a>
-</p>
-
-
-（3）示例代码：
-
-```java
-FaceModelConfig config = new FaceModelConfig();
-config.setModelEnum(FaceModelEnum.RETINA_FACE);//人脸模型
-config.setDevice(DeviceEnum.GPU);//指定GPU
-FaceModel faceModel = FaceModelFactory.getInstance().getModel(config);
-```
 
 
 ## 🙏 鸣谢
