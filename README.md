@@ -32,7 +32,21 @@
 
 `SmartJavaAI`是专为Java 开发者打造的一个功能丰富、开箱即用的 Java 算法工具包，致力于帮助Java开发者高效集成各类智能算法。SmartJavaAI通过对多种主流算法的统一封装，开发者无需深入了解底层实现，即可轻松在 Java 代码中调用人脸识别、目标检测、OCR 等功能。目前已支持部分人脸识别与目标检测算法，底层实现涵盖了 C++、Python 等语言的深度学习模型。后续将持续扩展更多算法，最终将构建一个面向 Java 开发者的通用智能工具库。
 
+## 🚀  演示图
 
+<p align="center">
+  <div style="display: inline-block; text-align: center; ">
+    <a href="https://gitee.com/dengwenjie/SmartJavaAI"><img src="https://cdn.jsdelivr.net/gh/geekwenjie/SmartJavaAI-Site/images/face.jpg" width="70%"></a><br/>
+    <span style="display:block; margin-top:8px;">人脸检测</span>
+  </div>
+</p>
+
+<p align="center">
+  <div style="display: inline-block; text-align: center; ">
+    <a href="https://gitee.com/dengwenjie/SmartJavaAI"><img src="https://cdn.jsdelivr.net/gh/geekwenjie/SmartJavaAI-Site/images/object_detection_detected.png" width="70%"></a><br/>
+    <span style="display:block; margin-top:8px;">目标检测</span>
+  </div>
+</p>
 
 
 ## 🚀  核心亮点
