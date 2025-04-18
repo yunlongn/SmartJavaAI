@@ -20,6 +20,9 @@
 	<a target="_blank" href='https://github.com/geekwenjie/SmartJavaAI'>
 		<img src="https://img.shields.io/github/stars/geekwenjie/SmartJavaAI.svg?style=social" alt="github star"/>
 	</a>
+    <a target="_blank" href='https://gitcode.com/geekwenjie/SmartJavaAI'>
+		<img src="https://gitcode.com/geekwenjie/SmartJavaAI/star/badge.svg" alt="gitcode star"/>
+	</a>
 </p>
 
 -------------------------------------------------------------------------------
