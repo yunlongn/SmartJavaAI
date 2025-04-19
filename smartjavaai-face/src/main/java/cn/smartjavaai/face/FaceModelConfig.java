@@ -21,6 +21,11 @@ public class FaceModelConfig {
     private double confidenceThreshold = FaceConfig.DEFAULT_CONFIDENCE_THRESHOLD;
 
     /**
+     * 相似度阈值 作用：判断是否为同一人脸
+     */
+    private double similarityThreshold = 0D;
+
+    /**
      * 非极大抑制阈值 作用：消除重叠检测框，保留最优结果
      */
     private double nmsThresh = FaceConfig.NMS_THRESHOLD;
@@ -39,6 +44,11 @@ public class FaceModelConfig {
      * 设备类型
      */
     private DeviceEnum device;
+
+    /**
+     * gpu设备ID 当device为GPU时生效
+     */
+    private int gpuId = 0;
 
 
 

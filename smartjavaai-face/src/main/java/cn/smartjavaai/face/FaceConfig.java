@@ -20,6 +20,11 @@ public class FaceConfig {
      */
     public static final float NMS_THRESHOLD = 0.45F;
 
+    /**
+     * 默认相似度阈值
+     */
+    public static final float SEETAFACE_DEFAULT_SIMILARITY_THRESHOLD = 0.85F;
+
 
 
 }

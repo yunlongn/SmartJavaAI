@@ -6,7 +6,7 @@
     <parent>
         <groupId>ink.numberone</groupId>
         <artifactId>smartjavaai-parent</artifactId>
-        <version>1.0.8</version>
+        <version>1.0.10</version>
     </parent>
 
     <artifactId>smartjavaai-common</artifactId>

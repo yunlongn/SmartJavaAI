@@ -6,13 +6,12 @@
 
     <groupId>ink.numberone</groupId>
     <artifactId>smartjavaai-parent</artifactId>
-    <version>1.0.8</version>
+    <version>1.0.10</version>
     <packaging>pom</packaging>
     <description>SmartJavaAI</description>
     <modules>
         <module>smartjavaai-face</module>
         <module>smartjavaai-common</module>
-        <module>smartjavaai-seetaface6-lib</module>
         <module>smartjavaai-objectdetection</module>
         <module>smartjavaai-all</module>
     </modules>
@@ -37,13 +36,13 @@
             <dependency>
                 <groupId>ink.numberone</groupId>
                 <artifactId>smartjavaai-common</artifactId>
-                <version>1.0.8</version>
+                <version>1.0.10</version>
             </dependency>
 
             <dependency>
                 <groupId>ink.numberone</groupId>
                 <artifactId>smartjavaai-face</artifactId>
-                <version>1.0.8</version>
+                <version>1.0.10</version>
             </dependency>
         </dependencies>
 
@@ -183,6 +182,18 @@
             <groupId>ai.djl.tensorrt</groupId>
             <artifactId>tensorrt</artifactId>
             <scope>runtime</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>cn.hutool</groupId>
+            <artifactId>hutool-system</artifactId>
+            <version>5.8.16</version>
+        </dependency>
+
+        <dependency>
+            <groupId>cn.hutool</groupId>
+            <artifactId>hutool-setting</artifactId>
+            <version>5.8.16</version>
         </dependency>
 
 

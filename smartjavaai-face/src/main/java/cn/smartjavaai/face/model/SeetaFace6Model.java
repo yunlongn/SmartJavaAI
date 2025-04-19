@@ -1,6 +1,12 @@
 package cn.smartjavaai.face.model;
 
+import ai.djl.inference.Predictor;
+import ai.djl.modality.cv.Image;
+import ai.djl.modality.cv.output.DetectedObjects;
+import cn.smartjavaai.common.config.Config;
 import cn.smartjavaai.common.entity.DetectionResponse;
+import cn.smartjavaai.common.enums.DeviceEnum;
+import cn.smartjavaai.common.pool.PredictorFactory;
 import cn.smartjavaai.common.utils.FileUtils;
 import cn.smartjavaai.common.utils.ImageUtils;
 import cn.smartjavaai.face.AbstractFaceModel;
@@ -10,13 +16,14 @@ import cn.smartjavaai.face.entity.FaceData;
 import cn.smartjavaai.face.entity.FaceResult;
 import cn.smartjavaai.face.exception.FaceException;
 import cn.smartjavaai.face.utils.FaceUtils;
+import com.seeta.pool.*;
+import com.seeta.sdk.*;
 import com.seetaface.NativeLoader;
 import com.seetaface.SeetaFace6JNI;
-import com.seetaface.model.RecognizeResult;
-import com.seetaface.model.SeetaImageData;
-import com.seetaface.model.SeetaRect;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.pool2.ObjectPool;
+import org.apache.commons.pool2.impl.GenericObjectPool;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
@@ -38,40 +45,76 @@ public class SeetaFace6Model extends AbstractFaceModel {
 
     private FaceModelConfig config;
 
-    private static final Object lock = new Object(); // 全局锁
+    private FaceDetectorPool faceDetectorPool;
+    private FaceRecognizerPool faceRecognizerPool;
+    private FaceLandmarkerPool faceLandmarkerPool;
+
+    private FaceDatabasePool faceDatabasePool;
+
+    /**
+     * 默认相似度阈值
+     */
+    public static final float SEETAFACE_DEFAULT_SIMILARITY_THRESHOLD = 0.62F;
 
 
     @Override
     public void loadModel(FaceModelConfig config) {
         this.config = config;
-        if (NativeLoader.seetaFace6SDK == null) {
-            synchronized (lock) {
-                if(StringUtils.isBlank(config.getModelPath())){
-                    throw new FaceException("modelPath is null");
-                }
-                //加载依赖库
-                NativeLoader.loadNativeLibraries(config.getModelPath());
-                log.info("Loading seetaFace6 library successfully.");
-                NativeLoader.seetaFace6SDK = new SeetaFace6JNI();
-                //加载模型
-                boolean isSuccess = NativeLoader.seetaFace6SDK.initModel(config.getModelPath());
-                if(!isSuccess){
-                    throw new FaceException("seetaFace6模型初始化失败," + config.getModelPath());
-                }
-                log.info("Load seetaFace6 model success!");
-                new Thread(new Runnable() {
-                    public void run() {
-                        try {
-                            log.info("start load faceDb...");
-                            loadFaceDb();
-                            log.info("Load faceDb success!");
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
-                    }
-                }).start();
+        if(StringUtils.isBlank(config.getModelPath())){
+            throw new FaceException("modelPath is null");
+        }
+        //设置默认相似度阈值
+        if(config.getSimilarityThreshold() <= 0){
+            config.setSimilarityThreshold(SEETAFACE_DEFAULT_SIMILARITY_THRESHOLD);
+        }
+        //加载依赖库
+        NativeLoader.loadNativeLibraries(config);
+        log.info("Loading seetaFace6 library successfully.");
+        String[] faceDetectorModelPath = {config.getModelPath() + File.separator + "face_detector.csta"};
+        String[] faceRecognizerModelPath = {config.getModelPath() + File.separator + "face_recognizer.csta"};
+        String[] faceLandmarkerModelPath = {config.getModelPath() + File.separator + "face_landmarker_pts5.csta"};
+        SeetaDevice device = SeetaDevice.SEETA_DEVICE_AUTO;
+        int gpuId = 0;
+        if(Objects.nonNull(config.getDevice())){
+            device = config.getDevice() == DeviceEnum.CPU ? SeetaDevice.SEETA_DEVICE_CPU : SeetaDevice.SEETA_DEVICE_GPU;
+            if(config.getGpuId() >= 0 && device == SeetaDevice.SEETA_DEVICE_GPU){
+                gpuId = config.getGpuId();
             }
         }
+        try {
+            SeetaModelSetting faceDetectorPoolSetting = new SeetaModelSetting(gpuId, faceDetectorModelPath, device);
+            SeetaConfSetting faceDetectorPoolConfSetting = new SeetaConfSetting(faceDetectorPoolSetting);
+
+            SeetaModelSetting faceRecognizerPoolSetting = new SeetaModelSetting(gpuId, faceRecognizerModelPath, device);
+            SeetaConfSetting faceRecognizerPoolConfSetting = new SeetaConfSetting(faceRecognizerPoolSetting);
+
+            SeetaModelSetting faceLandmarkerPoolSetting = new SeetaModelSetting(gpuId, faceLandmarkerModelPath, device);
+            SeetaConfSetting faceLandmarkerPoolConfSetting = new SeetaConfSetting(faceLandmarkerPoolSetting);
+
+            SeetaModelSetting faceDatabasePoolSetting = new SeetaModelSetting(gpuId, faceRecognizerModelPath, device);
+            SeetaConfSetting faceDatabasePoolConfSetting = new SeetaConfSetting(faceDatabasePoolSetting);
+
+            this.faceDetectorPool = new FaceDetectorPool(faceDetectorPoolConfSetting);
+            this.faceRecognizerPool = new FaceRecognizerPool(faceRecognizerPoolConfSetting);
+            this.faceLandmarkerPool = new FaceLandmarkerPool(faceLandmarkerPoolConfSetting);
+            this.faceDatabasePool = new FaceDatabasePool(faceDatabasePoolConfSetting);
+
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        log.info("start load faceDb...");
+                        loadFaceDb();
+                        log.info("Load faceDb success!");
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+            }).start();
+        } catch (FileNotFoundException e) {
+            throw new FaceException(e);
+        }
+
     }
 
     @Override
@@ -110,9 +153,21 @@ public class SeetaFace6Model extends AbstractFaceModel {
         }
         SeetaImageData imageData = new SeetaImageData(image.getWidth(), image.getHeight(), 3);
         imageData.data = ImageUtils.getMatrixBGR(image);
-        synchronized (lock) {
-            SeetaRect[] seetaResult = NativeLoader.seetaFace6SDK.detect(imageData);
+        FaceDetector predictor = null;
+        try {
+            predictor = faceDetectorPool.borrowObject();
+            SeetaRect[] seetaResult = predictor.Detect(imageData);
             return FaceUtils.convertToDetectionResponse(seetaResult, config);
+        } catch (Exception e) {
+            throw new FaceException("目标检测错误", e);
+        }finally {
+            if (predictor != null) {
+                try {
+                    faceDetectorPool.returnObject(predictor); //归还
+                } catch (Exception e) {
+                    log.warn("归还Predictor失败", e);
+                }
+            }
         }
     }
 
@@ -170,6 +225,76 @@ public class SeetaFace6Model extends AbstractFaceModel {
         }
     }
 
+    /**
+     * 获取5点坐标,循序依次为，左眼中心、右眼中心、鼻尖、左嘴角和右嘴角
+     * @param imageData
+     * @return
+     */
+    private SeetaPointF[] getMaskPoint(SeetaImageData imageData) {
+        FaceDetector faceDetector = null;
+        FaceLandmarker faceLandmarker = null;
+        try {
+            faceDetector = faceDetectorPool.borrowObject();
+            faceLandmarker = faceLandmarkerPool.borrowObject();
+            //检测人脸
+            SeetaRect[] seetaResult = faceDetector.Detect(imageData);
+            if(Objects.isNull(seetaResult) || seetaResult.length == 0){
+                throw new FaceException("未检测到人脸");
+            }
+            //提取第一个人脸的5点人脸标识
+            SeetaPointF[] pointFS = new SeetaPointF[faceLandmarker.number()];
+            faceLandmarker.mark(imageData, seetaResult[0], pointFS);
+            return pointFS;
+        } catch (FaceException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new FaceException("目标检测错误", e);
+        }finally {
+            if (faceDetector != null) {
+                try {
+                    faceDetectorPool.returnObject(faceDetector); //归还
+                } catch (Exception e) {
+                    log.warn("归还Predictor失败", e);
+                }
+            }
+            if (faceLandmarker != null) {
+                try {
+                    faceLandmarkerPool.returnObject(faceLandmarker); //归还
+                } catch (Exception e) {
+                    log.warn("归还Predictor失败", e);
+                }
+            }
+        }
+    }
+
+    /**
+     * 裁剪人脸
+     * @param imageData
+     * @return
+     */
+    private SeetaImageData getMaxCropFace(SeetaImageData imageData){
+        FaceRecognizer faceRecognizer = null;
+        try {
+            faceRecognizer = faceRecognizerPool.borrowObject();
+            //提取第一个人脸的5点人脸标识
+            SeetaPointF[] pointFS = getMaskPoint(imageData);
+            //裁剪人脸
+            SeetaImageData cropImageData = new SeetaImageData(faceRecognizer.GetCropFaceWidthV2(), faceRecognizer.GetCropFaceHeightV2(), faceRecognizer.GetCropFaceChannelsV2());
+            faceRecognizer.CropFaceV2(imageData, pointFS, cropImageData);
+            return cropImageData;
+        } catch (Exception e) {
+            throw new FaceException(e);
+        }finally {
+            if (faceRecognizer != null) {
+                try {
+                    faceRecognizerPool.returnObject(faceRecognizer); //归还
+                } catch (Exception e) {
+                    log.warn("归还Predictor失败", e);
+                }
+            }
+        }
+    }
+
     @Override
     public float[] featureExtraction(BufferedImage image) {
         if(!ImageUtils.isImageValid(image)){
@@ -177,10 +302,56 @@ public class SeetaFace6Model extends AbstractFaceModel {
         }
         SeetaImageData imageData = new SeetaImageData(image.getWidth(), image.getHeight(), 3);
         imageData.data = ImageUtils.getMatrixBGR(image);
-        synchronized (lock) {
-            return NativeLoader.seetaFace6SDK.extractMaxFace(imageData);
-        }
+        FaceDetector faceDetector = null;
+        FaceLandmarker faceLandmarker = null;
+        FaceRecognizer faceRecognizer = null;
+        try {
+            faceDetector = faceDetectorPool.borrowObject();
+            faceLandmarker = faceLandmarkerPool.borrowObject();
+            faceRecognizer = faceRecognizerPool.borrowObject();
+            //检测人脸
+            SeetaRect[] seetaResult = faceDetector.Detect(imageData);
+            if(Objects.isNull(seetaResult) || seetaResult.length == 0){
+                throw new FaceException("未检测到人脸");
+            }
+            //提取第一个人脸的5点人脸标识
+            SeetaPointF[] pointFS = new SeetaPointF[faceLandmarker.number()];
+            faceLandmarker.mark(imageData, seetaResult[0], pointFS);
 
+            //提取特征
+            float[] features = new float[faceRecognizer.GetExtractFeatureSize()];
+            boolean isSuccess = faceRecognizer.Extract(imageData, pointFS, features);
+            if(!isSuccess){
+                throw new FaceException("人脸特征提取失败");
+            }
+            return features;
+        } catch (FaceException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new FaceException("目标检测错误", e);
+        }finally {
+            if (faceDetector != null) {
+                try {
+                    faceDetectorPool.returnObject(faceDetector); //归还
+                } catch (Exception e) {
+                    log.warn("归还Predictor失败", e);
+                }
+            }
+            if (faceLandmarker != null) {
+                try {
+                    faceLandmarkerPool.returnObject(faceLandmarker); //归还
+                } catch (Exception e) {
+                    log.warn("归还Predictor失败", e);
+                }
+            }
+            if (faceRecognizer != null) {
+                try {
+                    faceRecognizerPool.returnObject(faceRecognizer); //归还
+                } catch (Exception e) {
+                    log.warn("归还Predictor失败", e);
+                }
+            }
+        }
     }
 
     @Override
@@ -228,8 +399,20 @@ public class SeetaFace6Model extends AbstractFaceModel {
         if(Objects.isNull(feature1) || Objects.isNull(feature2)){
             throw new FaceException("特征向量无效");
         }
-        synchronized (lock) {
-            return NativeLoader.seetaFace6SDK.calculateSimilarity(feature1, feature2);
+        FaceRecognizer faceRecognizer = null;
+        try {
+            faceRecognizer = faceRecognizerPool.borrowObject();
+            return faceRecognizer.CalculateSimilarity(feature1, feature2);
+        } catch (Exception e) {
+            throw new FaceException(e);
+        }finally {
+            if (faceRecognizer != null) {
+                try {
+                    faceRecognizerPool.returnObject(faceRecognizer); //归还
+                } catch (Exception e) {
+                    log.warn("归还Predictor失败", e);
+                }
+            }
         }
     }
 
@@ -276,26 +459,84 @@ public class SeetaFace6Model extends AbstractFaceModel {
 
         SeetaImageData imageData2 = new SeetaImageData(image2.getWidth(), image2.getHeight(), 3);
         imageData2.data = ImageUtils.getMatrixBGR(image2);
-        synchronized (lock) {
-            //裁剪
-            byte[][] cropImg1 = NativeLoader.seetaFace6SDK.crop(imageData1);
-            byte[][] cropImg2 = NativeLoader.seetaFace6SDK.crop(imageData2);
-            if(cropImg1 == null || cropImg1.length == 0){
-                throw new FaceException("未发现人脸");
-            }
-            if(cropImg2 == null || cropImg2.length == 0){
-                throw new FaceException("未发现人脸");
-            }
-            BufferedImage cropImage1 = ImageUtils.bgrToBufferedImage(cropImg1[0], 256, 256);
-            BufferedImage cropImage2 = ImageUtils.bgrToBufferedImage(cropImg2[0], 256, 256);
 
-            SeetaImageData cropImageData1 = new SeetaImageData(cropImage1.getWidth(), cropImage1.getHeight(), 3);
-            cropImageData1.data = ImageUtils.getMatrixBGR(cropImage1);
-            SeetaImageData cropImageData2 = new SeetaImageData(cropImage2.getWidth(), cropImage2.getHeight(), 3);
-            cropImageData2.data = ImageUtils.getMatrixBGR(cropImage2);
-            return NativeLoader.seetaFace6SDK.compare(cropImageData1, cropImageData2);
+
+        FaceRecognizer faceRecognizer = null;
+        FaceDatabase faceDatabase = null;
+        FaceLandmarker faceLandmarker = null;
+        FaceDetector faceDetector = null;
+        try {
+            faceRecognizer = faceRecognizerPool.borrowObject();
+            faceDatabase = faceDatabasePool.borrowObject();
+            faceLandmarker = faceLandmarkerPool.borrowObject();
+            faceDetector = faceDetectorPool.borrowObject();
+
+            //检测人脸
+            SeetaRect[] seetaResult = faceDetector.Detect(imageData1);
+            if(Objects.isNull(seetaResult) || seetaResult.length == 0){
+                throw new FaceException("未检测到人脸");
+            }
+            //提取第一个人脸的5点人脸标识
+            SeetaPointF[] pointFS1 = new SeetaPointF[faceLandmarker.number()];
+            faceLandmarker.mark(imageData1, seetaResult[0], pointFS1);
+
+            //裁剪人脸
+            SeetaImageData cropImageData1 = new SeetaImageData(faceRecognizer.GetCropFaceWidthV2(), faceRecognizer.GetCropFaceHeightV2(), faceRecognizer.GetCropFaceChannelsV2());
+            faceRecognizer.CropFaceV2(imageData1, pointFS1, cropImageData1);
+
+            //图片2：检测人脸
+            SeetaRect[] seetaResult2 = faceDetector.Detect(imageData2);
+            if(Objects.isNull(seetaResult2) || seetaResult2.length == 0){
+                throw new FaceException("未检测到人脸");
+            }
+            //图片2：提取第一个人脸的5点人脸标识
+            SeetaPointF[] pointFS2 = new SeetaPointF[faceLandmarker.number()];
+            faceLandmarker.mark(imageData2, seetaResult2[0], pointFS2);
+
+            //图片2：裁剪人脸
+            SeetaImageData cropImageData2 = new SeetaImageData(faceRecognizer.GetCropFaceWidthV2(), faceRecognizer.GetCropFaceHeightV2(), faceRecognizer.GetCropFaceChannelsV2());
+            faceRecognizer.CropFaceV2(imageData2, pointFS2, cropImageData2);
+
+            return faceDatabase.CompareByCroppedFace(cropImageData1, cropImageData2);
+        } catch (FaceException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new FaceException(e);
+        }finally {
+            if (faceDetector != null) {
+                try {
+                    faceDetectorPool.returnObject(faceDetector); //归还
+                } catch (Exception e) {
+                    log.warn("归还Predictor失败", e);
+                }
+            }
+            if (faceLandmarker != null) {
+                try {
+                    faceLandmarkerPool.returnObject(faceLandmarker); //归还
+                } catch (Exception e) {
+                    log.warn("归还Predictor失败", e);
+                }
+            }
+            if (faceRecognizer != null) {
+                try {
+                    faceRecognizerPool.returnObject(faceRecognizer); //归还
+                } catch (Exception e) {
+                    log.warn("归还Predictor失败", e);
+                }
+            }
+            if (faceDatabase != null) {
+                try {
+                    faceDatabasePool.returnObject(faceDatabase); //归还
+                } catch (Exception e) {
+                    log.warn("归还Predictor失败", e);
+                }
+            }
         }
+
     }
+
+
+
 
     @Override
     public float featureComparison(byte[] imageData1, byte[] imageData2) {
@@ -338,13 +579,11 @@ public class SeetaFace6Model extends AbstractFaceModel {
         }
         SeetaImageData imageData = new SeetaImageData(image.getWidth(), image.getHeight(), 3);
         imageData.data = ImageUtils.getMatrixBGR(image);
-        synchronized (lock) {
-            byte[][] bytes = NativeLoader.seetaFace6SDK.crop(imageData);
-            if (bytes == null || bytes.length == 0) {
-                log.info("register face fail: key={}, error=no valid face", key);
-                return false;
-            }
-            long index = NativeLoader.seetaFace6SDK.registerCroppedFace(bytes[0]);
+        FaceDatabase faceDatabase = null;
+        try {
+            faceDatabase = faceDatabasePool.borrowObject();
+            SeetaImageData cropImageData = getMaxCropFace(imageData);
+            long index = faceDatabase.RegisterByCroppedFace(cropImageData);
             if (index < 0) {
                 log.info("register face fail: key={}, index={}", key, index);
                 return false;
@@ -353,13 +592,25 @@ public class SeetaFace6Model extends AbstractFaceModel {
             FaceData face = new FaceData();
             face.setKey(key);
             face.setIndex(index);
-            face.setImgData(bytes[0]);
+            face.setImgData(cropImageData.data);
             try {
                 new FaceDao(config.getFaceDbPath()).save(face);
             } catch (SQLException | ClassNotFoundException e) {
                 throw new FaceException("保存人脸库失败", e);
             }
             return true;
+        } catch (FaceException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new FaceException(e);
+        }finally {
+            if (faceDatabase != null) {
+                try {
+                    faceDatabasePool.returnObject(faceDatabase); //归还
+                } catch (Exception e) {
+                    log.warn("归还Predictor失败", e);
+                }
+            }
         }
     }
 
@@ -400,9 +651,13 @@ public class SeetaFace6Model extends AbstractFaceModel {
      * @param faceData
      * @return
      */
-    private boolean register(String key, FaceData faceData) {
-        synchronized (lock) {
-            long index = NativeLoader.seetaFace6SDK.registerCroppedFace(faceData.getImgData());
+    private boolean registerCroppedFace(String key, FaceData faceData) {
+        FaceDatabase faceDatabase = null;
+        try {
+            faceDatabase = faceDatabasePool.borrowObject();
+            SeetaImageData cropImageData = new SeetaImageData(faceData.getWidth(), faceData.getHeight(), faceData.getChannel());
+            cropImageData.data = faceData.getImgData();
+            long index = faceDatabase.RegisterByCroppedFace(cropImageData);
             if (index < 0) {
                 log.info("register face fail: key={}, index={}", key, index);
                 return false;
@@ -414,6 +669,18 @@ public class SeetaFace6Model extends AbstractFaceModel {
                 throw new FaceException(e);
             }
             return rows > 0;
+        } catch (FaceException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new FaceException(e);
+        }finally {
+            if (faceDatabase != null) {
+                try {
+                    faceDatabasePool.returnObject(faceDatabase); //归还
+                } catch (Exception e) {
+                    log.warn("归还Predictor失败", e);
+                }
+            }
         }
     }
 
@@ -457,9 +724,33 @@ public class SeetaFace6Model extends AbstractFaceModel {
         }
         SeetaImageData imageData = new SeetaImageData(image.getWidth(), image.getHeight(), 3);
         imageData.data = ImageUtils.getMatrixBGR(image);
-        synchronized (lock) {
-            RecognizeResult recognizeResult = NativeLoader.seetaFace6SDK.query(imageData);
-            return searchFaceDb(recognizeResult);
+        FaceDatabase faceDatabase = null;
+        try {
+            faceDatabase = faceDatabasePool.borrowObject();
+            SeetaPointF[] points = getMaskPoint(imageData);
+            long[] index = new long[1];
+            float[] similarity = new float[1];
+            long result = faceDatabase.QueryTop(imageData, points, 1, index, similarity);
+            if(result < 1){
+                return null;
+            }
+            //检查相似度
+            if(similarity[0] < config.getSimilarityThreshold()){
+                return null;
+            }
+            return searchFaceDb(index[0], similarity[0]);
+        } catch (FaceException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new FaceException(e);
+        }finally {
+            if (faceDatabase != null) {
+                try {
+                    faceDatabasePool.returnObject(faceDatabase); //归还
+                } catch (Exception e) {
+                    log.warn("归还Predictor失败", e);
+                }
+            }
         }
     }
 
@@ -485,21 +776,32 @@ public class SeetaFace6Model extends AbstractFaceModel {
         if(!checkFaceDb()){
             throw new FaceException("未找到人脸库，无法使用此功能（请检查是否配置人脸库路径）");
         }
-        synchronized (lock) {
-            try {
-                List<Long> list = new FaceDao(config.getFaceDbPath()).findIndexList(keys);
-                if (list == null) {
-                    return 0;
+
+        FaceDatabase faceDatabase = null;
+        try {
+            List<Long> list = new FaceDao(config.getFaceDbPath()).findIndexList(keys);
+            if (list == null) {
+                return 0;
+            }
+            faceDatabase = faceDatabasePool.borrowObject();
+            int rows = 0;
+            for (long index : list) {
+                int row = faceDatabase.Delete(index);
+                rows += row;
+            }
+            new FaceDao(config.getFaceDbPath()).deleteFace(keys);
+            return rows;
+        } catch (Exception e) {
+            throw new FaceException(e);
+        }finally {
+            if (faceDatabase != null) {
+                try {
+                    faceDatabasePool.returnObject(faceDatabase); //归还
+                } catch (Exception e) {
+                    log.warn("归还Predictor失败", e);
                 }
-                long[] array = list.stream().mapToLong(Long::longValue).toArray();
-                long rows = NativeLoader.seetaFace6SDK.delete(array);
-                new FaceDao(config.getFaceDbPath()).deleteFace(keys);
-                return rows;
-            } catch (SQLException | ClassNotFoundException e) {
-                throw new FaceException(e);
             }
         }
-
     }
 
     @Override
@@ -507,16 +809,31 @@ public class SeetaFace6Model extends AbstractFaceModel {
         if(!checkFaceDb()){
             throw new FaceException("未找到人脸库，无法使用此功能（请检查是否配置人脸库路径）");
         }
-        synchronized (lock) {
-            long rows = NativeLoader.seetaFace6SDK.delete(new long[]{-1});
+
+        FaceDatabase faceDatabase = null;
+        try {
+            faceDatabase = faceDatabasePool.borrowObject();
+            faceDatabase.Clear();
+            long rows = 0;
             try {
-                new FaceDao(config.getFaceDbPath()).deleteAll();
+                rows = new FaceDao(config.getFaceDbPath()).deleteAll();
             } catch (SQLException | ClassNotFoundException e) {
                 throw new FaceException("删除人脸库失败", e);
             }
             return rows;
+        } catch (FaceException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new FaceException(e);
+        }finally {
+            if (faceDatabase != null) {
+                try {
+                    faceDatabasePool.returnObject(faceDatabase); //归还
+                } catch (Exception e) {
+                    log.warn("归还Predictor失败", e);
+                }
+            }
         }
-
     }
 
     /**
@@ -531,17 +848,15 @@ public class SeetaFace6Model extends AbstractFaceModel {
         return false;
     }
 
-    private FaceResult searchFaceDb(RecognizeResult recognizeResult) {
-        if(recognizeResult != null && recognizeResult.index >= 0){
+    private FaceResult searchFaceDb(long index,float similar) {
+        if(index >= 0){
             String key = null;
-            synchronized (lock) {
-                try {
-                    key = new FaceDao(config.getFaceDbPath()).findKeyByIndex(recognizeResult.index);
-                } catch (SQLException | ClassNotFoundException e) {
-                    throw new FaceException("查询人脸库失败", e);
-                }
-                return new FaceResult(key, recognizeResult.similar);
+            try {
+                key = new FaceDao(config.getFaceDbPath()).findKeyByIndex(index);
+            } catch (SQLException | ClassNotFoundException e) {
+                throw new FaceException("查询人脸库失败", e);
             }
+            return new FaceResult(key, similar);
         }
         return null;
     }
@@ -571,7 +886,7 @@ public class SeetaFace6Model extends AbstractFaceModel {
             }
             list.forEach(face -> {
                 try {
-                    register(face.getKey(), face);
+                    registerCroppedFace(face.getKey(), face);
                 } catch (Exception e) {
                     e.printStackTrace();
                 }

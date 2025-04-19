@@ -9,7 +9,7 @@ import cn.smartjavaai.common.entity.DetectionRectangle;
 import cn.smartjavaai.common.utils.ImageUtils;
 import cn.smartjavaai.face.FaceModelConfig;
 import cn.smartjavaai.face.exception.FaceException;
-import com.seetaface.model.SeetaRect;
+import com.seeta.sdk.SeetaRect;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
@@ -74,10 +74,10 @@ public class FaceUtils {
         List<DetectionRectangle> rectangleList = new ArrayList<DetectionRectangle>();
         for(SeetaRect rect : seetaResult){
             //过滤置信度
-            if(config.getConfidenceThreshold() > 0 && rect.score < config.getConfidenceThreshold()){
+            /*if(config.getConfidenceThreshold() > 0){
                 continue;
-            }
-            DetectionRectangle rectangle = new DetectionRectangle(rect.x, rect.y, rect.width, rect.height, rect.score);
+            }*/
+            DetectionRectangle rectangle = new DetectionRectangle(rect.x, rect.y, rect.width, rect.height, 0);
             rectangleList.add(rectangle);
         }
         detectionResponse.setRectangleList(rectangleList);

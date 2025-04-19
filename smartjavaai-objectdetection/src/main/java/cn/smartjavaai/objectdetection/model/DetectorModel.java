@@ -99,7 +99,7 @@ public class DetectorModel implements AutoCloseable{
     /**
      * 目标检测-将检测结果绘制到原图
      * @param imagePath
-     * @return
+     * @param outputPath
      */
     public void detectAndDraw(String imagePath, String outputPath){
         if(!FileUtils.isFileExists(imagePath)){

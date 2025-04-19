@@ -1,5 +1,6 @@
 package cn.smartjavaai.face;
 
+import cn.smartjavaai.common.config.Config;
 import cn.smartjavaai.face.exception.FaceException;
 import cn.smartjavaai.face.model.FeatureExtractionModel;
 import cn.smartjavaai.face.model.RetinaFaceModel;
@@ -122,6 +123,7 @@ public class FaceModelFactory {
         //人脸特征提取
         registerAlgorithm("featureextractionmodel", FeatureExtractionModel.class);
         registerAlgorithm("seetaface6model", SeetaFace6Model.class);
+        log.info("缓存目录：{}", Config.getCachePath());
     }
 
 }

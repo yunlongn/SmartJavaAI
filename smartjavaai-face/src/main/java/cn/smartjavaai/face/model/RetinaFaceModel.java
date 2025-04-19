@@ -220,7 +220,6 @@ public class RetinaFaceModel extends AbstractFaceModel implements AutoCloseable{
             if (predictor != null) {
                 try {
                     predictorPool.returnObject(predictor); //归还
-                    log.info("释放资源");
                 } catch (Exception e) {
                     log.warn("归还Predictor失败", e);
                     try {

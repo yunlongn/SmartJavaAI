@@ -111,7 +111,6 @@
 | smartjavaai-common          |     基础通用模块，封装了公共功能，供各算法模块共享使用           |
 | smartjavaai-face            |     人脸功能模块                                        |
 | smartjavaai-objectdetection |     目标检测模块                                                               |
-| smartjavaai-seetaface6-lib  |     seetaface6人脸算法JNI接口封装              |
 
 可以根据需求对每个模块单独引入，也可以通过引入`smartjavaai-all`方式引入所有模块。
 
@@ -134,7 +133,7 @@
 <dependency>
     <groupId>ink.numberone</groupId>
     <artifactId>smartjavaai-all</artifactId>
-    <version>1.0.8</version>
+    <version>1.0.10</version>
 </dependency>
 ```
 ### 3、完整示例代码
@@ -167,6 +166,10 @@
 ## 更新日志
 
 
+## [v1.0.10] - 2025-04-19
+-  兼容 SeetaFace6 在 Linux 系统下的运行
+-  新增全局缓存路径设置功能
+-  优化若干功能细节，提升稳定性与性能
 ## [v1.0.8] - 2025-04-13
 -  新增目标检测功能
 -  模型调用接口统一封装

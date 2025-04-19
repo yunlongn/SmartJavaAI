@@ -1,5 +1,6 @@
 package cn.smartjavaai.objectdetection.model;
 
+import cn.smartjavaai.common.config.Config;
 import cn.smartjavaai.objectdetection.DetectorModelConfig;
 import cn.smartjavaai.objectdetection.DetectorModelEnum;
 import cn.smartjavaai.objectdetection.exception.DetectionException;
@@ -20,6 +21,10 @@ public class ObjectDetectionModelFactory {
     private static volatile ObjectDetectionModelFactory instance;
 
     private static final ConcurrentHashMap<String, DetectorModel> modelMap = new ConcurrentHashMap<>();
+
+    static{
+        log.info("缓存目录：{}", Config.getCachePath());
+    }
 
     // 私有构造函数，防止外部创建实例
     private ObjectDetectionModelFactory() {}

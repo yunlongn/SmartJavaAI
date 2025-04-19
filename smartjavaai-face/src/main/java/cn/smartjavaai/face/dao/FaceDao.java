@@ -45,7 +45,7 @@ public class FaceDao {
      * @throws SQLException
      * @throws ClassNotFoundException
      */
-    public String findKeyByIndex(int index) throws SQLException, ClassNotFoundException {
+    public String findKeyByIndex(long index) throws SQLException, ClassNotFoundException {
         SqliteHelper sqliteHelper = new SqliteHelper(dbFilePath);
         return sqliteHelper.executeQuery("select \"key\" from " + TABLE_NAME_IMG + " where \"index\"=" + index);
     }
