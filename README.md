@@ -35,21 +35,75 @@
 
 `SmartJavaAI`是专为Java 开发者打造的一个功能丰富、开箱即用的 Java 算法工具包，致力于帮助Java开发者高效集成各类智能算法。SmartJavaAI通过对多种主流算法的统一封装，开发者无需深入了解底层实现，即可轻松在 Java 代码中调用人脸识别、目标检测、OCR 等功能。目前已支持部分人脸识别与目标检测算法，底层实现涵盖了 C++、Python 等语言的深度学习模型。后续将持续扩展更多算法，最终将构建一个面向 Java 开发者的通用智能工具库。
 
-## 🚀  演示图
+## 🚀  能力展示
 
-<p align="center">
-  <div style="display: inline-block; text-align: center; ">
-    <a href="https://gitee.com/dengwenjie/SmartJavaAI"><img src="https://cdn.jsdelivr.net/gh/geekwenjie/SmartJavaAI-Site/images/face.jpg" width="70%"></a><br/>
-    <span style="display:block; margin-top:8px;">人脸检测</span>
-  </div>
-</p>
-
-<p align="center">
-  <div style="display: inline-block; text-align: center; ">
-    <a href="https://gitee.com/dengwenjie/SmartJavaAI"><img src="https://cdn.jsdelivr.net/gh/geekwenjie/SmartJavaAI-Site/images/object_detection_detected.png" width="70%"></a><br/>
-    <span style="display:block; margin-top:8px;">目标检测</span>
-  </div>
-</p>
+<div align="center">
+  <table>      
+    <tr>
+      <td>
+        <div align="left">
+          <p>人脸检测</p>    
+        </div>
+      </td>     
+      <td>
+        <div align="center">
+        <img src="https://cdn.jsdelivr.net/gh/geekwenjie/SmartJavaAI-Site/images/face.jpg" width = "500px"/>
+        </div>
+      </td>
+    </tr>          
+    <tr>
+      <td>
+        <div align="left">
+          <p>人脸比对1：1</p>
+        </div>
+      </td>     
+      <td>
+        <div align="center">
+        <img src="https://cdn.jsdelivr.net/gh/geekwenjie/SmartJavaAI-Site/images/face1-1.jpg" width = "500px"/>
+        </div>
+      </td>
+    </tr>  
+    <tr>
+      <td>
+        <div align="left">
+          <p>人证核验</p>
+        </div>
+      </td>     
+      <td>
+        <div align="center">
+        <img src="https://cdn.jsdelivr.net/gh/geekwenjie/SmartJavaAI-Site/images/idcard.png" width = "500px"/>
+        </div>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <div align="left">
+          <p>人脸比对1：N</p>    
+          - 人脸注册 <br>
+          - 人脸库查询<br>
+          - 人脸库删除<br>
+        </div>
+      </td>     
+      <td>
+        <div align="center">
+        <img src="https://cdn.jsdelivr.net/gh/geekwenjie/SmartJavaAI-Site/images/face1-n.png" width = "500px"/>
+        </div>
+      </td>
+    </tr>         
+   <tr>
+      <td>
+        <div align="left">
+          <p>目标检测</p>
+        </div>
+      </td>     
+      <td>
+        <div align="center">
+        <img src="https://cdn.jsdelivr.net/gh/geekwenjie/SmartJavaAI-Site/images/object_detection_detected.png" width = "500px"/>
+        </div>
+      </td>
+    </tr>      
+  </table>
+</div>
 
 
 ## 🚀  核心亮点
@@ -71,6 +125,22 @@
 ✅ **跨平台兼容** - 支持Windows/Linux/macOS系统（x86 & ARM架构）  
 
 
+## 📌 支持功能
+
+### ✅ 已实现功能
+
+- **人脸检测**  
+  人脸检测、人脸识别、人脸比对1:1、人脸比对1:N、人脸库注册、人脸库、人脸库删除
+- **目标检测**
+  支持通用目标检测，能够识别图像中的多种物体类别，返回物体位置与类别信息
+
+### ⌛ 规划中功能
+
+- **OCR文字识别**  
+  即将支持身份证/银行卡/车牌等关键信息提取
+- **图像分割**
+- **语音识别**  
+  基于Transformer的语音转文本引擎，支持中文/英文多语种识别
 
 ## 🌟 AI集成方式对比
 
@@ -82,25 +152,6 @@
 | &zwnj;**Python混合调用**&zwnj;  | 跨语言调用方案                                                          | ✅ 可集成PyTorch/TF等框架<br>✅ 支持自定义算法<br>✅ 识别精度高  | ❌ 需维护双语言环境<br>❌ 进程通信性能损耗(30%+)<br>❌ 异常处理复杂度翻倍 |
 | &zwnj;**DJL框架**&zwnj;         | 深度学习框架                                                            | ✅ 纯Java实现<br>✅ 支持主流深度学习框架<br>✅ 可加载预训练模型(99%+)    | ❌ 需掌握DL知识<br>❌ 需处理模型加载、预处理、后处理等复杂技术细节       |
 | &zwnj;**SmartJavaAI**&zwnj;         | java深度学习工具包                                                            | ✅ 支持主流深度学习框架<br>✅ 提供丰富、开箱即用API<br>  ✅ 上手简单，单一Jar包集成 |   ❌要求JDK版本11及以上  |
-
-
-
-## 📌 支持功能
-
-### ✅ 已实现功能
-
-- **人脸检测**  
-  人脸检测、人脸识别、人脸比对1:1、人脸比对1:N、人脸库注册、人脸库、人脸库删除
-- **目标检测**
-    支持通用目标检测，能够识别图像中的多种物体类别，返回物体位置与类别信息
-
-### ⌛ 规划中功能
-
-- **OCR文字识别**  
-  即将支持身份证/银行卡/车牌等关键信息提取
-- **图像分割**  
-- **语音识别**  
-  基于Transformer的语音转文本引擎，支持中文/英文多语种识别
 
 
 
