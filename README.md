@@ -17,12 +17,6 @@
 	<a target="_blank" href='https://gitee.com/dengwenjie/SmartJavaAI/stargazers'>
 		<img src='https://gitee.com/dengwenjie/SmartJavaAI/badge/star.svg?theme=gvp' alt='star'/>
 	</a>
-	<a target="_blank" href='https://github.com/geekwenjie/SmartJavaAI'>
-		<img src="https://img.shields.io/github/stars/geekwenjie/SmartJavaAI.svg?style=social" alt="github star"/>
-	</a>
-    <a target="_blank" href='https://gitcode.com/geekwenjie/SmartJavaAI'>
-		<img src="https://gitcode.com/geekwenjie/SmartJavaAI/star/badge.svg" alt="gitcode star"/>
-	</a>
 </p>
 
 -------------------------------------------------------------------------------
@@ -208,6 +202,12 @@
 
 - **微信**: deng775747758 （请备注：SmartJavaAI）
 - **Email**: 775747758@qq.com
+
+#### 加微信群
+
+<p align="left">
+	<a href="https://gitee.com/dengwenjie/SmartJavaAI"><img src="https://cdn.jsdelivr.net/gh/geekwenjie/SmartJavaAI-Site/images/wechat_group.jpg" width="45%"></a>
+</p>
 
 🚀 **如果这个项目对你有帮助，别忘了点个 Star ⭐！你的支持是我持续优化升级的动力！** ❤️
 
