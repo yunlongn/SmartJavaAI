@@ -5,31 +5,41 @@ import ai.djl.MalformedModelException;
 import ai.djl.inference.Predictor;
 import ai.djl.modality.cv.Image;
 import ai.djl.modality.cv.ImageFactory;
+import ai.djl.ndarray.NDArray;
+import ai.djl.ndarray.NDManager;
+import ai.djl.opencv.OpenCVImageFactory;
 import ai.djl.repository.zoo.Criteria;
 import ai.djl.repository.zoo.ModelNotFoundException;
 import ai.djl.repository.zoo.ZooModel;
 import ai.djl.training.util.ProgressBar;
+import cn.smartjavaai.common.entity.DetectionRectangle;
+import cn.smartjavaai.common.entity.DetectionResponse;
 import cn.smartjavaai.common.enums.DeviceEnum;
 import cn.smartjavaai.common.pool.PredictorFactory;
 import cn.smartjavaai.common.utils.FileUtils;
 import cn.smartjavaai.common.utils.ImageUtils;
-import cn.smartjavaai.face.AbstractFaceModel;
-import cn.smartjavaai.face.FaceModelConfig;
+import cn.smartjavaai.face.*;
 import cn.smartjavaai.face.exception.FaceException;
 import cn.smartjavaai.face.translator.FaceFeatureTranslator;
+import cn.smartjavaai.face.utils.FaceAlignUtils;
+import cn.smartjavaai.face.utils.FaceUtils;
+import cn.smartjavaai.face.utils.OpenCVUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.pool2.ObjectPool;
 import org.apache.commons.pool2.impl.GenericObjectPool;
 import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
+import org.opencv.core.Mat;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Paths;
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
@@ -118,65 +128,6 @@ public class FeatureExtractionModel extends AbstractFaceModel implements AutoClo
 
 
     /**
-     * 特征提取
-     * @param imagePath 图片路径
-     * @return
-     */
-    @Override
-    public float[] featureExtraction(String imagePath) {
-        if(!FileUtils.isFileExists(imagePath)){
-            throw new FaceException("图像文件不存在");
-        }
-        Image img = null;
-        try {
-            img = ImageFactory.getInstance().fromFile(Paths.get(imagePath));
-        } catch (IOException e) {
-            throw new FaceException("无效图片", e);
-        }
-        return featureExtraction(img);
-    }
-
-    /**
-     * 特征提取
-     * @param inputStream 输入流
-     * @return
-     */
-    @Override
-    public float[] featureExtraction(InputStream inputStream) {
-        if(Objects.isNull(inputStream)){
-            throw new FaceException("图像输入流无效");
-        }
-        Image img = null;
-        try {
-            img = ImageFactory.getInstance().fromInputStream(inputStream);
-        } catch (IOException e) {
-            throw new FaceException("无效图片输入流", e);
-        }
-        return featureExtraction(img);
-    }
-
-    @Override
-    public float[] featureExtraction(BufferedImage sourceImage) {
-        if(!ImageUtils.isImageValid(sourceImage)){
-            throw new FaceException("图像无效");
-        }
-        Image img = ImageFactory.getInstance().fromImage(sourceImage);
-        return featureExtraction(img);
-    }
-
-    @Override
-    public float[] featureExtraction(byte[] imageData) {
-        if(Objects.isNull(imageData)){
-            throw new FaceException("图像无效");
-        }
-        try {
-            return featureExtraction(ImageIO.read(new ByteArrayInputStream(imageData)));
-        } catch (IOException e) {
-            throw new FaceException("无效图片字节流", e);
-        }
-    }
-
-    /**
      * 计算相似度
      * @param feature1 图1特征
      * @param feature2 图2特征
@@ -207,34 +158,19 @@ public class FeatureExtractionModel extends AbstractFaceModel implements AutoClo
         if(!FileUtils.isFileExists(imagePath1) || !FileUtils.isFileExists(imagePath2)){
             throw new FaceException("图像文件不存在");
         }
-        float[] feature1 = featureExtraction(imagePath1);
-        float[] feature2 = featureExtraction(imagePath2);
+        float[] feature1 = extractTopFaceFeature(imagePath1);
+        float[] feature2 = extractTopFaceFeature(imagePath2);
         return calculSimilar(feature1, feature2);
     }
 
-    /**
-     * 特征比较
-     * @param inputStream1 图1输入流
-     * @param inputStream2 图2输入流
-     * @return
-     */
-    @Override
-    public float featureComparison(InputStream inputStream1, InputStream inputStream2) {
-        if(Objects.isNull(inputStream1) || Objects.isNull(inputStream2)){
-            throw new FaceException("图像输入流无效");
-        }
-        float[] feature1 = featureExtraction(inputStream1);
-        float[] feature2 = featureExtraction(inputStream2);
-        return calculSimilar(feature1, feature2);
-    }
 
     @Override
     public float featureComparison(BufferedImage sourceImage1, BufferedImage sourceImag2) {
         if(!ImageUtils.isImageValid(sourceImage1) || !ImageUtils.isImageValid(sourceImag2)){
             throw new FaceException("图像无效");
         }
-        float[] feature1 = featureExtraction(sourceImage1);
-        float[] feature2 = featureExtraction(sourceImag2);
+        float[] feature1 = extractTopFaceFeature(sourceImage1);
+        float[] feature2 = extractTopFaceFeature(sourceImag2);
         return calculSimilar(feature1, feature2);
     }
 
@@ -243,9 +179,201 @@ public class FeatureExtractionModel extends AbstractFaceModel implements AutoClo
         if(Objects.isNull(imageData1) || Objects.isNull(imageData2)){
             throw new FaceException("图像无效");
         }
-        float[] feature1 = featureExtraction(imageData1);
-        float[] feature2 = featureExtraction(imageData2);
+        float[] feature1 = extractTopFaceFeature(imageData1);
+        float[] feature2 = extractTopFaceFeature(imageData2);
         return calculSimilar(feature1, feature2);
+    }
+
+    /**
+     * 获取默认特征提取配置
+     * @return
+     */
+    private FaceExtractConfig getDefaultConfig() {
+        FaceExtractConfig config = new FaceExtractConfig();
+        FaceModelConfig detectModelConfig = new FaceModelConfig();
+        detectModelConfig.setModelEnum(FaceModelEnum.ULTRA_LIGHT_FAST_GENERIC_FACE);
+        config.setDetectModelConfig(detectModelConfig);
+        return config;
+    }
+
+    @Override
+    public List<float[]> extractFeatures(String imagePath) {
+        return extractFeatures(imagePath, getDefaultConfig());
+    }
+
+    @Override
+    public List<float[]> extractFeatures(byte[] imageData) {
+        return extractFeatures(imageData, getDefaultConfig());
+    }
+
+    @Override
+    public List<float[]> extractFeatures(BufferedImage image) {
+        return extractFeatures(image, getDefaultConfig());
+    }
+
+
+    @Override
+    public List<float[]> extractFeatures(BufferedImage image, FaceExtractConfig config) {
+        if(Objects.isNull(config)){
+            throw new FaceException("config为null");
+        }
+        List<float[]> featureList = new ArrayList<float[]>();
+        if(Objects.isNull(config.getDetectModelConfig())){
+            throw new FaceException("config.detectModelConfig为null");
+        }
+        FaceModel faceModel = FaceModelFactory.getInstance().getModel(config.getDetectModelConfig());
+        DetectionResponse detectedResult = faceModel.detect(image);
+        if(Objects.isNull(detectedResult) || Objects.isNull(detectedResult.getRectangleList()) || detectedResult.getRectangleList().isEmpty()){
+            throw new FaceException("未检测到人脸");
+        }
+        Image djlImage = ImageFactory.getInstance().fromImage(OpenCVUtils.image2Mat(image));
+        NDManager manager = NDManager.newBaseManager();
+        for (DetectionRectangle rectangle : detectedResult.getRectangleList()){
+            float[] features = null;
+            //裁剪人脸
+            Image subImage = djlImage.getSubImage(rectangle.getX(), rectangle.getY() , rectangle.getWidth() , rectangle.getHeight());
+            //人脸对齐
+            if(config.isAlign()){
+                //获取子图中人脸关键点坐标
+                double[][] pointsArray = FaceUtils.facePoints(rectangle.getKeyPoints());
+                NDArray srcPoints = manager.create(pointsArray);
+                NDArray dstPoints = FaceUtils.faceTemplate512x512(manager);
+                // 5点仿射变换
+                Mat affine_matrix = OpenCVUtils.toOpenCVMat(manager, srcPoints, dstPoints);
+                /*Mat sourceMat = OpenCVUtils.image2Mat(image);
+                Mat mat = FaceAlignUtils.warpAffine(sourceMat, affine_matrix);
+                //OpenCVUtils.mat2Image(mat);
+                Image alignedImg = ImageFactory.getInstance().fromImage(mat);
+                features = featureExtraction(alignedImg);*/
+                Mat mat = FaceAlignUtils.warpAffine((Mat) djlImage.getWrappedImage(), affine_matrix);
+                Image alignedImg = OpenCVImageFactory.getInstance().fromImage(mat);
+                features = featureExtraction(alignedImg);
+            }else{
+                //不对齐人脸
+                features = featureExtraction(subImage);
+            }
+            if(Objects.nonNull(features)){
+                featureList.add(features);
+            }
+        }
+        return featureList;
+    }
+
+    @Override
+    public List<float[]> extractFeatures(String imagePath, FaceExtractConfig config) {
+        if(!FileUtils.isFileExists(imagePath)){
+            throw new FaceException("图像文件不存在");
+        }
+        // 将图片路径转换为 BufferedImage
+        BufferedImage image = null;
+        try {
+            image = ImageIO.read(new File(Paths.get(imagePath).toAbsolutePath().toString()));
+        } catch (IOException e) {
+            throw new FaceException("无效图片路径", e);
+        }
+        return extractFeatures(image, config);
+    }
+
+    @Override
+    public List<float[]> extractFeatures(byte[] imageData, FaceExtractConfig config) {
+        if(Objects.isNull(imageData)){
+            throw new FaceException("图像无效");
+        }
+        try {
+            return extractFeatures(ImageIO.read(new ByteArrayInputStream(imageData)), config);
+        } catch (IOException e) {
+            throw new FaceException("错误的图像", e);
+        }
+    }
+
+    @Override
+    public float[] extractTopFaceFeature(BufferedImage image) {
+        return extractTopFaceFeature(image, getDefaultConfig());
+    }
+
+    @Override
+    public float[] extractTopFaceFeature(String imagePath) {
+        return extractTopFaceFeature(imagePath, getDefaultConfig());
+    }
+
+    @Override
+    public float[] extractTopFaceFeature(byte[] imageData) {
+        return extractTopFaceFeature(imageData, getDefaultConfig());
+    }
+
+    @Override
+    public float[] extractTopFaceFeature(BufferedImage image, FaceExtractConfig config) {
+        if(Objects.isNull(config)){
+            throw new FaceException("config为null");
+        }
+        if(Objects.isNull(config.getDetectModelConfig())){
+            throw new FaceException("config.detectModelConfig为null");
+        }
+        Image djlImage = ImageFactory.getInstance().fromImage(OpenCVUtils.image2Mat(image));
+        float[] features = null;
+        if(config.isCropFace()){
+            FaceModel faceModel = FaceModelFactory.getInstance().getModel(config.getDetectModelConfig());
+            DetectionResponse detectedResult = faceModel.detect(image);
+            if(Objects.isNull(detectedResult) || Objects.isNull(detectedResult.getRectangleList()) || detectedResult.getRectangleList().isEmpty()){
+                throw new FaceException("未检测到人脸");
+            }
+            //只取第一个人脸
+            DetectionRectangle rectangle = detectedResult.getRectangleList().get(0);
+            //裁剪人脸
+            Image subImage = djlImage.getSubImage(rectangle.getX(), rectangle.getY() , rectangle.getWidth() , rectangle.getHeight());
+            //人脸对齐
+            if(config.isAlign()){
+                NDManager manager = NDManager.newBaseManager();
+                //获取子图中人脸关键点坐标
+                double[][] pointsArray = FaceUtils.facePoints(rectangle.getKeyPoints());
+                NDArray srcPoints = manager.create(pointsArray);
+                NDArray dstPoints = FaceUtils.faceTemplate512x512(manager);
+                // 5点仿射变换
+                Mat affine_matrix = OpenCVUtils.toOpenCVMat(manager, srcPoints, dstPoints);
+                /*Mat sourceMat = OpenCVUtils.image2Mat(image);
+                Mat mat = FaceAlignUtils.warpAffine(sourceMat, affine_matrix);
+                OpenCVUtils.mat2Image(mat);
+                Image alignedImg = ImageFactory.getInstance().fromImage(OpenCVUtils.mat2Image(mat));
+                features = featureExtraction(alignedImg);*/
+                Mat mat = FaceAlignUtils.warpAffine((Mat) djlImage.getWrappedImage(), affine_matrix);
+                Image alignedImg = OpenCVImageFactory.getInstance().fromImage(mat);
+                features = featureExtraction(alignedImg);
+            }else{
+                //不对齐人脸
+                features = featureExtraction(subImage);
+            }
+        }else{
+            //不裁剪人脸直接提取特征
+            features = featureExtraction(djlImage);
+        }
+        return features;
+    }
+
+    @Override
+    public float[] extractTopFaceFeature(String imagePath, FaceExtractConfig config) {
+        if(!FileUtils.isFileExists(imagePath)){
+            throw new FaceException("图像文件不存在");
+        }
+        // 将图片路径转换为 BufferedImage
+        BufferedImage image = null;
+        try {
+            image = ImageIO.read(new File(Paths.get(imagePath).toAbsolutePath().toString()));
+        } catch (IOException e) {
+            throw new FaceException("无效图片路径", e);
+        }
+        return extractTopFaceFeature(image, config);
+    }
+
+    @Override
+    public float[] extractTopFaceFeature(byte[] imageData, FaceExtractConfig config) {
+        if(Objects.isNull(imageData)){
+            throw new FaceException("图像无效");
+        }
+        try {
+            return extractTopFaceFeature(ImageIO.read(new ByteArrayInputStream(imageData)), config);
+        } catch (IOException e) {
+            throw new FaceException("错误的图像", e);
+        }
     }
 
     @Override
@@ -254,5 +382,7 @@ public class FeatureExtractionModel extends AbstractFaceModel implements AutoClo
             predictorPool.close();
         }
     }
+
+
 
 }

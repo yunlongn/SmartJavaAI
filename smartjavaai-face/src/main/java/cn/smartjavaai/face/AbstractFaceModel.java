@@ -5,6 +5,7 @@ import cn.smartjavaai.face.entity.FaceResult;
 
 import java.awt.image.BufferedImage;
 import java.io.InputStream;
+import java.util.List;
 
 /**
  * 人脸识别算法
@@ -43,16 +44,6 @@ public abstract class AbstractFaceModel implements FaceModel {
 
     @Override
     public BufferedImage detectAndDraw(BufferedImage sourceImage) {
-        throw new UnsupportedOperationException("默认不支持该功能");
-    }
-
-    @Override
-    public float[] featureExtraction(String imagePath) {
-        throw new UnsupportedOperationException("默认不支持该功能");
-    }
-
-    @Override
-    public float[] featureExtraction(InputStream inputStream) {
         throw new UnsupportedOperationException("默认不支持该功能");
     }
 
@@ -111,15 +102,6 @@ public abstract class AbstractFaceModel implements FaceModel {
         throw new UnsupportedOperationException("默认不支持该功能");
     }
 
-    @Override
-    public float[] featureExtraction(BufferedImage sourceImage) {
-        throw new UnsupportedOperationException("默认不支持该功能");
-    }
-
-    @Override
-    public float[] featureExtraction(byte[] imageData) {
-        throw new UnsupportedOperationException("默认不支持该功能");
-    }
 
     @Override
     public float featureComparison(BufferedImage sourceImage1, BufferedImage sourceImag2) {
@@ -138,6 +120,66 @@ public abstract class AbstractFaceModel implements FaceModel {
 
     @Override
     public FaceResult search(byte[] imageData) {
+        throw new UnsupportedOperationException("默认不支持该功能");
+    }
+
+    @Override
+    public List<float[]> extractFeatures(String imagePath) {
+        throw new UnsupportedOperationException("默认不支持该功能");
+    }
+
+    @Override
+    public List<float[]> extractFeatures(byte[] imageData) {
+        throw new UnsupportedOperationException("默认不支持该功能");
+    }
+
+    @Override
+    public List<float[]> extractFeatures(BufferedImage image) {
+        throw new UnsupportedOperationException("默认不支持该功能");
+    }
+
+    @Override
+    public List<float[]> extractFeatures(BufferedImage image, FaceExtractConfig config) {
+        throw new UnsupportedOperationException("默认不支持该功能");
+    }
+
+    @Override
+    public List<float[]> extractFeatures(String imagePath, FaceExtractConfig config) {
+        throw new UnsupportedOperationException("默认不支持该功能");
+    }
+
+    @Override
+    public List<float[]> extractFeatures(byte[] imageData, FaceExtractConfig config) {
+        throw new UnsupportedOperationException("默认不支持该功能");
+    }
+
+    @Override
+    public float[] extractTopFaceFeature(BufferedImage image) {
+        throw new UnsupportedOperationException("默认不支持该功能");
+    }
+
+    @Override
+    public float[] extractTopFaceFeature(String imagePath) {
+        throw new UnsupportedOperationException("默认不支持该功能");
+    }
+
+    @Override
+    public float[] extractTopFaceFeature(byte[] imageData) {
+        throw new UnsupportedOperationException("默认不支持该功能");
+    }
+
+    @Override
+    public float[] extractTopFaceFeature(BufferedImage image, FaceExtractConfig config) {
+        throw new UnsupportedOperationException("默认不支持该功能");
+    }
+
+    @Override
+    public float[] extractTopFaceFeature(String imagePath, FaceExtractConfig config) {
+        throw new UnsupportedOperationException("默认不支持该功能");
+    }
+
+    @Override
+    public float[] extractTopFaceFeature(byte[] imageData, FaceExtractConfig config) {
         throw new UnsupportedOperationException("默认不支持该功能");
     }
 }

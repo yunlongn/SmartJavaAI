@@ -26,4 +26,16 @@ public class DetectorModelConfig {
      * 设备类型
      */
     private DeviceEnum device;
+
+    public DetectorModelConfig() {
+    }
+
+    public DetectorModelConfig(DetectorModelEnum modelEnum, DeviceEnum device) {
+        this.modelEnum = modelEnum;
+        this.device = device;
+    }
+
+    public DetectorModelConfig(DetectorModelEnum modelEnum) {
+        this.modelEnum = modelEnum;
+    }
 }

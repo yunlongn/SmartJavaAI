@@ -5,6 +5,7 @@ import cn.smartjavaai.face.entity.FaceResult;
 
 import java.awt.image.BufferedImage;
 import java.io.InputStream;
+import java.util.List;
 
 /**
  * 人脸识别算法
@@ -60,34 +61,6 @@ public interface FaceModel {
      * @return
      */
     BufferedImage detectAndDraw(BufferedImage sourceImage);
-
-    /**
-     * 特征提取
-     * @param imagePath 图片路径
-     * @return
-     */
-    float[] featureExtraction(String imagePath);
-
-    /**
-     * 特征提取
-     * @param inputStream 输入流
-     * @return
-     */
-    float[] featureExtraction(InputStream inputStream);
-
-    /**
-     * 特征提取
-     * @param sourceImage BufferedImage图片数据
-     * @return
-     */
-    float[] featureExtraction(BufferedImage sourceImage);
-
-    /**
-     * 特征提取
-     * @param imageData 图片字节流
-     * @return
-     */
-    float[] featureExtraction(byte[] imageData);
 
     /**
      * 计算相似度
@@ -202,5 +175,95 @@ public interface FaceModel {
      * 清空人脸库数据
      */
     long clearFace();
+
+    /**
+     * 特征提取（使用默认配置）
+     * @param imagePath 图片路径
+     * @return
+     */
+    List<float[]> extractFeatures(String imagePath);
+
+    /**
+     * 特征提取（使用默认配置）
+     * @param imageData 图片字节流
+     * @return
+     */
+    List<float[]> extractFeatures(byte[] imageData);
+
+    /**
+     * 特征提取（使用默认配置）
+     * @param image BufferedImage
+     * @return
+     */
+    List<float[]> extractFeatures(BufferedImage image);
+
+    /**
+     * 特征提取（使用自定义配置）
+     * 强制裁剪操作
+     * @param image BufferedImage
+     * @param config
+     * @return
+     */
+    List<float[]> extractFeatures(BufferedImage image, FaceExtractConfig config);
+
+    /**
+     * 特征提取（使用自定义配置）
+     * @param imagePath 图片路径
+     * @param config
+     * @return
+     */
+    List<float[]> extractFeatures(String imagePath, FaceExtractConfig config);
+
+    /**
+     * 特征提取（使用自定义配置）
+     * @param imageData 图片字节流
+     * @param config
+     * @return
+     */
+    List<float[]> extractFeatures(byte[] imageData, FaceExtractConfig config);
+
+    /**
+     * 提取分数最高人脸特征（使用默认配置）
+     * @param image BufferedImage
+     * @return
+     */
+    float[] extractTopFaceFeature(BufferedImage image);
+
+    /**
+     * 提取分数最高人脸特征（使用默认配置）
+     * @param imagePath 图片路径
+     * @return
+     */
+    float[] extractTopFaceFeature(String imagePath);
+
+    /**
+     * 提取分数最高人脸特征（使用默认配置）
+     * @param imageData 图片字节流
+     * @return
+     */
+    float[] extractTopFaceFeature(byte[] imageData);
+
+    /**
+     * 提取分数最高人脸特征（使用自定义配置）
+     * @param image BufferedImage
+     * @return
+     */
+    float[] extractTopFaceFeature(BufferedImage image, FaceExtractConfig config);
+
+    /**
+     * 提取分数最高人脸特征（使用自定义配置）
+     * @param imagePath 图片路径
+     * @param config
+     * @return
+     */
+    float[] extractTopFaceFeature(String imagePath, FaceExtractConfig config);
+
+    /**
+     * 提取分数最高人脸特征（使用自定义配置）
+     * @param imageData 图片字节流
+     * @param config
+     * @return
+     */
+    float[] extractTopFaceFeature(byte[] imageData, FaceExtractConfig config);
 
 }

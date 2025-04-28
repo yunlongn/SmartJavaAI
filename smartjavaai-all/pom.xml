@@ -4,13 +4,13 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <groupId>ink.numberone</groupId>
+        <groupId>cn.smartjavaai</groupId>
         <artifactId>smartjavaai-parent</artifactId>
-        <version>1.0.10</version>
+        <version>1.0.11</version>
     </parent>
 
     <artifactId>smartjavaai-all</artifactId>
-    <version>1.0.10</version>
+    <version>1.0.11</version>
     <name>smartjavaai-all</name>
     <description>SmartJavaAI</description>
     <url>https://github.com/geekwenjie/SmartJavaAI</url>
@@ -23,13 +23,13 @@
 
     <dependencies>
         <dependency>
-            <groupId>ink.numberone</groupId>
+            <groupId>cn.smartjavaai</groupId>
             <artifactId>smartjavaai-face</artifactId>
             <version>${project.version}</version>
         </dependency>
 
         <dependency>
-            <groupId>ink.numberone</groupId>
+            <groupId>cn.smartjavaai</groupId>
             <artifactId>smartjavaai-objectdetection</artifactId>
             <version>${project.version}</version>
         </dependency>

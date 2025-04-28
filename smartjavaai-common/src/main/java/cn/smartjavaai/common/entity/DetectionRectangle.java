@@ -1,5 +1,7 @@
 package cn.smartjavaai.common.entity;
 
+import java.util.List;
+
 /**
  * 检测结果-矩形区域
  * @author dwj
@@ -11,8 +13,12 @@ public class DetectionRectangle {
     public int width;
     public int height;
     public float score;
-
     public String className;
+
+    /**
+     * 人脸关键点
+     */
+    private List<Point> keyPoints;
 
     public DetectionRectangle() {
     }
@@ -80,5 +86,13 @@ public class DetectionRectangle {
 
     public void setClassName(String className) {
         this.className = className;
+    }
+
+    public List<Point> getKeyPoints() {
+        return keyPoints;
+    }
+
+    public void setKeyPoints(List<Point> keyPoints) {
+        this.keyPoints = keyPoints;
     }
 }

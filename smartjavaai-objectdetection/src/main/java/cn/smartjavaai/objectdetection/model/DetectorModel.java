@@ -7,6 +7,7 @@ import ai.djl.inference.Predictor;
 import ai.djl.modality.cv.Image;
 import ai.djl.modality.cv.ImageFactory;
 import ai.djl.modality.cv.output.DetectedObjects;
+import ai.djl.opencv.OpenCVImageFactory;
 import ai.djl.repository.zoo.Criteria;
 import ai.djl.repository.zoo.ModelNotFoundException;
 import ai.djl.repository.zoo.ZooModel;
@@ -18,6 +19,7 @@ import cn.smartjavaai.common.pool.ModelPredictorPoolManager;
 import cn.smartjavaai.common.pool.PredictorFactory;
 import cn.smartjavaai.common.utils.FileUtils;
 import cn.smartjavaai.common.utils.ImageUtils;
+import cn.smartjavaai.common.utils.OpenCVUtils;
 import cn.smartjavaai.objectdetection.DetectorConfig;
 import cn.smartjavaai.objectdetection.DetectorModelConfig;
 import cn.smartjavaai.objectdetection.exception.DetectionException;
@@ -145,7 +147,7 @@ public class DetectorModel implements AutoCloseable{
         if(!ImageUtils.isImageValid(image)){
             throw new DetectionException("图像无效");
         }
-        Image img = ImageFactory.getInstance().fromImage(image);
+        Image img = ImageFactory.getInstance().fromImage(OpenCVUtils.image2Mat(image));
         DetectedObjects detectedObjects = detect(img);
         return DetectorUtils.convertToDetectionResponse(detectedObjects, img);
     }
@@ -159,7 +161,7 @@ public class DetectorModel implements AutoCloseable{
         if(!ImageUtils.isImageValid(sourceImage)){
             throw new DetectionException("图像无效");
         }
-        Image img = ImageFactory.getInstance().fromImage(sourceImage);
+        Image img = ImageFactory.getInstance().fromImage(OpenCVUtils.image2Mat(sourceImage));
         DetectedObjects detectedObjects = detect(img);
         img.drawBoundingBoxes(detectedObjects);
         try {

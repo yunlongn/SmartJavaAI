@@ -1,29 +1,23 @@
 package cn.smartjavaai.face.model;
 
-import ai.djl.inference.Predictor;
-import ai.djl.modality.cv.Image;
-import ai.djl.modality.cv.output.DetectedObjects;
-import cn.smartjavaai.common.config.Config;
 import cn.smartjavaai.common.entity.DetectionResponse;
 import cn.smartjavaai.common.enums.DeviceEnum;
-import cn.smartjavaai.common.pool.PredictorFactory;
 import cn.smartjavaai.common.utils.FileUtils;
 import cn.smartjavaai.common.utils.ImageUtils;
 import cn.smartjavaai.face.AbstractFaceModel;
+import cn.smartjavaai.face.FaceExtractConfig;
 import cn.smartjavaai.face.FaceModelConfig;
 import cn.smartjavaai.face.dao.FaceDao;
 import cn.smartjavaai.face.entity.FaceData;
 import cn.smartjavaai.face.entity.FaceResult;
 import cn.smartjavaai.face.exception.FaceException;
+import cn.smartjavaai.face.utils.FaceAlignUtils;
 import cn.smartjavaai.face.utils.FaceUtils;
 import com.seeta.pool.*;
 import com.seeta.sdk.*;
-import com.seetaface.NativeLoader;
-import com.seetaface.SeetaFace6JNI;
+import cn.smartjavaai.face.seetaface.NativeLoader;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.pool2.ObjectPool;
-import org.apache.commons.pool2.impl.GenericObjectPool;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
@@ -31,6 +25,7 @@ import java.io.*;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
@@ -154,16 +149,32 @@ public class SeetaFace6Model extends AbstractFaceModel {
         SeetaImageData imageData = new SeetaImageData(image.getWidth(), image.getHeight(), 3);
         imageData.data = ImageUtils.getMatrixBGR(image);
         FaceDetector predictor = null;
+        FaceLandmarker faceLandmarker = null;
         try {
             predictor = faceDetectorPool.borrowObject();
+            faceLandmarker = faceLandmarkerPool.borrowObject();
             SeetaRect[] seetaResult = predictor.Detect(imageData);
-            return FaceUtils.convertToDetectionResponse(seetaResult, config);
+            List<SeetaPointF[]> seetaPointFSList = new ArrayList<SeetaPointF[]>();
+            for(SeetaRect seetaRect : seetaResult){
+                //提取人脸的5点人脸标识
+                SeetaPointF[] pointFS = new SeetaPointF[faceLandmarker.number()];
+                faceLandmarker.mark(imageData, seetaRect, pointFS);
+                seetaPointFSList.add(pointFS);
+            }
+            return FaceUtils.convertToDetectionResponse(seetaResult, config, seetaPointFSList);
         } catch (Exception e) {
             throw new FaceException("目标检测错误", e);
         }finally {
             if (predictor != null) {
                 try {
                     faceDetectorPool.returnObject(predictor); //归还
+                } catch (Exception e) {
+                    log.warn("归还Predictor失败", e);
+                }
+            }
+            if (faceLandmarker != null) {
+                try {
+                    faceLandmarkerPool.returnObject(faceLandmarker); //归还
                 } catch (Exception e) {
                     log.warn("归还Predictor失败", e);
                 }
@@ -295,104 +306,6 @@ public class SeetaFace6Model extends AbstractFaceModel {
         }
     }
 
-    @Override
-    public float[] featureExtraction(BufferedImage image) {
-        if(!ImageUtils.isImageValid(image)){
-            throw new FaceException("图像无效");
-        }
-        SeetaImageData imageData = new SeetaImageData(image.getWidth(), image.getHeight(), 3);
-        imageData.data = ImageUtils.getMatrixBGR(image);
-        FaceDetector faceDetector = null;
-        FaceLandmarker faceLandmarker = null;
-        FaceRecognizer faceRecognizer = null;
-        try {
-            faceDetector = faceDetectorPool.borrowObject();
-            faceLandmarker = faceLandmarkerPool.borrowObject();
-            faceRecognizer = faceRecognizerPool.borrowObject();
-            //检测人脸
-            SeetaRect[] seetaResult = faceDetector.Detect(imageData);
-            if(Objects.isNull(seetaResult) || seetaResult.length == 0){
-                throw new FaceException("未检测到人脸");
-            }
-            //提取第一个人脸的5点人脸标识
-            SeetaPointF[] pointFS = new SeetaPointF[faceLandmarker.number()];
-            faceLandmarker.mark(imageData, seetaResult[0], pointFS);
-
-            //提取特征
-            float[] features = new float[faceRecognizer.GetExtractFeatureSize()];
-            boolean isSuccess = faceRecognizer.Extract(imageData, pointFS, features);
-            if(!isSuccess){
-                throw new FaceException("人脸特征提取失败");
-            }
-            return features;
-        } catch (FaceException e) {
-            throw e;
-        } catch (Exception e) {
-            throw new FaceException("目标检测错误", e);
-        }finally {
-            if (faceDetector != null) {
-                try {
-                    faceDetectorPool.returnObject(faceDetector); //归还
-                } catch (Exception e) {
-                    log.warn("归还Predictor失败", e);
-                }
-            }
-            if (faceLandmarker != null) {
-                try {
-                    faceLandmarkerPool.returnObject(faceLandmarker); //归还
-                } catch (Exception e) {
-                    log.warn("归还Predictor失败", e);
-                }
-            }
-            if (faceRecognizer != null) {
-                try {
-                    faceRecognizerPool.returnObject(faceRecognizer); //归还
-                } catch (Exception e) {
-                    log.warn("归还Predictor失败", e);
-                }
-            }
-        }
-    }
-
-    @Override
-    public float[] featureExtraction(String imagePath) {
-        if(!FileUtils.isFileExists(imagePath)){
-            throw new FaceException("图像文件不存在");
-        }
-        BufferedImage image = null;
-        try {
-            image = ImageIO.read(new File(Paths.get(imagePath).toAbsolutePath().toString()));
-        } catch (IOException e) {
-            throw new FaceException("无效图片路径", e);
-        }
-        return featureExtraction(image);
-    }
-
-    @Override
-    public float[] featureExtraction(InputStream inputStream) {
-        if(Objects.isNull(inputStream)){
-            throw new FaceException("图像输入流无效");
-        }
-        BufferedImage image = null;
-        try {
-            image = ImageIO.read(inputStream);
-        } catch (IOException e) {
-            throw new FaceException("无效图片输入流", e);
-        }
-        return featureExtraction(image);
-    }
-
-    @Override
-    public float[] featureExtraction(byte[] imageData) {
-        if(Objects.isNull(imageData)){
-            throw new FaceException("图像无效");
-        }
-        try {
-            return featureExtraction(ImageIO.read(new ByteArrayInputStream(imageData)));
-        } catch (IOException e) {
-            throw new FaceException("错误的图像", e);
-        }
-    }
 
     @Override
     public float calculSimilar(float[] feature1, float[] feature2) {
@@ -897,4 +810,185 @@ public class SeetaFace6Model extends AbstractFaceModel {
             pageNo++;
         }
     }
+
+
+    @Override
+    public List<float[]> extractFeatures(String imagePath) {
+        if(!FileUtils.isFileExists(imagePath)){
+            throw new FaceException("图像文件不存在");
+        }
+        // 将图片路径转换为 BufferedImage
+        BufferedImage image = null;
+        try {
+            image = ImageIO.read(new File(Paths.get(imagePath).toAbsolutePath().toString()));
+        } catch (IOException e) {
+            throw new FaceException("无效图片路径", e);
+        }
+        return extractFeatures(image);
+    }
+
+    @Override
+    public List<float[]> extractFeatures(byte[] imageData) {
+        if(Objects.isNull(imageData)){
+            throw new FaceException("图像无效");
+        }
+        try {
+            return extractFeatures(ImageIO.read(new ByteArrayInputStream(imageData)));
+        } catch (IOException e) {
+            throw new FaceException("错误的图像", e);
+        }
+    }
+
+    @Override
+    public List<float[]> extractFeatures(BufferedImage image) {
+        if(!ImageUtils.isImageValid(image)){
+            throw new FaceException("图像无效");
+        }
+        List<float[]> featureList = new ArrayList<float[]>();
+        SeetaImageData imageData = new SeetaImageData(image.getWidth(), image.getHeight(), 3);
+        imageData.data = ImageUtils.getMatrixBGR(image);
+        FaceDetector faceDetector = null;
+        FaceLandmarker faceLandmarker = null;
+        FaceRecognizer faceRecognizer = null;
+        try {
+            faceDetector = faceDetectorPool.borrowObject();
+            faceLandmarker = faceLandmarkerPool.borrowObject();
+            faceRecognizer = faceRecognizerPool.borrowObject();
+            //检测人脸
+            SeetaRect[] seetaResult = faceDetector.Detect(imageData);
+            if(Objects.isNull(seetaResult) || seetaResult.length == 0){
+                throw new FaceException("未检测到人脸");
+            }
+            for(SeetaRect seetaRect : seetaResult){
+                //提取人脸的5点人脸标识
+                SeetaPointF[] pointFS = new SeetaPointF[faceLandmarker.number()];
+                faceLandmarker.mark(imageData, seetaRect, pointFS);
+                //提取特征
+                float[] features = new float[faceRecognizer.GetExtractFeatureSize()];
+                //CropFaceV2 + ExtractCroppedFace 已包含裁剪+人脸对齐
+                boolean isSuccess = faceRecognizer.Extract(imageData, pointFS, features);
+                if(!isSuccess){
+                    throw new FaceException("人脸特征提取失败");
+                }
+                featureList.add(features);
+            }
+        } catch (FaceException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new FaceException("目标检测错误", e);
+        }finally {
+            if (faceDetector != null) {
+                try {
+                    faceDetectorPool.returnObject(faceDetector); //归还
+                } catch (Exception e) {
+                    log.warn("归还Predictor失败", e);
+                }
+            }
+            if (faceLandmarker != null) {
+                try {
+                    faceLandmarkerPool.returnObject(faceLandmarker); //归还
+                } catch (Exception e) {
+                    log.warn("归还Predictor失败", e);
+                }
+            }
+            if (faceRecognizer != null) {
+                try {
+                    faceRecognizerPool.returnObject(faceRecognizer); //归还
+                } catch (Exception e) {
+                    log.warn("归还Predictor失败", e);
+                }
+            }
+        }
+        return featureList;
+    }
+
+
+    @Override
+    public float[] extractTopFaceFeature(BufferedImage image) {
+        if(!ImageUtils.isImageValid(image)){
+            throw new FaceException("图像无效");
+        }
+        float[] features = null;
+        SeetaImageData imageData = new SeetaImageData(image.getWidth(), image.getHeight(), 3);
+        imageData.data = ImageUtils.getMatrixBGR(image);
+        FaceDetector faceDetector = null;
+        FaceLandmarker faceLandmarker = null;
+        FaceRecognizer faceRecognizer = null;
+        try {
+            faceDetector = faceDetectorPool.borrowObject();
+            faceLandmarker = faceLandmarkerPool.borrowObject();
+            faceRecognizer = faceRecognizerPool.borrowObject();
+            //检测人脸
+            SeetaRect[] seetaResult = faceDetector.Detect(imageData);
+            if(Objects.isNull(seetaResult) || seetaResult.length == 0){
+                throw new FaceException("未检测到人脸");
+            }
+            //提取人脸的5点人脸标识
+            SeetaPointF[] pointFS = new SeetaPointF[faceLandmarker.number()];
+            faceLandmarker.mark(imageData, seetaResult[0], pointFS);
+            //提取特征
+            features = new float[faceRecognizer.GetExtractFeatureSize()];
+            //CropFaceV2 + ExtractCroppedFace 已包含裁剪+人脸对齐
+            boolean isSuccess = faceRecognizer.Extract(imageData, pointFS, features);
+            if(!isSuccess){
+                throw new FaceException("人脸特征提取失败");
+            }
+        } catch (FaceException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new FaceException("目标检测错误", e);
+        }finally {
+            if (faceDetector != null) {
+                try {
+                    faceDetectorPool.returnObject(faceDetector); //归还
+                } catch (Exception e) {
+                    log.warn("归还Predictor失败", e);
+                }
+            }
+            if (faceLandmarker != null) {
+                try {
+                    faceLandmarkerPool.returnObject(faceLandmarker); //归还
+                } catch (Exception e) {
+                    log.warn("归还Predictor失败", e);
+                }
+            }
+            if (faceRecognizer != null) {
+                try {
+                    faceRecognizerPool.returnObject(faceRecognizer); //归还
+                } catch (Exception e) {
+                    log.warn("归还Predictor失败", e);
+                }
+            }
+        }
+        return features;
+    }
+
+    @Override
+    public float[] extractTopFaceFeature(String imagePath) {
+        if(!FileUtils.isFileExists(imagePath)){
+            throw new FaceException("图像文件不存在");
+        }
+        // 将图片路径转换为 BufferedImage
+        BufferedImage image = null;
+        try {
+            image = ImageIO.read(new File(Paths.get(imagePath).toAbsolutePath().toString()));
+        } catch (IOException e) {
+            throw new FaceException("无效图片路径", e);
+        }
+        return extractTopFaceFeature(image);
+    }
+
+    @Override
+    public float[] extractTopFaceFeature(byte[] imageData) {
+        if(Objects.isNull(imageData)){
+            throw new FaceException("图像无效");
+        }
+        try {
+            return extractTopFaceFeature(ImageIO.read(new ByteArrayInputStream(imageData)));
+        } catch (IOException e) {
+            throw new FaceException("错误的图像", e);
+        }
+    }
+
+
 }

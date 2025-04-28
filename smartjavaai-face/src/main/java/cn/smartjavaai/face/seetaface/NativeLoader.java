@@ -1,4 +1,4 @@
-package com.seetaface;
+package cn.smartjavaai.face.seetaface;
 
 
 import cn.hutool.core.io.FileUtil;
@@ -9,18 +9,11 @@ import cn.smartjavaai.common.config.Config;
 import cn.smartjavaai.common.enums.DeviceEnum;
 import cn.smartjavaai.face.FaceModelConfig;
 import cn.smartjavaai.face.exception.FaceException;
-import com.seeta.sdk.SeetaDevice;
 import com.seeta.sdk.util.DllItem;
 import com.seeta.sdk.util.LoadNativeCore;
-import jdk.dynalink.linker.support.Lookup;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 
 import java.io.*;
-import java.lang.invoke.MethodHandles;
-import java.lang.invoke.VarHandle;
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -37,18 +30,9 @@ public class NativeLoader {
 
 
     private static Path seetaface6NativePath;
-    private static final String[] WIN_LIBS = {"tennis.dll","tennis_haswell.dll","tennis_pentium.dll","tennis_sandy_bridge.dll","SeetaAuthorize.dll","SeetaFaceAntiSpoofingX600.dll","SeetaFaceDetector600.dll","SeetaFaceLandmarker600.dll","SeetaFaceRecognizer610.dll","SeetaFace6JNI.dll"};
-    //private static final String[] WIN_LIBS = {"tennis","tennis_haswell","tennis_pentium","tennis_sandy_bridge","SeetaAuthorize","SeetaFaceAntiSpoofingX600","SeetaFaceDetector600","SeetaFaceLandmarker600","SeetaFaceRecognizer610","SeetaFace6JNI"};
-    private static final String[] LINUX_CENTOS_LIBS = {"libSeetaAuthorize.so","libtennis.so","libtennis_haswell.so","libtennis_pentium.so","libtennis_sandy_bridge.so","libSeetaFaceDetector600.so","libSeetaAgePredictor600.so","libSeetaEyeStateDetector200.so","libSeetaFaceAntiSpoofingX600.so","libSeetaFaceLandmarker600.so","libSeetaFaceRecognizer610.so","libSeetaGenderPredictor600.so","libSeetaMaskDetector200.so","libSeetaPoseEstimation600.so","libSeetaFaceTracking600.so","libSeetaQualityAssessor300.so"};
-    private static final String[] LINUX_UBUNTU_LIBS = {"libSeetaAuthorize.so","libtennis.so","libtennis_haswell.so","libtennis_pentium.so","libtennis_sandy_bridge.so","libSeetaFaceDetector600.so","libSeetaAgePredictor600.so","libSeetaEyeStateDetector200.so","libSeetaFaceAntiSpoofingX600.so","libSeetaFaceLandmarker600.so","libSeetaFaceRecognizer610.so","libSeetaGenderPredictor600.so","libSeetaMaskDetector200.so","libSeetaPoseEstimation600.so","libSeetaFaceTracking600.so","libSeetaQualityAssessor300.so"};
 
     private static final String SEETAFACE_LIB_DIR = "seetaface6";
 
-    public static SeetaFace6JNI seetaFace6SDK;
-
-    public static final String AMD64 = "amd64";
-
-    public static final String x86_64 = "amd64";
 
     /**
      * 定义dll 路径和加载顺序的文件
@@ -204,7 +188,7 @@ public class NativeLoader {
      */
     private static File extractLibrary(String libPath) throws IOException {
         String resourcePath = libPath;
-        try (InputStream in = com.seetaface.NativeLoader.class.getResourceAsStream(resourcePath)) {
+        try (InputStream in = NativeLoader.class.getResourceAsStream(resourcePath)) {
             if (in == null) throw new FileNotFoundException(resourcePath);
             Path path = Paths.get(resourcePath);
             String fileName = path.getFileName().toString();

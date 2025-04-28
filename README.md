@@ -36,12 +36,13 @@
     <tr>
       <td>
         <div align="left">
-          <p>人脸检测</p>    
+          <p>人脸检测</p>   
+         - 5点人脸关键点定位 <br>
         </div>
       </td>     
       <td>
         <div align="center">
-        <img src="https://cdn.jsdelivr.net/gh/geekwenjie/SmartJavaAI-Site/images/face.jpg" width = "500px"/>
+        <img src="https://cdn.jsdelivr.net/gh/geekwenjie/SmartJavaAI-Site/images/face5point.png" width = "500px"/>
         </div>
       </td>
     </tr>          
@@ -49,6 +50,7 @@
       <td>
         <div align="left">
           <p>人脸比对1：1</p>
+          - 人脸对齐 <br>
         </div>
       </td>     
       <td>
@@ -72,7 +74,8 @@
     <tr>
       <td>
         <div align="left">
-          <p>人脸比对1：N</p>    
+          <p>人脸比对1：N</p>  
+          - 人脸对齐 <br>
           - 人脸注册 <br>
           - 人脸库查询<br>
           - 人脸库删除<br>
@@ -98,6 +101,7 @@
     </tr>      
   </table>
 </div>
+
 
 
 ## 🚀  核心亮点
@@ -176,9 +180,9 @@
 
 ```xml
 <dependency>
-    <groupId>ink.numberone</groupId>
+    <groupId>cn.smartjavaai</groupId>
     <artifactId>smartjavaai-all</artifactId>
-    <version>1.0.10</version>
+    <version>1.0.11</version>
 </dependency>
 ```
 ### 3、完整示例代码
@@ -193,6 +197,7 @@
 
 - **[Seetaface6JNI](https://gitee.com/cnsugar/seetaface6JNI)**
 - **[Deep Java Library](https://docs.djl.ai)**
+- **[AIAS](https://gitee.com/mymagicpower/AIAS)**
 
 
 
@@ -216,7 +221,12 @@
 
 ## 更新日志
 
-
+## [v1.0.11] - 2025-04-28
+-  FaceNet 特征提取新增人脸对齐
+-  人脸检测新5点人脸关键点定位
+-  特征提取接口支持多人脸和最佳人脸提取
+-  修复人脸框边界精度问题
+-  更新 Maven 发布的 groupId
 ## [v1.0.10] - 2025-04-19
 -  兼容 SeetaFace6 在 Linux 系统下的运行
 -  新增全局缓存路径设置功能

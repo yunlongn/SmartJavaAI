@@ -19,6 +19,7 @@ import cn.smartjavaai.face.*;
 import cn.smartjavaai.face.exception.FaceException;
 import cn.smartjavaai.face.translator.FaceDetectionTranslator;
 import cn.smartjavaai.face.utils.FaceUtils;
+import cn.smartjavaai.face.utils.OpenCVUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.pool2.ObjectPool;
@@ -144,7 +145,7 @@ public class RetinaFaceModel extends AbstractFaceModel implements AutoCloseable{
         if(!ImageUtils.isImageValid(image)){
             throw new FaceException("图像无效");
         }
-        Image img = ImageFactory.getInstance().fromImage(image);
+        Image img = ImageFactory.getInstance().fromImage(OpenCVUtils.image2Mat(image));
         DetectedObjects detection = detect(img);
         return FaceUtils.convertToDetectionResponse(detection,img);
     }
@@ -186,7 +187,7 @@ public class RetinaFaceModel extends AbstractFaceModel implements AutoCloseable{
         if(!ImageUtils.isImageValid(sourceImage)){
             throw new FaceException("图像无效");
         }
-        Image img = ImageFactory.getInstance().fromImage(sourceImage);
+        Image img = ImageFactory.getInstance().fromImage(OpenCVUtils.image2Mat(sourceImage));
         DetectedObjects detectedObjects = detect(img);
         if(Objects.isNull(detectedObjects) || detectedObjects.getNumberOfObjects() == 0){
             throw new FaceException("未识别到人脸");

@@ -50,6 +50,15 @@ public class FaceModelConfig {
      */
     private int gpuId = 0;
 
+    public FaceModelConfig() {
+    }
 
+    public FaceModelConfig(FaceModelEnum modelEnum) {
+        this.modelEnum = modelEnum;
+    }
 
+    public FaceModelConfig(FaceModelEnum modelEnum, String modelPath) {
+        this.modelEnum = modelEnum;
+        this.modelPath = modelPath;
+    }
 }
