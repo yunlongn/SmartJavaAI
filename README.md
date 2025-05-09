@@ -227,7 +227,7 @@
 ```
 ### 3、完整示例代码
 
-[示例代码](https://gitee.com/dengwenjie/SmartJavaAI-Demo)
+[示例代码](https://gitee.com/dengwenjie/SmartJavaAI/tree/master/examples)
 
 ### 4、文档地址
 
