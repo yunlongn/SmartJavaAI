@@ -17,6 +17,12 @@
 	<a target="_blank" href='https://gitee.com/dengwenjie/SmartJavaAI/stargazers'>
 		<img src='https://gitee.com/dengwenjie/SmartJavaAI/badge/star.svg?theme=gvp' alt='star'/>
 	</a>
+    <a target="_blank" href='https://github.com/geekwenjie/SmartJavaAI'>
+		<img src="https://img.shields.io/github/stars/geekwenjie/SmartJavaAI.svg?style=social" alt="github star"/>
+	</a>
+    <a target="_blank" href='https://gitcode.com/geekwenjie/SmartJavaAI'>
+		<img src="https://gitcode.com/geekwenjie/SmartJavaAI/star/badge.svg" alt="gitcode star"/>
+	</a>
 </p>
 
 -------------------------------------------------------------------------------
@@ -86,7 +92,37 @@
         <img src="https://cdn.jsdelivr.net/gh/geekwenjie/SmartJavaAI-Site/images/face1-n.png" width = "500px"/>
         </div>
       </td>
-    </tr>         
+    </tr>  
+    <tr>
+      <td>
+        <div align="left">
+          <p>人脸属性检测</p>  
+          - 性别检测 <br>
+          - 年龄检测 <br>
+          - 口罩检测<br>
+          - 眼睛状态检测<br>
+          - 脸部姿态检测<br>
+        </div>
+      </td>     
+      <td>
+        <div align="center">
+        <img src="https://cdn.jsdelivr.net/gh/geekwenjie/SmartJavaAI-Site/images/face_attribute.jpg" width = "500px"/>
+        </div>
+      </td>
+    </tr> 
+    <tr>
+      <td>
+        <div align="left">
+          <p>活体检测</p>  
+          - 图片和视频活体检测 <br>
+        </div>
+      </td>     
+      <td>
+        <div align="center">
+        <img src="https://cdn.jsdelivr.net/gh/geekwenjie/SmartJavaAI-Site/images/liveness.jpg" width = "500px"/>
+        </div>
+      </td>
+    </tr> 
    <tr>
       <td>
         <div align="left">
@@ -127,10 +163,14 @@
 
 ### ✅ 已实现功能
 
-- **人脸检测**  
-  人脸检测、人脸识别、人脸比对1:1、人脸比对1:N、人脸库注册、人脸库、人脸库删除
+- **人脸识别**  
+  - 人脸检测、人脸识别、人脸比对1:1、人脸比对1:N、人脸库注册、人脸库、人脸库删除
+  - 5点人脸关键点定位
+  - 人脸属性检测（性别、年龄、口罩、眼睛状态、脸部姿态）
+  - 人脸活体检测：图片、视频活体检测
 - **目标检测**
-  支持通用目标检测，能够识别图像中的多种物体类别，返回物体位置与类别信息
+  - 支持YOLO、resnet50、VGG16等目标检测模型
+  - 支持通用目标检测，能够识别图像中的多种物体类别，返回物体位置与类别信息
 
 ### ⌛ 规划中功能
 
@@ -182,13 +222,16 @@
 <dependency>
     <groupId>cn.smartjavaai</groupId>
     <artifactId>smartjavaai-all</artifactId>
-    <version>1.0.11</version>
+    <version>1.0.12</version>
 </dependency>
 ```
 ### 3、完整示例代码
 
 [示例代码](https://gitee.com/dengwenjie/SmartJavaAI-Demo)
 
+### 4、文档地址
+
+[开发文档](http://doc.smartjavaai.cn)
 
 
 ## 🙏 鸣谢
@@ -208,18 +251,17 @@
 - **微信**: deng775747758 （请备注：SmartJavaAI）
 - **Email**: 775747758@qq.com
 
-#### 加微信群
-
-<p align="left">
-	<a href="https://gitee.com/dengwenjie/SmartJavaAI"><img src="https://cdn.jsdelivr.net/gh/geekwenjie/SmartJavaAI-Site/images/wechat_group.jpg" width="45%"></a>
-</p>
 
 🚀 **如果这个项目对你有帮助，别忘了点个 Star ⭐！你的支持是我持续优化升级的动力！** ❤️
 
 
-
-
 ## 更新日志
+
+## [v1.0.12] - 2025-05-09
+-  新增图片与视频活体检测
+-  新增人脸属性识别（性别、年龄、口罩、姿态、眼睛状态）
+-  优化检测返回与包结构
+-  新增 dependencyManagement 统一依赖版本管理
 
 ## [v1.0.11] - 2025-04-28
 -  FaceNet 特征提取新增人脸对齐

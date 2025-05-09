@@ -6,7 +6,7 @@
 
     <groupId>cn.smartjavaai</groupId>
     <artifactId>smartjavaai-parent</artifactId>
-    <version>1.0.11</version>
+    <version>1.0.12</version>
     <packaging>pom</packaging>
     <description>SmartJavaAI</description>
     <modules>
@@ -15,6 +15,7 @@
         <module>smartjavaai-objectdetection</module>
         <module>smartjavaai-all</module>
         <module>smartjavaai-ocr</module>
+        <module>smartjavaai-bom</module>
     </modules>
 
     <properties>
@@ -38,13 +39,13 @@
             <dependency>
                 <groupId>cn.smartjavaai</groupId>
                 <artifactId>smartjavaai-common</artifactId>
-                <version>1.0.11</version>
+                <version>1.0.12</version>
             </dependency>
 
             <dependency>
                 <groupId>cn.smartjavaai</groupId>
                 <artifactId>smartjavaai-face</artifactId>
-                <version>1.0.11</version>
+                <version>1.0.12</version>
             </dependency>
         </dependencies>
 
@@ -63,18 +64,18 @@
             <groupId>ai.djl</groupId>
             <artifactId>model-zoo</artifactId>
         </dependency>
-        <dependency>
-            <groupId>ai.djl.timeseries</groupId>
-            <artifactId>timeseries</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>ai.djl.huggingface</groupId>
-            <artifactId>tokenizers</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>ai.djl.audio</groupId>
-            <artifactId>audio</artifactId>
-        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>ai.djl.timeseries</groupId>-->
+<!--            <artifactId>timeseries</artifactId>-->
+<!--        </dependency>-->
+<!--        <dependency>-->
+<!--            <groupId>ai.djl.huggingface</groupId>-->
+<!--            <artifactId>tokenizers</artifactId>-->
+<!--        </dependency>-->
+<!--        <dependency>-->
+<!--            <groupId>ai.djl.audio</groupId>-->
+<!--            <artifactId>audio</artifactId>-->
+<!--        </dependency>-->
         <!-- MXNet -->
         <dependency>
             <groupId>ai.djl.mxnet</groupId>
@@ -90,11 +91,7 @@
             <groupId>ai.djl.tensorflow</groupId>
             <artifactId>tensorflow-model-zoo</artifactId>
         </dependency>
-        <!-- ONNXRuntime -->
-        <dependency>
-            <groupId>ai.djl.onnxruntime</groupId>
-            <artifactId>onnxruntime-engine</artifactId>
-        </dependency>
+
         <dependency>
             <groupId>org.testng</groupId>
             <artifactId>testng</artifactId>
@@ -208,6 +205,12 @@
             <groupId>gov.nist.math</groupId>
             <artifactId>jama</artifactId>
             <version>1.0.3</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.bytedeco</groupId>
+            <artifactId>javacv</artifactId>
+            <version>1.5.10</version>
         </dependency>
 
 

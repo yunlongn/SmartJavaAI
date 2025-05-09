@@ -7,7 +7,7 @@ import cn.hutool.system.OsInfo;
 import cn.hutool.system.SystemUtil;
 import cn.smartjavaai.common.config.Config;
 import cn.smartjavaai.common.enums.DeviceEnum;
-import cn.smartjavaai.face.FaceModelConfig;
+import cn.smartjavaai.face.config.FaceModelConfig;
 import cn.smartjavaai.face.exception.FaceException;
 import com.seeta.sdk.util.DllItem;
 import com.seeta.sdk.util.LoadNativeCore;
@@ -39,35 +39,48 @@ public class NativeLoader {
      */
     private static final String PROPERTIES_FILE_NAME = "dll.properties";
 
+    // 使用 volatile 保证内存可见性
+    private static volatile boolean isDllLoaded = false;
 
 
-    public static void loadNativeLibraries(FaceModelConfig config) {
+
+    public static void loadNativeLibraries(DeviceEnum device) {
         try {
-            OsInfo osInfo = SystemUtil.getOsInfo();
-            //检查当前系统是否支持
-            if(!osInfo.isWindows() && !osInfo.isLinux()){
-                throw new FaceException("当前系统不支持：" + osInfo.getName());
-            }
-            //判断硬件架构是否支持GPU
-            if(config.getDevice() != null && config.getDevice().equals(DeviceEnum.GPU)){
-                //GPU仅支持amd64
-                if(!osInfo.getArch().contains("amd64") && !osInfo.getArch().contains("x86_64")){
-                    throw new FaceException("seetaface6 GPU模型不支持当前arch：" + osInfo.getArch());
+            if (!isDllLoaded) {
+                synchronized (NativeLoader.class) {
+                    if (!isDllLoaded) {  // 双重检查
+                        OsInfo osInfo = SystemUtil.getOsInfo();
+                        //检查当前系统是否支持
+                        if(!osInfo.isWindows() && !osInfo.isLinux()){
+                            throw new FaceException("当前系统不支持：" + osInfo.getName());
+                        }
+                        //判断硬件架构是否支持GPU
+                        if(device != null && device.equals(DeviceEnum.GPU)){
+                            //GPU仅支持amd64
+                            if(!osInfo.getArch().contains("amd64") && !osInfo.getArch().contains("x86_64")){
+                                throw new FaceException("seetaface6 GPU模型不支持当前arch：" + osInfo.getArch());
+                            }
+                        }
+                        seetaface6NativePath = Paths.get(Config.getCachePath(), SEETAFACE_LIB_DIR);
+                        //创建目录
+                        FileUtil.mkdir(seetaface6NativePath);
+                        log.info("seetaface6依赖库路径: " + seetaface6NativePath.toAbsolutePath().toString());
+                        //拷贝依赖库到缓存目录
+                        List<File> fileList = getLibFiles(osInfo, device);
+                        if(fileList != null && !fileList.isEmpty()){
+                            // 加载依赖库文件
+                            fileList.forEach(file -> {
+                                System.load(file.getAbsolutePath());
+                                log.info(String.format("load %s finish", file.getAbsolutePath()));
+                            });
+                        }
+                        isDllLoaded = true;
+                    }
                 }
+            } else {
+                log.info("SeetaFace DLL is already loaded.");
             }
-            seetaface6NativePath = Paths.get(Config.getCachePath(), SEETAFACE_LIB_DIR);
-            //创建目录
-            FileUtil.mkdir(seetaface6NativePath);
-            log.info("seetaface6依赖库路径: " + seetaface6NativePath.toAbsolutePath().toString());
-            //拷贝依赖库到缓存目录
-            List<File> fileList = getLibFiles(osInfo, config.getDevice());
-            if(fileList != null && !fileList.isEmpty()){
-                // 加载依赖库文件
-                fileList.forEach(file -> {
-                    System.load(file.getAbsolutePath());
-                    log.info(String.format("load %s finish", file.getAbsolutePath()));
-                });
-            }
+
         } catch (Exception e) {
             throw new RuntimeException("Native library loading failed", e);
         }

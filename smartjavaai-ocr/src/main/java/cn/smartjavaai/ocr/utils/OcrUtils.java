@@ -5,6 +5,7 @@ import ai.djl.modality.cv.output.BoundingBox;
 import ai.djl.modality.cv.output.DetectedObjects;
 import ai.djl.ndarray.NDArray;
 import ai.djl.ndarray.NDList;
+import cn.smartjavaai.common.entity.DetectionInfo;
 import cn.smartjavaai.common.entity.DetectionRectangle;
 import cn.smartjavaai.common.entity.DetectionResponse;
 import lombok.extern.slf4j.Slf4j;
@@ -34,7 +35,7 @@ public class OcrUtils {
             return null;
         }
         DetectionResponse detectionResponse = new DetectionResponse();
-        List<DetectionRectangle> rectangleList = new ArrayList<DetectionRectangle>();
+        List<DetectionInfo> detectionInfoList = new ArrayList<DetectionInfo>();
         for(NDArray box : dt_boxes){
             DetectionRectangle rectangle = new DetectionRectangle();
             float[] points = box.toFloatArray();
@@ -54,9 +55,9 @@ public class OcrUtils {
             rectangle.setY(y);
             rectangle.setHeight(height);
             rectangle.setWidth(width);
-            rectangleList.add(rectangle);
+            detectionInfoList.add(new DetectionInfo(rectangle));
         }
-        detectionResponse.setRectangleList(rectangleList);
+        detectionResponse.setDetectionInfoList(detectionInfoList);
         return detectionResponse;
     }
 

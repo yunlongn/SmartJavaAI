@@ -3,8 +3,10 @@ package cn.smartjavaai.objectdetection.utils;
 import ai.djl.modality.cv.Image;
 import ai.djl.modality.cv.output.BoundingBox;
 import ai.djl.modality.cv.output.DetectedObjects;
+import cn.smartjavaai.common.entity.DetectionInfo;
 import cn.smartjavaai.common.entity.DetectionRectangle;
 import cn.smartjavaai.common.entity.DetectionResponse;
+import cn.smartjavaai.common.entity.ObjectDetInfo;
 import cn.smartjavaai.common.utils.ImageUtils;
 
 import javax.imageio.ImageIO;
@@ -37,7 +39,7 @@ public class DetectorUtils {
             return null;
         }
         DetectionResponse detectionResponse = new DetectionResponse();
-        List<DetectionRectangle> rectangleList = new ArrayList<DetectionRectangle>();
+        List<DetectionInfo> detectionInfoList = new ArrayList<DetectionInfo>();
         List<DetectedObjects.DetectedObject> detectedObjectList = detection.items();
         Iterator iterator = detectedObjectList.iterator();
         int index = 0;
@@ -49,11 +51,14 @@ public class DetectorUtils {
             int y = (int)(box.getBounds().getY() * (double)img.getHeight());
             int width = (int)(box.getBounds().getWidth() * (double)img.getWidth());
             int height = (int)(box.getBounds().getHeight() * (double)img.getHeight());
-            DetectionRectangle rectangle = new DetectionRectangle(x, y, width, height, detection.getProbabilities().get(index).floatValue(),className);
-            rectangleList.add(rectangle);
+            DetectionRectangle rectangle = new DetectionRectangle(x, y, width, height);
+            DetectionInfo detectionInfo = new DetectionInfo(rectangle, detection.getProbabilities().get(index).floatValue());
+            ObjectDetInfo objectDetInfo = new ObjectDetInfo(className);
+            detectionInfo.setObjectDetInfo(objectDetInfo);
+            detectionInfoList.add(detectionInfo);
             index++;
         }
-        detectionResponse.setRectangleList(rectangleList);
+        detectionResponse.setDetectionInfoList(detectionInfoList);
         return detectionResponse;
     }
 

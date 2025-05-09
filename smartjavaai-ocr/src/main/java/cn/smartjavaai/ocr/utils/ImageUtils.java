@@ -4,6 +4,7 @@ import ai.djl.modality.cv.Image;
 import ai.djl.modality.cv.ImageFactory;
 import ai.djl.modality.cv.output.DetectedObjects;
 import ai.djl.ndarray.NDArray;
+import cn.smartjavaai.common.entity.DetectionInfo;
 import cn.smartjavaai.common.entity.DetectionRectangle;
 import cn.smartjavaai.common.entity.DetectionResponse;
 import cn.smartjavaai.common.utils.OpenCVUtils;
@@ -207,7 +208,8 @@ public class ImageUtils {
      */
     public static void drawRect(Mat mat, DetectionResponse detectionResponse) {
 
-        for(DetectionRectangle detectionRectangle : detectionResponse.getRectangleList()){
+        for(DetectionInfo detectionInfo : detectionResponse.getDetectionInfoList()){
+            DetectionRectangle detectionRectangle = detectionInfo.getDetectionRectangle();
             // 左上角点
             Point topLeft = new Point(detectionRectangle.getX(), detectionRectangle.getY());
             // 右下角点

@@ -1,5 +1,7 @@
 package cn.smartjavaai.common.entity;
 
+import lombok.Data;
+
 import java.util.List;
 
 /**
@@ -7,15 +9,15 @@ import java.util.List;
  * @author dwj
  * @date 2025/4/12
  */
+@Data
 public class DetectionResponse {
 
-    private List<DetectionRectangle> rectangleList;
+    private List<DetectionInfo> detectionInfoList;
 
-    public List<DetectionRectangle> getRectangleList() {
-        return rectangleList;
+    public DetectionResponse() {
     }
 
-    public void setRectangleList(List<DetectionRectangle> rectangleList) {
-        this.rectangleList = rectangleList;
+    public DetectionResponse(List<DetectionInfo> detectionInfoList) {
+        this.detectionInfoList = detectionInfoList;
     }
 }

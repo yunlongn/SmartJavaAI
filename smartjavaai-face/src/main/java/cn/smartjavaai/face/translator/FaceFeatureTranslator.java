@@ -12,6 +12,7 @@ import ai.djl.translate.Translator;
 import ai.djl.translate.TranslatorContext;
 
 /**
+ * facenet人脸特征提取Translator
  * @author dwj
  * @date 2025/3/31
  */
