@@ -2,7 +2,8 @@
 	<a href="https://gitee.com/dengwenjie/SmartJavaAI"><img src="https://cdn.jsdelivr.net/gh/geekwenjie/SmartJavaAI-Site/images/logo.png?v=2025-04-13T07:48:42.197Z" width="45%"></a>
 </p>
 <p align="center">
-	<strong>🍬JAVA轻量级深度学习算法库，该库致力于构建Java生态与AI模型之间的高效桥梁</strong>
+	<strong>🍬Java轻量级、免费、离线AI工具箱，致力于帮助Java开发者零门槛使用AI算法模型</strong><br>
+	<em>像Hutool一样简单易用的Java AI工具箱</em>
 </p>
 <p align="center">
 	<a target="_blank" href="https://central.sonatype.com/artifact/ink.numberone/smartjavaai-all">
@@ -33,7 +34,7 @@
 
 ## 📚简介
 
-`SmartJavaAI`是专为Java 开发者打造的一个功能丰富、开箱即用的 Java 算法工具包，致力于帮助Java开发者高效集成各类智能算法。SmartJavaAI通过对多种主流算法的统一封装，开发者无需深入了解底层实现，即可轻松在 Java 代码中调用人脸识别、目标检测、OCR 等功能。目前已支持部分人脸识别与目标检测算法，底层实现涵盖了 C++、Python 等语言的深度学习模型。后续将持续扩展更多算法，最终将构建一个面向 Java 开发者的通用智能工具库。
+SmartJavaAI是专为JAVA 开发者打造的一个功能丰富、开箱即用的 JAVA  AI算法工具包，致力于帮助JAVA开发者零门槛使用各种AI算法模型，开发者无需深入了解底层实现，即可轻松在 Java 代码中调用人脸识别、目标检测、OCR 等功能。底层实现涵盖了 C++、Python 等语言的深度学习模型。后续将持续扩展更多算法，目标是构建一个**“像 Hutool 一样简单易用”**的 JAVA AI 通用工具箱
 
 ## 🚀  能力展示
 
@@ -159,7 +160,9 @@
 ✅ **跨平台兼容** - 支持Windows/Linux/macOS系统（x86 & ARM架构）  
 
 
+
 ## 📌 支持功能
+
 
 ### ✅ 已实现功能
 
