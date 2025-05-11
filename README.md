@@ -177,11 +177,26 @@ SmartJavaAI是专为JAVA 开发者打造的一个功能丰富、开箱即用的 
 
 ### ⌛ 规划中功能
 
-- **OCR文字识别**  
-  即将支持身份证/银行卡/车牌等关键信息提取
-- **图像分割**
-- **语音识别**  
-  基于Transformer的语音转文本引擎，支持中文/英文多语种识别
+- 图像分类（Image classification）
+
+- 万物分割 （Segment Anything）
+
+- 实例分割（Instance Segmentation）
+
+- 语义分割（Semantic Segmentation）
+
+- 姿态识别（Pose Estimation）
+
+- 动作识别（Action Recognition）
+
+- 使用 BigGAN 的图像生成
+
+- 图像增强
+
+- 基于 BERT 的问答
+
+- 语音识别示例（Speech Recognition）
+
 
 ## 🌟 AI集成方式对比
 
