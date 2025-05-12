@@ -13,7 +13,8 @@
         <maven.compiler.target>11</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <smartjavaai.version>1.0.12</smartjavaai.version>
-        <exec.mainClass>smartai.examples.face.FaceDemo2</exec.mainClass>
+        <!--如果打包运行，需要替换成你的main-->
+        <exec.mainClass>smartai.examples.face.facerec.RetinaFaceDemo</exec.mainClass>
 
         <javacv.version>1.5.10</javacv.version>
 
@@ -227,37 +228,24 @@
     </dependencies>
 
     <build>
-        <finalName>example</finalName>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-assembly-plugin</artifactId>
-                <version>2.3</version>
-                <configuration>
-                    <!--如果不想在打包的后缀加上assembly.xml中设置的id，可以加上下面的配置-->
-                    <appendAssemblyId>false</appendAssemblyId>
-                    <descriptorRefs>
-                        <descriptorRef>jar-with-dependencies</descriptorRef>
-                    </descriptorRefs>
-                    <archive>
-                        <manifest>
-                            <!-- 是否绑定依赖，将外部jar包依赖加入到classPath中 -->
-                            <addClasspath>true</addClasspath>
-                            <!-- 依赖前缀，与之前设置的文件夹路径要匹配 -->
-                            <classpathPrefix>lib/</classpathPrefix>
-                            <!-- 执行的主程序入口 -->
-                            <mainClass>smartai.examples.face.FaceDemo2</mainClass>
-                        </manifest>
-                    </archive>
-                </configuration>
+                <artifactId>maven-shade-plugin</artifactId>
+                <version>3.5.0</version>
                 <executions>
                     <execution>
-                        <id>make-assembly</id>
-                        <!--绑定的maven操作-->
                         <phase>package</phase>
-                        <goals>
-                            <goal>assembly</goal>
-                        </goals>
+                        <goals><goal>shade</goal></goals>
+                        <configuration>
+                            <createDependencyReducedPom>false</createDependencyReducedPom>
+                            <transformers>
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                                    <mainClass>${exec.mainClass}</mainClass>
+                                </transformer>
+                            </transformers>
+                        </configuration>
                     </execution>
                 </executions>
             </plugin>
