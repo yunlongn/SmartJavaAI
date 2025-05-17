@@ -125,7 +125,7 @@ public class FaceNetDemo {
         try {
             FaceModelConfig config = new FaceModelConfig();
             config.setModelEnum(FaceModelEnum.FACENET_FEATURE_EXTRACTION);//人脸模型
-            //config.setModelPath("/Users/xxx/Documents/develop/face_model/model_ir_se50.pth");
+            config.setModelPath("/Users/wenjie/Documents/develop/face_model/face_feature.pt");
             FaceModel faceModel = FaceModelFactory.getInstance().getModel(config);
             //自动裁剪人脸并比对人脸特征
             float similar = faceModel.featureComparison("src/main/resources/kana1.jpg","src/main/resources/kana2.jpg");
@@ -147,6 +147,13 @@ public class FaceNetDemo {
             FaceModelConfig config = new FaceModelConfig();
             config.setModelEnum(FaceModelEnum.FACENET_FEATURE_EXTRACTION);//人脸模型
             config.setModelPath("/Users/xxx/Documents/develop/face_model/face_feature.pt");
+            //人脸特征提取参数
+            FaceExtractConfig extractConfig = new FaceExtractConfig();
+            FaceModelConfig detectModelConfig = new FaceModelConfig(FaceModelEnum.ULTRA_LIGHT_FAST_GENERIC_FACE);
+            detectModelConfig.setModelPath("/Users/xxx/Documents/develop/face_model/ultranet.pt");
+            //人脸检测模型配置
+            extractConfig.setDetectModel(FaceModelFactory.getInstance().getModel(detectModelConfig));
+            config.setExtractConfig(extractConfig);
             FaceModel faceModel = FaceModelFactory.getInstance().getModel(config);
             //自动裁剪人脸并比对人脸特征
             float similar = faceModel.featureComparison("src/main/resources/kana1.jpg","src/main/resources/kana2.jpg");
