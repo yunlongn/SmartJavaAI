@@ -54,14 +54,17 @@ public class FaceNetDemo {
     @Test
     public void testExtractFeaturesWithCustomConfig(){
         try {
-            //人脸特征提取模型
-            FaceModel faceModel = FaceModelFactory.getInstance().getModel(
-                    new FaceModelConfig(FaceModelEnum.FACENET_FEATURE_EXTRACTION));
+            //人脸模型参数
+            FaceModelConfig config = new FaceModelConfig();
+            config.setModelEnum(FaceModelEnum.FACENET_FEATURE_EXTRACTION);
             //人脸特征提取参数
             FaceExtractConfig extractConfig = new FaceExtractConfig();
             //人脸检测模型配置
-            extractConfig.setDetectModelConfig(new FaceModelConfig(FaceModelEnum.ULTRA_LIGHT_FAST_GENERIC_FACE));
-            List<float[]> faceResult = faceModel.extractFeatures("src/main/resources/kana1.jpg",extractConfig);
+            extractConfig.setDetectModel(FaceModelFactory.getInstance().getModel(new FaceModelConfig(FaceModelEnum.ULTRA_LIGHT_FAST_GENERIC_FACE)));
+            config.setExtractConfig(extractConfig);
+            //人脸特征提取模型
+            FaceModel faceModel = FaceModelFactory.getInstance().getModel(config);
+            List<float[]> faceResult = faceModel.extractFeatures("src/main/resources/kana1.jpg");
             log.info("人脸特征提取结果：{}", JSONObject.toJSONString(faceResult));
         }catch (Exception e){
             e.printStackTrace();
@@ -94,13 +97,16 @@ public class FaceNetDemo {
     @Test
     public void testExtractTopFaceFeatureWithCustomConfig(){
         try {
-            //人脸特征提取模型
-            FaceModel faceModel = FaceModelFactory.getInstance().getModel(
-                    new FaceModelConfig(FaceModelEnum.FACENET_FEATURE_EXTRACTION));
+            //人脸模型参数
+            FaceModelConfig config = new FaceModelConfig();
+            config.setModelEnum(FaceModelEnum.FACENET_FEATURE_EXTRACTION);
             //人脸特征提取参数
             FaceExtractConfig extractConfig = new FaceExtractConfig();
             //人脸检测模型配置
-            extractConfig.setDetectModelConfig(new FaceModelConfig(FaceModelEnum.ULTRA_LIGHT_FAST_GENERIC_FACE));
+            extractConfig.setDetectModel(FaceModelFactory.getInstance().getModel(new FaceModelConfig(FaceModelEnum.ULTRA_LIGHT_FAST_GENERIC_FACE)));
+            config.setExtractConfig(extractConfig);
+            //人脸特征提取模型
+            FaceModel faceModel = FaceModelFactory.getInstance().getModel(config);
             float[] faceResult = faceModel.extractTopFaceFeature("src/main/resources/kana1.jpg");
             log.info("人脸特征提取结果：{}", JSONObject.toJSONString(faceResult));
         }catch (Exception e){

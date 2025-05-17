@@ -629,6 +629,7 @@ public class SeetaFace6Model extends AbstractFaceModel {
 
     @Override
     public FaceResult search(BufferedImage image) {
+        long time1 = System.currentTimeMillis();
         if(!ImageUtils.isImageValid(image)){
             throw new FaceException("图像无效");
         }
@@ -648,7 +649,12 @@ public class SeetaFace6Model extends AbstractFaceModel {
             if(similarity[0] < config.getSimilarityThreshold()){
                 return null;
             }
-            return searchFaceDb(index[0], similarity[0]);
+            long time2 = System.currentTimeMillis();
+            System.out.println("总耗时1：" + (time2 - time1) + " ms");
+            FaceResult faceResult = searchFaceDb(index[0], similarity[0]);
+            long time3 = System.currentTimeMillis();
+            System.out.println("总耗时2：" + (time3 - time2) + " ms");
+            return faceResult;
         } catch (FaceException e) {
             throw e;
         } catch (Exception e) {

@@ -13,7 +13,7 @@
 		<img src="https://img.shields.io/:license-MulanPSL2-blue.svg" />
 	</a>
 	<a target="_blank" href="https://www.oracle.com/java/technologies/javase/javase-jdk11-downloads.html">
-		<img src="https://img.shields.io/badge/JDK-11+-green.svg" />
+		<img src="https://img.shields.io/badge/JDK-8+-green.svg" />
 	</a>
 	<a target="_blank" href='https://gitee.com/dengwenjie/SmartJavaAI/stargazers'>
 		<img src='https://gitee.com/dengwenjie/SmartJavaAI/badge/star.svg?theme=gvp' alt='star'/>
@@ -230,7 +230,7 @@ SmartJavaAI是专为JAVA 开发者打造的一个功能丰富、开箱即用的 
 
 ### 1、环境要求
 
-- Java 版本：**JDK 11或更高版本**
+- Java 版本：**JDK 8或更高版本**
 - 操作系统：不同模型支持的系统不一样，具体请查看文档
 
 ### 2、Maven
@@ -240,7 +240,7 @@ SmartJavaAI是专为JAVA 开发者打造的一个功能丰富、开箱即用的 
 <dependency>
     <groupId>cn.smartjavaai</groupId>
     <artifactId>smartjavaai-all</artifactId>
-    <version>1.0.12</version>
+    <version>1.0.13</version>
 </dependency>
 ```
 ### 3、完整示例代码
@@ -273,7 +273,15 @@ SmartJavaAI是专为JAVA 开发者打造的一个功能丰富、开箱即用的 
 🚀 **如果这个项目对你有帮助，别忘了点个 Star ⭐！你的支持是我持续优化升级的动力！** ❤️
 
 
-## 更新日志
+## 近期更新日志
+
+## [v1.0.13] - 2025-05-17
+- 支持 JDK8 环境运行
+- 引入离线依赖，支持完全离线使用
+- 优化 FaceNet 人脸比对性能，提升比对速度
+- 支持带 Alpha 通道的 4 通道图片检测
+- 目标检测：新增 YOLOv12 官方模型支持
+- 目标检测：支持加载自训练模型进行推理
 
 ## [v1.0.12] - 2025-05-09
 -  新增图片与视频活体检测
@@ -297,9 +305,6 @@ SmartJavaAI是专为JAVA 开发者打造的一个功能丰富、开箱即用的 
 -  修复若干已知问题
 -  支持自定义选择使用 GPU 或 CPU 运算
 -  人脸识别模块新增多种接口，功能更加完善
-## [v1.0.6] - 2025-04-01
--  修复人脸识别算法facenet-pytorch实现方式
--  优化Seetaface6算法，兼容jdk高版本
 
 
 

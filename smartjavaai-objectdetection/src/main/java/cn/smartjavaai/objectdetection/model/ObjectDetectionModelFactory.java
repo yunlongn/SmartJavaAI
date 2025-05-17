@@ -1,12 +1,11 @@
 package cn.smartjavaai.objectdetection.model;
 
 import cn.smartjavaai.common.config.Config;
-import cn.smartjavaai.objectdetection.DetectorModelConfig;
-import cn.smartjavaai.objectdetection.DetectorModelEnum;
+import cn.smartjavaai.objectdetection.config.DetectorModelConfig;
+import cn.smartjavaai.objectdetection.enums.DetectorModelEnum;
 import cn.smartjavaai.objectdetection.exception.DetectionException;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 

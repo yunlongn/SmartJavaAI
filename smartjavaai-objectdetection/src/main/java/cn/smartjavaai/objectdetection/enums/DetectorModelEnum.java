@@ -1,4 +1,4 @@
-package cn.smartjavaai.objectdetection;
+package cn.smartjavaai.objectdetection.enums;
 
 /**
  * 目标检测模型枚举
@@ -34,7 +34,14 @@ public enum DetectorModelEnum {
     YOLO3_DARKNET_COCO_608("ai.djl.mxnet/yolo/0.0.1/yolo3_darknet_coco_608"),
     YOLO3_MOBILENET_COCO_320("ai.djl.mxnet/yolo/0.0.1/yolo3_mobilenet_coco_320"),
     YOLO3_MOBILENET_COCO_416("ai.djl.mxnet/yolo/0.0.1/yolo3_mobilenet_coco_416"),
-    YOLO3_MOBILENET_COCO_608("ai.djl.mxnet/yolo/0.0.1/yolo3_mobilenet_coco_608");
+    YOLO3_MOBILENET_COCO_608("ai.djl.mxnet/yolo/0.0.1/yolo3_mobilenet_coco_608"),
+
+    YOLOV12_OFFICIAL(""),
+    YOLOV8_OFFICIAL(""),
+
+    YOLOV8_CUSTOM(""),
+
+    YOLOV12_CUSTOM("");
 
     /**
      * 根据名称获取枚举 (忽略大小写和下划线变体)

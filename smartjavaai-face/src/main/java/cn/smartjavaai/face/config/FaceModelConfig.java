@@ -52,6 +52,11 @@ public class FaceModelConfig {
      */
     private int gpuId = 0;
 
+    /**
+     * 人脸特征提取配置
+     */
+    private FaceExtractConfig extractConfig;
+
     public FaceModelConfig() {
     }
 

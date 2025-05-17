@@ -1,41 +1,34 @@
 package cn.smartjavaai.objectdetection.model;
 
-import ai.djl.Application;
-import ai.djl.Device;
 import ai.djl.MalformedModelException;
 import ai.djl.inference.Predictor;
 import ai.djl.modality.cv.Image;
 import ai.djl.modality.cv.ImageFactory;
 import ai.djl.modality.cv.output.DetectedObjects;
-import ai.djl.opencv.OpenCVImageFactory;
+import ai.djl.modality.cv.translator.YoloV8TranslatorFactory;
 import ai.djl.repository.zoo.Criteria;
 import ai.djl.repository.zoo.ModelNotFoundException;
 import ai.djl.repository.zoo.ZooModel;
 import ai.djl.training.util.ProgressBar;
-import ai.djl.translate.TranslateException;
 import cn.smartjavaai.common.entity.DetectionResponse;
-import cn.smartjavaai.common.enums.DeviceEnum;
-import cn.smartjavaai.common.pool.ModelPredictorPoolManager;
 import cn.smartjavaai.common.pool.PredictorFactory;
 import cn.smartjavaai.common.utils.FileUtils;
 import cn.smartjavaai.common.utils.ImageUtils;
 import cn.smartjavaai.common.utils.OpenCVUtils;
-import cn.smartjavaai.objectdetection.DetectorConfig;
-import cn.smartjavaai.objectdetection.DetectorModelConfig;
+import cn.smartjavaai.objectdetection.config.DetectorModelConfig;
+import cn.smartjavaai.objectdetection.constant.DetectorConstant;
+import cn.smartjavaai.objectdetection.criteria.CriteriaBuilderFactory;
 import cn.smartjavaai.objectdetection.exception.DetectionException;
 import cn.smartjavaai.objectdetection.utils.DetectorUtils;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.Validate;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.pool2.ObjectPool;
 import org.apache.commons.pool2.impl.GenericObjectPool;
-import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.*;
-import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.time.Duration;
 import java.util.Objects;
 
 /**
@@ -50,23 +43,16 @@ public class DetectorModel implements AutoCloseable{
 
     //private Predictor<Image, DetectedObjects> predictor;
 
-    private static final String DJL_MODEL_PREFIX = "djl://";
+
 
     private ObjectPool<Predictor<Image, DetectedObjects>> predictorPool;
 
     public void loadModel(DetectorModelConfig config){
-        Device device = null;
-        if(!Objects.isNull(config.getDevice())){
-            device = config.getDevice() == DeviceEnum.CPU ? Device.cpu() : Device.gpu();
+        if(Objects.isNull(config.getModelEnum())){
+            throw new DetectionException("未配置模型枚举");
         }
-        Criteria<Image, DetectedObjects> criteria = Criteria.builder()
-                        .optApplication(Application.CV.OBJECT_DETECTION)
-                        .setTypes(Image.class, DetectedObjects.class)
-                        .optArgument("threshold", config.getThreshold() > 0 ? config.getThreshold() : DetectorConfig.DEFAULT_THRESHOLD)
-                        .optModelUrls(DJL_MODEL_PREFIX + config.getModelEnum().getModelUri())
-                        .optDevice(device)
-                        .optProgress(new ProgressBar())
-                        .build();
+        Criteria<Image, DetectedObjects> criteria = CriteriaBuilderFactory.createCriteria(config);
+
         try {
             model = criteria.loadModel();
             // 创建池子：每个线程独享 Predictor

@@ -111,8 +111,26 @@ public class OpenCVUtils {
     public static Mat image2Mat(BufferedImage img) {
         int width = img.getWidth();
         int height = img.getHeight();
+        int channels;
+
+        // 获取图像类型
+        int imageType = img.getType();
+
+        // 判断是3通道还是4通道
+        if (imageType == BufferedImage.TYPE_3BYTE_BGR) {
+            channels = 3;
+        } else if (imageType == BufferedImage.TYPE_4BYTE_ABGR || imageType == BufferedImage.TYPE_4BYTE_ABGR_PRE) {
+            channels = 4;
+        } else {
+            // 如果不是已知格式，强制转换为 3 通道 BGR
+            BufferedImage convertedImg = new BufferedImage(width, height, BufferedImage.TYPE_3BYTE_BGR);
+            convertedImg.getGraphics().drawImage(img, 0, 0, null);
+            img = convertedImg;
+            channels = 3;
+        }
+
         byte[] data = ((DataBufferByte) img.getRaster().getDataBuffer()).getData();
-        Mat mat = new Mat(height, width, CvType.CV_8UC3);
+        Mat mat = new Mat(height, width, CvType.CV_8UC(channels));
         mat.put(0, 0, data);
         return mat;
     }

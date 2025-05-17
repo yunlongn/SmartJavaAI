@@ -1,5 +1,6 @@
 package cn.smartjavaai.face.config;
 
+import cn.smartjavaai.face.model.facerec.FaceModel;
 import lombok.Data;
 
 /**
@@ -21,17 +22,17 @@ public class FaceExtractConfig {
     private boolean align = true;
 
     /**
-     * 人脸检测模型配置
+     * 人脸检测模型
      */
-    private FaceModelConfig detectModelConfig;
+    private FaceModel detectModel;
 
     public FaceExtractConfig() {
     }
 
-    public FaceExtractConfig(boolean cropFace, boolean align, FaceModelConfig detectModelConfig) {
+    public FaceExtractConfig(boolean cropFace, boolean align, FaceModel detectModel) {
         this.cropFace = cropFace;
         this.align = align;
-        this.detectModelConfig = detectModelConfig;
+        this.detectModel = detectModel;
     }
 
 

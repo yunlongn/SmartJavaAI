@@ -13,8 +13,8 @@ import ai.djl.repository.zoo.ZooModel;
 import ai.djl.training.util.ProgressBar;
 import cn.smartjavaai.common.entity.DetectionResponse;
 import cn.smartjavaai.common.enums.DeviceEnum;
-import cn.smartjavaai.objectdetection.DetectorModelConfig;
-import cn.smartjavaai.objectdetection.DetectorModelEnum;
+import cn.smartjavaai.objectdetection.config.DetectorModelConfig;
+import cn.smartjavaai.objectdetection.enums.DetectorModelEnum;
 import cn.smartjavaai.objectdetection.exception.DetectionException;
 import cn.smartjavaai.objectdetection.model.DetectorModel;
 import cn.smartjavaai.objectdetection.model.ObjectDetectionModelFactory;
@@ -62,7 +62,7 @@ public class ObjectDetection {
     @Test
     public void objectDetection2(){
         DetectorModelConfig config = new DetectorModelConfig();
-        config.setModelEnum(DetectorModelEnum.SSD_300_RESNET50);//检测模型，目前支持19种模型
+        config.setModelEnum(DetectorModelEnum.SSD_300_RESNET50);//检测模型，目前支持19种预置模型
         DetectorModel detectorModel = ObjectDetectionModelFactory.getInstance().getModel(config);
         DetectionResponse detectionResponse = detectorModel.detect("src/main/resources/dog_bike_car.jpg");
         log.info("目标检测结果：{}", JSONObject.toJSONString(detectionResponse));
@@ -109,6 +109,36 @@ public class ObjectDetection {
         log.info("目标检测结果：{}", JSONObject.toJSONString(detectionResponse));
     }
 
+
+    /**
+     * 使用yolo官方模型检测
+     */
+    @Test
+    public void objectDetectionWithOfficialModel(){
+        DetectorModelConfig config = new DetectorModelConfig();
+        //也支持YoloV8：YOLOV8_OFFICIAL 模型可以从文档中提供的地址下载
+        config.setModelEnum(DetectorModelEnum.YOLOV12_OFFICIAL);//检测模型，目前支持19种模型
+        // 指定模型路径，需要更改为自己的模型路径
+        config.setModelPath("/Users/xxx/Documents/develop/face_model/yolov12n.onnx");
+        DetectorModel detectorModel = ObjectDetectionModelFactory.getInstance().getModel(config);
+        //一定要将yolo官方的类别文件：synset.txt（文档中下载）放在模型同目录下，否则报错
+        detectorModel.detectAndDraw("src/main/resources/object_detection.jpg","output/object_detection_detected.png");
+    }
+
+    /**
+     * 使用自己训练的模型检测
+     */
+    @Test
+    public void objectDetectionWithCustomModel(){
+        DetectorModelConfig config = new DetectorModelConfig();
+        //也支持YoloV8：YOLOV8_CUSTOM 模型需要自己训练，训练教程可以查看文档
+        config.setModelEnum(DetectorModelEnum.YOLOV12_CUSTOM);//自定义YOLOV12模型
+        // 指定模型路径，需要更改为自己的模型路径
+        config.setModelPath("/Users/xxx/Documents/develop/fire_model/best.onnx");
+        DetectorModel detectorModel = ObjectDetectionModelFactory.getInstance().getModel(config);
+        //一定要将类别文件：synset.txt 放在模型同目录下，否则报错(具体请参看文档)
+        detectorModel.detectAndDraw("/Users/xxx/Downloads/test.jpg","output/test_detected.jpg");
+    }
 
 
 }

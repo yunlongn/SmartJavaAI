@@ -141,21 +141,6 @@ public abstract class AbstractFaceModel implements FaceModel {
     }
 
     @Override
-    public List<float[]> extractFeatures(BufferedImage image, FaceExtractConfig config) {
-        throw new UnsupportedOperationException("默认不支持该功能");
-    }
-
-    @Override
-    public List<float[]> extractFeatures(String imagePath, FaceExtractConfig config) {
-        throw new UnsupportedOperationException("默认不支持该功能");
-    }
-
-    @Override
-    public List<float[]> extractFeatures(byte[] imageData, FaceExtractConfig config) {
-        throw new UnsupportedOperationException("默认不支持该功能");
-    }
-
-    @Override
     public float[] extractTopFaceFeature(BufferedImage image) {
         throw new UnsupportedOperationException("默认不支持该功能");
     }
@@ -170,18 +155,5 @@ public abstract class AbstractFaceModel implements FaceModel {
         throw new UnsupportedOperationException("默认不支持该功能");
     }
 
-    @Override
-    public float[] extractTopFaceFeature(BufferedImage image, FaceExtractConfig config) {
-        throw new UnsupportedOperationException("默认不支持该功能");
-    }
 
-    @Override
-    public float[] extractTopFaceFeature(String imagePath, FaceExtractConfig config) {
-        throw new UnsupportedOperationException("默认不支持该功能");
-    }
-
-    @Override
-    public float[] extractTopFaceFeature(byte[] imageData, FaceExtractConfig config) {
-        throw new UnsupportedOperationException("默认不支持该功能");
-    }
 }

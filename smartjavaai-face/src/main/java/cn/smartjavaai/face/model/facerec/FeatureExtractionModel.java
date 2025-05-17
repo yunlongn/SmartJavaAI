@@ -59,6 +59,8 @@ public class FeatureExtractionModel extends AbstractFaceModel implements AutoClo
 
     private ZooModel<Image, float[]> model;
 
+    private FaceModelConfig config;
+
     public static final List<Float> mean =
             Arrays.asList(
                     127.5f / 255.0f,
@@ -75,10 +77,21 @@ public class FeatureExtractionModel extends AbstractFaceModel implements AutoClo
      */
     @Override
     public void loadModel(FaceModelConfig config) {
+        if(Objects.isNull(config)){
+            throw new FaceException("config为null");
+        }
+        if(Objects.isNull(config.getExtractConfig())){
+            config.setExtractConfig(getDefaultConfig());
+        }else{
+            if(Objects.isNull(config.getExtractConfig().getDetectModel())){
+                throw new FaceException("请设置人脸检测模型");
+            }
+        }
         Device device = null;
         if(!Objects.isNull(config.getDevice())){
             device = config.getDevice() == DeviceEnum.CPU ? Device.cpu() : Device.gpu();
         }
+        this.config = config;
         String normalize = mean.stream().map(Object::toString).collect(Collectors.joining(","));
         Criteria<Image, float[]> faceFeatureCriteria =
                 Criteria.builder()
@@ -162,7 +175,8 @@ public class FeatureExtractionModel extends AbstractFaceModel implements AutoClo
         }
         float[] feature1 = extractTopFaceFeature(imagePath1);
         float[] feature2 = extractTopFaceFeature(imagePath2);
-        return calculSimilar(feature1, feature2);
+        float ret = calculSimilar(feature1, feature2);
+        return ret;
     }
 
 
@@ -194,37 +208,18 @@ public class FeatureExtractionModel extends AbstractFaceModel implements AutoClo
         FaceExtractConfig config = new FaceExtractConfig();
         FaceModelConfig detectModelConfig = new FaceModelConfig();
         detectModelConfig.setModelEnum(FaceModelEnum.ULTRA_LIGHT_FAST_GENERIC_FACE);
-        config.setDetectModelConfig(detectModelConfig);
+        log.debug("创建默认检测模型：ULTRA_LIGHT_FAST_GENERIC_FACE");
+        FaceModel detectModel = FaceModelFactory.getInstance().getModel(detectModelConfig);
+        log.debug("创建检测模型完毕");
+        config.setDetectModel(detectModel);
         return config;
     }
 
     @Override
-    public List<float[]> extractFeatures(String imagePath) {
-        return extractFeatures(imagePath, getDefaultConfig());
-    }
-
-    @Override
-    public List<float[]> extractFeatures(byte[] imageData) {
-        return extractFeatures(imageData, getDefaultConfig());
-    }
-
-    @Override
     public List<float[]> extractFeatures(BufferedImage image) {
-        return extractFeatures(image, getDefaultConfig());
-    }
 
-
-    @Override
-    public List<float[]> extractFeatures(BufferedImage image, FaceExtractConfig config) {
-        if(Objects.isNull(config)){
-            throw new FaceException("config为null");
-        }
         List<float[]> featureList = new ArrayList<float[]>();
-        if(Objects.isNull(config.getDetectModelConfig())){
-            throw new FaceException("config.detectModelConfig为null");
-        }
-        FaceModel faceModel = FaceModelFactory.getInstance().getModel(config.getDetectModelConfig());
-        DetectionResponse detectedResult = faceModel.detect(image);
+        DetectionResponse detectedResult = config.getExtractConfig().getDetectModel().detect(image);
         if(Objects.isNull(detectedResult) || Objects.isNull(detectedResult.getDetectionInfoList()) || detectedResult.getDetectionInfoList().isEmpty()){
             throw new FaceException("未检测到人脸");
         }
@@ -237,7 +232,7 @@ public class FeatureExtractionModel extends AbstractFaceModel implements AutoClo
             //裁剪人脸
             Image subImage = djlImage.getSubImage(rectangle.getX(), rectangle.getY() , rectangle.getWidth() , rectangle.getHeight());
             //人脸对齐
-            if(config.isAlign()){
+            if(config.getExtractConfig().isAlign()){
                 //获取子图中人脸关键点坐标
                 double[][] pointsArray = FaceUtils.facePoints(detectionInfo.getFaceInfo().getKeyPoints());
                 NDArray srcPoints = manager.create(pointsArray);
@@ -263,8 +258,21 @@ public class FeatureExtractionModel extends AbstractFaceModel implements AutoClo
         return featureList;
     }
 
+
     @Override
-    public List<float[]> extractFeatures(String imagePath, FaceExtractConfig config) {
+    public List<float[]> extractFeatures(byte[] imageData) {
+        if(Objects.isNull(imageData)){
+            throw new FaceException("图像无效");
+        }
+        try {
+            return extractFeatures(ImageIO.read(new ByteArrayInputStream(imageData)));
+        } catch (IOException e) {
+            throw new FaceException("错误的图像", e);
+        }
+    }
+
+    @Override
+    public List<float[]> extractFeatures(String imagePath) {
         if(!FileUtils.isFileExists(imagePath)){
             throw new FaceException("图像文件不存在");
         }
@@ -275,49 +283,15 @@ public class FeatureExtractionModel extends AbstractFaceModel implements AutoClo
         } catch (IOException e) {
             throw new FaceException("无效图片路径", e);
         }
-        return extractFeatures(image, config);
-    }
-
-    @Override
-    public List<float[]> extractFeatures(byte[] imageData, FaceExtractConfig config) {
-        if(Objects.isNull(imageData)){
-            throw new FaceException("图像无效");
-        }
-        try {
-            return extractFeatures(ImageIO.read(new ByteArrayInputStream(imageData)), config);
-        } catch (IOException e) {
-            throw new FaceException("错误的图像", e);
-        }
+        return extractFeatures(image);
     }
 
     @Override
     public float[] extractTopFaceFeature(BufferedImage image) {
-        return extractTopFaceFeature(image, getDefaultConfig());
-    }
-
-    @Override
-    public float[] extractTopFaceFeature(String imagePath) {
-        return extractTopFaceFeature(imagePath, getDefaultConfig());
-    }
-
-    @Override
-    public float[] extractTopFaceFeature(byte[] imageData) {
-        return extractTopFaceFeature(imageData, getDefaultConfig());
-    }
-
-    @Override
-    public float[] extractTopFaceFeature(BufferedImage image, FaceExtractConfig config) {
-        if(Objects.isNull(config)){
-            throw new FaceException("config为null");
-        }
-        if(Objects.isNull(config.getDetectModelConfig())){
-            throw new FaceException("config.detectModelConfig为null");
-        }
         Image djlImage = ImageFactory.getInstance().fromImage(OpenCVUtils.image2Mat(image));
         float[] features = null;
-        if(config.isCropFace()){
-            FaceModel faceModel = FaceModelFactory.getInstance().getModel(config.getDetectModelConfig());
-            DetectionResponse detectedResult = faceModel.detect(image);
+        if(config.getExtractConfig().isCropFace()){
+            DetectionResponse detectedResult = config.getExtractConfig().getDetectModel().detect(image);
             if(Objects.isNull(detectedResult) || Objects.isNull(detectedResult.getDetectionInfoList()) || detectedResult.getDetectionInfoList().isEmpty()){
                 throw new FaceException("未检测到人脸");
             }
@@ -327,7 +301,7 @@ public class FeatureExtractionModel extends AbstractFaceModel implements AutoClo
             //裁剪人脸
             Image subImage = djlImage.getSubImage(rectangle.getX(), rectangle.getY() , rectangle.getWidth() , rectangle.getHeight());
             //人脸对齐
-            if(config.isAlign()){
+            if(config.getExtractConfig().isAlign()){
                 NDManager manager = NDManager.newBaseManager();
                 //获取子图中人脸关键点坐标
                 double[][] pointsArray = FaceUtils.facePoints(detectionInfo.getFaceInfo().getKeyPoints());
@@ -355,7 +329,7 @@ public class FeatureExtractionModel extends AbstractFaceModel implements AutoClo
     }
 
     @Override
-    public float[] extractTopFaceFeature(String imagePath, FaceExtractConfig config) {
+    public float[] extractTopFaceFeature(String imagePath) {
         if(!FileUtils.isFileExists(imagePath)){
             throw new FaceException("图像文件不存在");
         }
@@ -366,16 +340,16 @@ public class FeatureExtractionModel extends AbstractFaceModel implements AutoClo
         } catch (IOException e) {
             throw new FaceException("无效图片路径", e);
         }
-        return extractTopFaceFeature(image, config);
+        return extractTopFaceFeature(image);
     }
 
     @Override
-    public float[] extractTopFaceFeature(byte[] imageData, FaceExtractConfig config) {
+    public float[] extractTopFaceFeature(byte[] imageData) {
         if(Objects.isNull(imageData)){
             throw new FaceException("图像无效");
         }
         try {
-            return extractTopFaceFeature(ImageIO.read(new ByteArrayInputStream(imageData)), config);
+            return extractTopFaceFeature(ImageIO.read(new ByteArrayInputStream(imageData)));
         } catch (IOException e) {
             throw new FaceException("错误的图像", e);
         }

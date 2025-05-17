@@ -199,30 +199,6 @@ public interface FaceModel {
      */
     List<float[]> extractFeatures(BufferedImage image);
 
-    /**
-     * 特征提取（使用自定义配置）
-     * 强制裁剪操作
-     * @param image BufferedImage
-     * @param config
-     * @return
-     */
-    List<float[]> extractFeatures(BufferedImage image, FaceExtractConfig config);
-
-    /**
-     * 特征提取（使用自定义配置）
-     * @param imagePath 图片路径
-     * @param config
-     * @return
-     */
-    List<float[]> extractFeatures(String imagePath, FaceExtractConfig config);
-
-    /**
-     * 特征提取（使用自定义配置）
-     * @param imageData 图片字节流
-     * @param config
-     * @return
-     */
-    List<float[]> extractFeatures(byte[] imageData, FaceExtractConfig config);
 
     /**
      * 提取分数最高人脸特征（使用默认配置）
@@ -245,27 +221,6 @@ public interface FaceModel {
      */
     float[] extractTopFaceFeature(byte[] imageData);
 
-    /**
-     * 提取分数最高人脸特征（使用自定义配置）
-     * @param image BufferedImage
-     * @return
-     */
-    float[] extractTopFaceFeature(BufferedImage image, FaceExtractConfig config);
 
-    /**
-     * 提取分数最高人脸特征（使用自定义配置）
-     * @param imagePath 图片路径
-     * @param config
-     * @return
-     */
-    float[] extractTopFaceFeature(String imagePath, FaceExtractConfig config);
-
-    /**
-     * 提取分数最高人脸特征（使用自定义配置）
-     * @param imageData 图片字节流
-     * @param config
-     * @return
-     */
-    float[] extractTopFaceFeature(byte[] imageData, FaceExtractConfig config);
 
 }
