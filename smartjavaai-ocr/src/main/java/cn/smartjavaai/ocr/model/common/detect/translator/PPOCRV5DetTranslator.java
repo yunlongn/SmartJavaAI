@@ -1,4 +1,4 @@
-package cn.smartjavaai.ocr.ppv4.translator;
+package cn.smartjavaai.ocr.model.common.detect.translator;
 
 import ai.djl.modality.cv.Image;
 import ai.djl.modality.cv.util.NDImageUtils;
@@ -27,7 +27,7 @@ import java.util.Map;
  * @mail 179209347@qq.com
  * @website www.aias.top
  */
-public class PaddleOCRV4DetectTranslator implements Translator<Image, NDList> {
+public class PPOCRV5DetTranslator implements Translator<Image, NDList> {
     // det_algorithm == "DB"
     private final float thresh = 0.3f;
     private final boolean use_dilation = false;
@@ -44,7 +44,7 @@ public class PaddleOCRV4DetectTranslator implements Translator<Image, NDList> {
     private int img_height;
     private int img_width;
 
-    public PaddleOCRV4DetectTranslator(Map<String, ?> arguments) {
+    public PPOCRV5DetTranslator(Map<String, ?> arguments) {
         limit_side_len =
                 arguments.containsKey("limit_side_len")
                         ? Integer.parseInt(arguments.get("limit_side_len").toString())

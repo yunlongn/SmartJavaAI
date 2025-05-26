@@ -27,7 +27,7 @@ import java.util.List;
 import java.util.Objects;
 
 /**
- * SeetaFace6 人脸算法
+ * SeetaFace6 人脸模型
  * @author dwj
  */
 @SuppressWarnings("AliMissingOverrideAnnotation")
@@ -649,11 +649,7 @@ public class SeetaFace6Model extends AbstractFaceModel {
             if(similarity[0] < config.getSimilarityThreshold()){
                 return null;
             }
-            long time2 = System.currentTimeMillis();
-            System.out.println("总耗时1：" + (time2 - time1) + " ms");
             FaceResult faceResult = searchFaceDb(index[0], similarity[0]);
-            long time3 = System.currentTimeMillis();
-            System.out.println("总耗时2：" + (time3 - time2) + " ms");
             return faceResult;
         } catch (FaceException e) {
             throw e;

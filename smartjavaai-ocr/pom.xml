@@ -6,18 +6,11 @@
     <parent>
         <groupId>cn.smartjavaai</groupId>
         <artifactId>smartjavaai-parent</artifactId>
-        <version>1.0.13</version>
+        <version>1.0.14</version>
     </parent>
 
     <artifactId>smartjavaai-ocr</artifactId>
 
-    <properties>
-<!--        <maven.compiler.source>11</maven.compiler.source>-->
-<!--        <maven.compiler.target>11</maven.compiler.target>-->
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <javacv.version>1.5.8</javacv.version>
-        <javacv.ffmpeg.version>5.1.2-1.5.8</javacv.ffmpeg.version>
-    </properties>
 
     <dependencies>
         <dependency>
@@ -25,23 +18,9 @@
             <artifactId>smartjavaai-common</artifactId>
             <version>${project.version}</version>
         </dependency>
-        <dependency>
-            <groupId>org.bytedeco</groupId>
-            <artifactId>javacpp</artifactId>
-            <version>${javacv.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.bytedeco</groupId>
-            <artifactId>ffmpeg</artifactId>
-            <version>${javacv.ffmpeg.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>ai.djl.opencv</groupId>
-            <artifactId>opencv</artifactId>
-        </dependency>
     </dependencies>
 
-    <version>1.0.13</version>
+    <version>1.0.14</version>
     <name>smartjavaai-ocr</name>
     <description>SmartJavaAI</description>
     <url>https://github.com/geekwenjie/SmartJavaAI</url>

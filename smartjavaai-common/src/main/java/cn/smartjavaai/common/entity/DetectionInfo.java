@@ -31,6 +31,8 @@ public class DetectionInfo {
      */
     private ObjectDetInfo objectDetInfo;
 
+
+
     public DetectionInfo() {
     }
 

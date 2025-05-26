@@ -13,7 +13,7 @@ import lombok.Data;
 public class FaceModelConfig {
 
     /**
-     * 人脸算法名称
+     * 人脸模型枚举
      */
     private FaceModelEnum modelEnum;
 

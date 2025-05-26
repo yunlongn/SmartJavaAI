@@ -1,6 +1,7 @@
 package cn.smartjavaai.ocr.entity;
 
 import ai.djl.ndarray.NDArray;
+
 /**
  * 旋转检测框 - 支持左上角 X 坐标升序排序
  */

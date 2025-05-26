@@ -24,7 +24,7 @@ public class FaceAttributeModelFactory {
     private static final ConcurrentHashMap<String, FaceAttributeModel> modelMap = new ConcurrentHashMap<>();
 
     /**
-     * 算法注册表
+     * 模型注册表
      */
     private static final Map<String, Class<? extends FaceAttributeModel>> registry =
             new ConcurrentHashMap<>();

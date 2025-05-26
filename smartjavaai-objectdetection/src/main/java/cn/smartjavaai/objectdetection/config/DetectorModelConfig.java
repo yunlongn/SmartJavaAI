@@ -15,7 +15,7 @@ import lombok.Data;
 public class DetectorModelConfig {
 
     /**
-     * 模型名称
+     * 模型
      */
     private DetectorModelEnum modelEnum;
 

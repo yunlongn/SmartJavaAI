@@ -1,9 +1,11 @@
-package cn.smartjavaai.ocr.detection;
+package cn.smartjavaai.ocr.config;
 
 import cn.smartjavaai.common.enums.DeviceEnum;
+import cn.smartjavaai.ocr.enums.CommonDetModelEnum;
 import lombok.Data;
 
 /**
+ * OCR检测模型配置
  * @author dwj
  * @date 2025/4/22
  */
@@ -11,9 +13,9 @@ import lombok.Data;
 public class OcrDetModelConfig {
 
     /**
-     * 模型名称
+     * 模型
      */
-    private OcrDetModelEnum modelEnum;
+    private CommonDetModelEnum modelEnum;
 
     /**
      * 设备类型
@@ -21,8 +23,9 @@ public class OcrDetModelConfig {
     private DeviceEnum device;
 
     /**
-     * 模型路径
+     * 检测模型路径
      */
-    private String modelPath;
+    private String detModelPath;
+
 
 }

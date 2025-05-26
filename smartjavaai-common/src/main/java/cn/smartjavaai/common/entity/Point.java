@@ -38,4 +38,10 @@ public class Point implements Serializable {
     public String toString() {
         return JsonUtils.GSON_COMPACT.toJson(this);
     }
+
+    public org.opencv.core.Point toCvPoint() {
+        return new org.opencv.core.Point(x, y);
+    }
+
+
 }

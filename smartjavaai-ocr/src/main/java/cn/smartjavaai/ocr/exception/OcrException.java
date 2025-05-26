@@ -1,7 +1,7 @@
 package cn.smartjavaai.ocr.exception;
 
 /**
- * 人脸检测异常
+ * OCR异常
  * @author dwj
  * @date 2025/4/4
  */

@@ -10,7 +10,7 @@ import java.io.InputStream;
 import java.util.List;
 
 /**
- * 人脸识别算法
+ * 人脸识别模型
  * @author dwj
  */
 public abstract class AbstractFaceModel implements FaceModel {

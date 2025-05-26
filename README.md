@@ -135,7 +135,22 @@ SmartJavaAI是专为JAVA 开发者打造的一个功能丰富、开箱即用的 
         <img src="https://cdn.jsdelivr.net/gh/geekwenjie/SmartJavaAI-Site/images/object_detection_detected.png" width = "500px"/>
         </div>
       </td>
-    </tr>      
+    </tr>
+    <tr>
+      <td>
+        <div align="left">
+          <p>OCR文字识别</p>
+          - 支持任意角度文字识别 <br>
+          - 支持印刷体识别 <br>
+          - 支持手写字识别<br>
+        </div>
+      </td>     
+      <td>
+        <div align="center">
+        <img src="https://cdn.jsdelivr.net/gh/geekwenjie/SmartJavaAI-Site/images/general_ocr_002_recognized.png" width = "500px"/>
+        </div>
+      </td>
+    </tr> 
   </table>
 </div>
 
@@ -174,10 +189,12 @@ SmartJavaAI是专为JAVA 开发者打造的一个功能丰富、开箱即用的 
 - **目标检测**
   - 支持多种主流模型：兼容 YOLOv3、YOLOv5、YOLOv8、YOLOv11、YOLOv12、SSD 等目标检测算法
   - 支持自定义模型加载：可无缝加载并部署用户自行训练的目标检测模型
+- **OCR文字识别**
+  - 支持PaddleOCR 3.0模型：集成最新PP-OCRv5模型
+  - 支持任意角度识别，方向校准
+  - 支持通用文字识别，通用手写字识别
 
 ### ⌛ 规划中功能
-
-- 文字识别（OCR）
 
 - 图像分类（Image classification）
 
@@ -215,11 +232,12 @@ SmartJavaAI是专为JAVA 开发者打造的一个功能丰富、开箱即用的 
 
 ## 🛠️包含组件
 
-| 模块                          |     介绍                                                                          |
-|-----------------------------|---------------------------------------------------------------------------------- |
-| smartjavaai-common          |     基础通用模块，封装了公共功能，供各算法模块共享使用           |
-| smartjavaai-face            |     人脸功能模块                                        |
-| smartjavaai-objectdetection |     目标检测模块                                                               |
+| 模块                          | 介绍                        |
+|-----------------------------|---------------------------|
+| smartjavaai-common          | 基础通用模块，封装了公共功能，供各算法模块共享使用 |
+| smartjavaai-face            | 人脸功能模块                    |
+| smartjavaai-objectdetection | 目标检测模块                    |
+| smartjavaai-ocr             | OCR文字识别模块                 |
 
 可以根据需求对每个模块单独引入，也可以通过引入`smartjavaai-all`方式引入所有模块。
 
@@ -242,7 +260,7 @@ SmartJavaAI是专为JAVA 开发者打造的一个功能丰富、开箱即用的 
 <dependency>
     <groupId>cn.smartjavaai</groupId>
     <artifactId>smartjavaai-all</artifactId>
-    <version>1.0.13</version>
+    <version>1.0.14</version>
 </dependency>
 ```
 ### 3、完整示例代码
@@ -276,6 +294,10 @@ SmartJavaAI是专为JAVA 开发者打造的一个功能丰富、开箱即用的 
 
 
 ## 近期更新日志
+
+## [v1.0.14] - 2025-05-17
+- 新增OCR文字识别模块：支持最新 PP-OCRv5
+- OCR文本识别：支持文字方向检测与自动校正
 
 ## [v1.0.13] - 2025-05-17
 - 支持 JDK8 环境运行

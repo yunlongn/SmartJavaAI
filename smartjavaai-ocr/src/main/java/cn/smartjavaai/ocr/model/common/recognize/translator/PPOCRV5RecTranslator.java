@@ -1,4 +1,4 @@
-package cn.smartjavaai.ocr.ppv4.translator;
+package cn.smartjavaai.ocr.model.common.recognize.translator;
 
 import ai.djl.Model;
 import ai.djl.modality.cv.Image;
@@ -23,11 +23,11 @@ import java.util.Map;
  * 文字识别前后处理
  *
  */
-public class PaddleOCRV4WordRecTranslator implements Translator<Image, String> {
+public class PPOCRV5RecTranslator implements Translator<Image, String> {
     private List<String> table;
     private final boolean use_space_char;
 
-    public PaddleOCRV4WordRecTranslator(Map<String, ?> arguments) {
+    public PPOCRV5RecTranslator(Map<String, ?> arguments) {
         use_space_char =
                 arguments.containsKey("use_space_char")
                         ? Boolean.parseBoolean(arguments.get("use_space_char").toString())

@@ -1,21 +1,21 @@
-package cn.smartjavaai.ocr.detection;
+package cn.smartjavaai.ocr.enums;
 
 /**
- * OCR模型枚举
+ * OCR文本方向分类模型枚举
  * @author dwj
  * @date 2025/4/4
  */
-public enum OcrDetModelEnum {
+public enum DirectionModelEnum {
 
-    PADDLEOCR_V4_DET_MODEL;
+    CH_PPOCR_MOBILE_V2_CLS;
 
 
     /**
      * 根据名称获取枚举 (忽略大小写和下划线变体)
      */
-    public static OcrDetModelEnum fromName(String name) {
+    public static DirectionModelEnum fromName(String name) {
         String formatted = name.trim().toUpperCase().replaceAll("[-_]", "");
-        for (OcrDetModelEnum model : values()) {
+        for (DirectionModelEnum model : values()) {
             if (model.name().replaceAll("_", "").equals(formatted)) {
                 return model;
             }

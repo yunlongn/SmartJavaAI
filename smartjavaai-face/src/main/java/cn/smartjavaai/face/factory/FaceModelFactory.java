@@ -25,7 +25,7 @@ public class FaceModelFactory {
     private static final ConcurrentHashMap<String, FaceModel> modelMap = new ConcurrentHashMap<>();
 
     /**
-     * 算法注册表
+     * 模型注册表
      */
     private static final Map<String, Class<? extends FaceModel>> registry =
             new ConcurrentHashMap<>();
@@ -45,7 +45,7 @@ public class FaceModelFactory {
 
 
     /**
-     * 注册算法
+     * 注册模型
      * @param name
      * @param clazz
      */
@@ -82,7 +82,7 @@ public class FaceModelFactory {
     }
 
     /**
-     * 使用ModelConfig创建算法
+     * 使用ModelConfig创建模型
      * @param config
      * @return
      */

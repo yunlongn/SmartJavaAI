@@ -29,6 +29,8 @@ public class Config {
         if(StringUtils.isNotBlank(cachePath)){
             System.setProperty("DJL_CACHE_DIR", cachePath);
         }
+        System.setProperty("ai.djl.default_engine", "PyTorch");
+        log.info("设置默认引擎：{}", "PyTorch");
     }
 
     // 设置缓存路径的方法
