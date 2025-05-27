@@ -48,10 +48,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -158,8 +155,10 @@ public class PpOCRV5RecModel implements OcrCommonRecModel {
                 for (OcrItem ocrItem : ocrItemList){
                     //放射变换+裁剪
                     Image subImage = OcrUtils.transformAndCrop(srcMat, ocrItem.getOcrBox());
+                    //ImageUtils.saveImage(subImage, UUID.randomUUID().toString() + "_aaa.png", "build/output");
                     //纠正文本框
                     subImage = OcrUtils.rotateImg(subImage, ocrItem.getAngle());
+                    //ImageUtils.saveImage(subImage, UUID.randomUUID().toString() + "_bbb.png", "build/output");
                     //识别
                     String name = predictor.predict(subImage);
                     ocrItem.setText(name);

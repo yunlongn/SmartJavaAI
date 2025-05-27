@@ -6,11 +6,11 @@
     <parent>
         <groupId>cn.smartjavaai</groupId>
         <artifactId>smartjavaai-parent</artifactId>
-        <version>1.0.14</version>
+        <version>1.0.15</version>
     </parent>
 
     <artifactId>smartjavaai-face</artifactId>
-    <version>1.0.14</version>
+    <version>1.0.15</version>
     <name>smartjavaai-face</name>
     <description>SmartJavaAI</description>
     <url>https://github.com/geekwenjie/SmartJavaAI</url>

@@ -260,7 +260,7 @@ SmartJavaAI是专为JAVA 开发者打造的一个功能丰富、开箱即用的 
 <dependency>
     <groupId>cn.smartjavaai</groupId>
     <artifactId>smartjavaai-all</artifactId>
-    <version>1.0.14</version>
+    <version>1.0.15</version>
 </dependency>
 ```
 ### 3、完整示例代码
@@ -295,7 +295,7 @@ SmartJavaAI是专为JAVA 开发者打造的一个功能丰富、开箱即用的 
 
 ## 近期更新日志
 
-## [v1.0.14] - 2025-05-17
+## [v1.0.15] - 2025-05-17
 - 新增OCR文字识别模块：支持最新 PP-OCRv5
 - OCR文本识别：支持文字方向检测与自动校正
 

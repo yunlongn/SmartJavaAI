@@ -47,6 +47,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.UUID;
 
 /**
  * PPOCRMobileV2Model 方向分类模型
@@ -177,13 +178,12 @@ public class PPOCRMobileV2Model implements OcrDirectionModel {
             if (subImg.getHeight() * 1.0 / subImg.getWidth() > 1.5) {
                 //旋转图片90度
                 subImg = OcrUtils.rotateImg(manager, subImg);
-                //ImageUtils.saveImage(subImg, i + "rotate.png", "build/output");
                 //检测方向
                 directionInfo = predictor.predict(subImg);
                 if (directionInfo.getName().equalsIgnoreCase("Rotate")) {
-                    angle = "90";
-                } else {
                     angle = "270";
+                } else {
+                    angle = "90";
                 }
             }else{ //横向
                 directionInfo = predictor.predict(subImg);
