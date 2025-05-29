@@ -6,6 +6,9 @@
 	<em>像Hutool一样简单易用的Java AI工具箱</em>
 </p>
 <p align="center">
+	👉 <a href="http://www.smartjavaai.cn/">http://www.smartjavaai.cn/</a> 👈
+</p>
+<p align="center">
 	<a target="_blank" href="https://central.sonatype.com/artifact/ink.numberone/smartjavaai-all">
 		<img src="https://img.shields.io/maven-central/v/ink.numberone/smartjavaai-all.svg?label=Maven%20Central" />
 	</a>
