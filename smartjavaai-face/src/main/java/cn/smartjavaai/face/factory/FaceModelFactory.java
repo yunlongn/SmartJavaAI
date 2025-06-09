@@ -121,9 +121,9 @@ public class FaceModelFactory {
         registerAlgorithm("retinafacemodel", RetinaFaceModel.class);
         registerAlgorithm("ultralightfastgenericfacemodel", UltraLightFastGenericFaceModel.class);
         //人脸特征提取
-        registerAlgorithm("featureextractionmodel", FeatureExtractionModel.class);
+        registerAlgorithm("facenetmodel", FaceNetModel.class);
         registerAlgorithm("seetaface6model", SeetaFace6Model.class);
-        log.info("缓存目录：{}", Config.getCachePath());
+        log.debug("缓存目录：{}", Config.getCachePath());
     }
 
 }

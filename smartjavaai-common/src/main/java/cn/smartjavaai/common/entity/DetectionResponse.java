@@ -14,6 +14,7 @@ public class DetectionResponse {
 
     private List<DetectionInfo> detectionInfoList;
 
+
     public DetectionResponse() {
     }
 

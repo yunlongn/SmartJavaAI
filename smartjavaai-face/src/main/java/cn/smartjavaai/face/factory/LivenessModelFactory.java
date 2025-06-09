@@ -95,7 +95,7 @@ public class LivenessModelFactory {
     // 初始化默认算法
     static {
         registerModel("seetaface6model", Seetaface6LivenessModel.class);
-        log.info("缓存目录：{}", Config.getCachePath());
+        log.debug("缓存目录：{}", Config.getCachePath());
     }
 
 }

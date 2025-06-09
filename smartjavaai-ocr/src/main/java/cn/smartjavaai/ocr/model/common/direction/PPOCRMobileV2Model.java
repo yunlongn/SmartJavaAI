@@ -89,8 +89,8 @@ public class PPOCRMobileV2Model implements OcrDirectionModel {
             ZooModel model = ModelZoo.loadModel(criteria);
             // 创建池子：每个线程独享 Predictor
             this.predictorPool = new GenericObjectPool<>(new PredictorFactory<>(model));
-            log.info("当前设备: " + model.getNDManager().getDevice());
-            log.info("当前引擎: " + Engine.getInstance().getEngineName());
+            log.debug("当前设备: " + model.getNDManager().getDevice());
+            log.debug("当前引擎: " + Engine.getInstance().getEngineName());
         } catch (IOException | ModelNotFoundException | MalformedModelException e) {
             throw new OcrException("模型加载失败", e);
         }
@@ -232,7 +232,7 @@ public class PPOCRMobileV2Model implements OcrDirectionModel {
             }
             OcrUtils.drawRectWithText((Mat) img.getWrappedImage(), itemList);
             Path output = Paths.get(outputPath);
-            log.info("Saving to {}", output.toAbsolutePath().toString());
+            log.debug("Saving to {}", output.toAbsolutePath().toString());
             img.save(Files.newOutputStream(output), "png");
             ((Mat) img.getWrappedImage()).release();
         } catch (IOException e) {

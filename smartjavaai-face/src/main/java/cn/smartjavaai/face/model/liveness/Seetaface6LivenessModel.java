@@ -46,7 +46,7 @@ public class Seetaface6LivenessModel implements LivenessDetModel{
         }
         //加载依赖库
         NativeLoader.loadNativeLibraries(config.getDevice());
-        log.info("Loading seetaFace6 library successfully.");
+        log.debug("Loading seetaFace6 library successfully.");
         String[] faceDetectorModelPath = {config.getModelPath() + File.separator + "face_detector.csta"};
         String[] faceAntiSpoofingModelPath = {config.getModelPath() + File.separator + "fas_first.csta",config.getModelPath() + File.separator + "fas_second.csta"};
         String[] faceLandmarkerModelPath = {config.getModelPath() + File.separator + "face_landmarker_pts5.csta"};
@@ -511,7 +511,7 @@ public class Seetaface6LivenessModel implements LivenessDetModel{
             // 获取视频总帧数
             int totalFrames = grabber.getLengthInFrames();
             int videoFrameCountConfig = faceAntiSpoofing.GetVideoFrameCount();
-            log.info("视频总帧数：{}，检测帧数：{}", totalFrames, videoFrameCountConfig);
+            log.debug("视频总帧数：{}，检测帧数：{}", totalFrames, videoFrameCountConfig);
             if(totalFrames < videoFrameCountConfig){
                 throw new FaceException("视频帧数低于检测帧数");
             }

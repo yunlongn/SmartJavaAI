@@ -64,21 +64,22 @@ public class NativeLoader {
                         seetaface6NativePath = Paths.get(Config.getCachePath(), SEETAFACE_LIB_DIR);
                         //创建目录
                         FileUtil.mkdir(seetaface6NativePath);
-                        log.info("seetaface6依赖库路径: " + seetaface6NativePath.toAbsolutePath().toString());
+                        log.debug("seetaface6依赖库路径: " + seetaface6NativePath.toAbsolutePath().toString());
                         //拷贝依赖库到缓存目录
                         List<File> fileList = getLibFiles(osInfo, device);
                         if(fileList != null && !fileList.isEmpty()){
                             // 加载依赖库文件
                             fileList.forEach(file -> {
                                 System.load(file.getAbsolutePath());
-                                log.info(String.format("load %s finish", file.getAbsolutePath()));
+                                //log.debug(String.format("load %s finish", file.getAbsolutePath()));
                             });
                         }
+                        log.debug("seetaface6 依赖库加载完毕");
                         isDllLoaded = true;
                     }
                 }
             } else {
-                log.info("SeetaFace DLL is already loaded.");
+                log.debug("SeetaFace DLL is already loaded.");
             }
 
         } catch (Exception e) {
@@ -94,7 +95,7 @@ public class NativeLoader {
     private static List<File> getLibFiles(OsInfo osInfo,DeviceEnum deviceEnum){
         try {
             String device = getDevice(deviceEnum);
-            log.info("当前设备：{}", device);
+            log.debug("当前设备：{}", device);
             //获取dll文件列表
             List<DllItem> baseList = new ArrayList<>();
             List<DllItem> jniList = new ArrayList<>();
@@ -206,11 +207,15 @@ public class NativeLoader {
             Path path = Paths.get(resourcePath);
             String fileName = path.getFileName().toString();
             Path targetPath = seetaface6NativePath.resolve(fileName);
-            Files.copy(in, targetPath, StandardCopyOption.REPLACE_EXISTING);
-            log.info("copy target path success : {}", targetPath.toAbsolutePath().toString());
-            // 设置可执行权限
-            if (!SystemUtil.getOsInfo().getName().toLowerCase().contains("win")) {
-                targetPath.toFile().setExecutable(true);
+            if (Files.exists(targetPath)) {
+                //log.debug("target file already exists, skip copy: {}", targetPath.toAbsolutePath());
+            } else {
+                Files.copy(in, targetPath, StandardCopyOption.REPLACE_EXISTING);
+                log.debug("copy target path success: {}", targetPath.toAbsolutePath());
+                // 设置可执行权限
+                if (!SystemUtil.getOsInfo().getName().toLowerCase().contains("win")) {
+                    targetPath.toFile().setExecutable(true);
+                }
             }
             return targetPath.toFile();
         }

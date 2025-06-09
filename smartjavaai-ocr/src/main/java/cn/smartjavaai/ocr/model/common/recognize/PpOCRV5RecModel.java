@@ -90,8 +90,8 @@ public class PpOCRV5RecModel implements OcrCommonRecModel {
         try{
             ZooModel recognitionModel = ModelZoo.loadModel(recCriteria);
             this.recPredictorPool = new GenericObjectPool<>(new PredictorFactory<>(recognitionModel));
-            log.info("当前设备: " + recognitionModel.getNDManager().getDevice());
-            log.info("当前引擎: " + Engine.getInstance().getEngineName());
+            log.debug("当前设备: " + recognitionModel.getNDManager().getDevice());
+            log.debug("当前引擎: " + Engine.getInstance().getEngineName());
         } catch (IOException | ModelNotFoundException | MalformedModelException e) {
             throw new OcrException("识别模型加载失败", e);
         }

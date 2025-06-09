@@ -3,16 +3,17 @@ package cn.smartjavaai.face.dao;
 import cn.smartjavaai.face.entity.FaceData;
 import cn.smartjavaai.face.sqllite.RowMapper;
 import cn.smartjavaai.face.sqllite.SqliteHelper;
+import cn.smartjavaai.face.utils.VectorUtils;
+import cn.smartjavaai.face.vector.entity.FaceVector;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.beanutils.BeanUtils;
+import org.apache.commons.collections4.CollectionUtils;
 
 import java.lang.reflect.InvocationTargetException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * 人脸库持久层
@@ -21,131 +22,168 @@ import java.util.Map;
 @Slf4j
 public class FaceDao {
 
-    private static final String TABLE_NAME_IMG = "face";
+    private static final String FACE_TABLE_NAME = "face";
 
+    private static final String SCHEMA_RESOURCE = "db/schema.sql";
 
-    private String dbFilePath;
+    private static final ConcurrentHashMap<String, FaceDao> INSTANCES = new ConcurrentHashMap<>();
 
-    public FaceDao(String dbFilePath) {
-        this.dbFilePath = dbFilePath;
+    private final String dbFilePath;
+
+    /**
+     * 获取FaceDao实例（单例模式）
+     * @param dbFilePath 数据库文件路径
+     * @return FaceDao实例
+     */
+    public static FaceDao getInstance(String dbFilePath) {
+        return INSTANCES.computeIfAbsent(dbFilePath, path -> new FaceDao(path));
     }
 
+    /**
+     * 私有构造函数
+     * @param dbFilePath 数据库文件路径
+     */
+    private FaceDao(String dbFilePath) {
+        this.dbFilePath = dbFilePath;
+        try {
+            SqliteHelper sqliteHelper = SqliteHelper.getInstance(dbFilePath);
+            //自动创建数据库+表
+            sqliteHelper.initializeDatabase(FACE_TABLE_NAME, SCHEMA_RESOURCE);
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        } catch (ClassNotFoundException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
-    public void save(FaceData faceData) throws SQLException, ClassNotFoundException {
-        SqliteHelper sqliteHelper = new SqliteHelper(dbFilePath);
-        sqliteHelper.executeUpdate("INSERT OR REPLACE INTO " + TABLE_NAME_IMG + " (\"index\",\"key\",\"img_data\",\"width\",\"height\",\"channel\") VALUES (?,?,?,?,?,?)", new Object[]{faceData.getIndex(),faceData
-                .getKey(), faceData.getImgData(), faceData.getWidth(), faceData.getHeight(), faceData.getChannel()});
+    /**
+     * 插入或更新人脸向量
+     * @param faceVector 人脸向量
+     * @throws SQLException SQL异常
+     * @throws ClassNotFoundException 类未找到异常
+     */
+    public void insertOrUpdate(FaceVector faceVector) throws SQLException, ClassNotFoundException {
+        SqliteHelper sqliteHelper = SqliteHelper.getInstance(dbFilePath);
+        Map<String, Object> params = new HashMap<>();
+        params.put("id", faceVector.getId());
+        params.put("vector", VectorUtils.toByteArray(faceVector.getVector()));
+        params.put("metadata", faceVector.getMetadata());
+        sqliteHelper.executeInsertOrUpdate(FACE_TABLE_NAME, params);
     }
 
     /**
      * 使用index查询key
-     *
-     * @param index
-     * @return
-     * @throws SQLException
-     * @throws ClassNotFoundException
+     * @param id 人脸ID
+     * @return 人脸向量
+     * @throws SQLException SQL异常
+     * @throws ClassNotFoundException 类未找到异常
      */
-    public String findKeyByIndex(long index) throws SQLException, ClassNotFoundException {
-        SqliteHelper sqliteHelper = new SqliteHelper(dbFilePath);
-        return sqliteHelper.executeQuery("select \"key\" from " + TABLE_NAME_IMG + " where \"index\"=" + index);
+    public FaceVector findById(String id) throws SQLException, ClassNotFoundException {
+        SqliteHelper sqliteHelper = SqliteHelper.getInstance(dbFilePath);
+        String sql = "select \"id\",\"vector\",\"metadata\" from " + FACE_TABLE_NAME + " where \"id\"=" + id;
+        List<FaceVector> faceVectors = sqliteHelper.executeQuery(sql, new RowMapper<FaceVector>() {
+            @Override
+            public FaceVector mapRow(ResultSet rs, int id) throws SQLException {
+                FaceVector face = new FaceVector();
+                face.setId(rs.getString("id"));
+                face.setVector(VectorUtils.toFloatArray(rs.getBytes("vector")));
+                face.setMetadata(rs.getString("metadata"));
+                return face;
+            }
+        });
+        return CollectionUtils.isNotEmpty(faceVectors) ? faceVectors.get(0) : null;
     }
 
     /**
      * 删除全部
-     *
-     * @return
-     * @throws SQLException
-     * @throws ClassNotFoundException
+     * @return 删除的行数
+     * @throws SQLException SQL异常
+     * @throws ClassNotFoundException 类未找到异常
      */
     public long deleteAll() throws SQLException, ClassNotFoundException {
-        SqliteHelper sqliteHelper = new SqliteHelper(dbFilePath);
-        long rows = sqliteHelper.executeUpdate("delete from " + TABLE_NAME_IMG);
+        SqliteHelper sqliteHelper = SqliteHelper.getInstance(dbFilePath);
+        long rows = sqliteHelper.executeUpdate("delete from " + FACE_TABLE_NAME);
         return rows;
     }
 
     /**
-     * 查询index
-     *
-     * @param keys
-     * @return
-     * @throws SQLException
-     * @throws ClassNotFoundException
+     * 使用id数组查询
+     * @param ids ID数组
+     * @return 人脸向量列表
+     * @throws SQLException SQL异常
+     * @throws ClassNotFoundException 类未找到异常
      */
-    public List<Long> findIndexList(String... keys) throws SQLException, ClassNotFoundException {
+    public List<FaceVector> findByIds(String... ids) throws SQLException, ClassNotFoundException {
         // 使用 Stream API
-        String inKeys = Arrays.stream(keys)
+        String inKeys = Arrays.stream(ids)
                 .map(s -> "'" + s + "'")
                 .reduce((s1, s2) -> s1 + "," + s2)
                 .orElse("");
-        String sql = "select \"index\" from " + TABLE_NAME_IMG + " where \"key\" in (" + inKeys + ")";
-        log.info("sql：{}", sql.toString());
-        SqliteHelper sqliteHelper = new SqliteHelper(dbFilePath);
-        return sqliteHelper.executeQuery(sql, new RowMapper<Long>() {
+        String sql = "select \"id\",\"vector\",\"metadata\" from " + FACE_TABLE_NAME + " where \"id\" in (" + inKeys + ")";
+        log.debug("sql：{}", sql);
+        SqliteHelper sqliteHelper = SqliteHelper.getInstance(dbFilePath);
+        List<FaceVector> faceVectors = sqliteHelper.executeQuery(sql, new RowMapper<FaceVector>() {
             @Override
-            public Long mapRow(ResultSet rs, int index) throws SQLException {
-                return rs.getLong(1);
+            public FaceVector mapRow(ResultSet rs, int id) throws SQLException {
+                FaceVector face = new FaceVector();
+                face.setId(rs.getString("id"));
+                face.setVector(VectorUtils.toFloatArray(rs.getBytes("vector")));
+                face.setMetadata(rs.getString("metadata"));
+                return face;
             }
         });
+        return faceVectors;
     }
 
     /**
      * 删除人脸
-     * @param keys
-     * @return
-     * @throws SQLException
-     * @throws ClassNotFoundException
+     * @param ids ID数组
+     * @return 是否成功
+     * @throws SQLException SQL异常
+     * @throws ClassNotFoundException 类未找到异常
      */
-    public boolean deleteFace(String... keys) throws SQLException, ClassNotFoundException {
-        String inKeys = Arrays.stream(keys)
+    public boolean deleteFace(String... ids) throws SQLException, ClassNotFoundException {
+        String inKeys = Arrays.stream(ids)
                 .map(s -> "'" + s + "'")
                 .reduce((s1, s2) -> s1 + "," + s2)
                 .orElse("");
 
-        SqliteHelper sqliteHelper = new SqliteHelper(dbFilePath);
-        String sql = "delete from " + TABLE_NAME_IMG + " where \"key\" in (" + inKeys + ")";
-        log.info("sql：{}", sql.toString());
-        sqliteHelper.executeUpdate(sql);
-        return true;
+        SqliteHelper sqliteHelper = SqliteHelper.getInstance(dbFilePath);
+        String sql = "delete from " + FACE_TABLE_NAME + " where \"id\" in (" + inKeys + ")";
+        int rows = sqliteHelper.executeUpdate(sql);
+        log.debug("删除了{}行数据", rows);
+        return rows == ids.length;
     }
 
     /**
      * 分页查询人脸
-     * @param pageNo
-     * @param pageSize
-     * @return
-     * @throws SQLException
-     * @throws ClassNotFoundException
+     * @param pageNo 页码
+     * @param pageSize 每页大小
+     * @return 人脸向量列表
+     * @throws SQLException SQL异常
+     * @throws ClassNotFoundException 类未找到异常
      */
-    public List<FaceData> findFace(int pageNo, int pageSize) throws SQLException, ClassNotFoundException {
-        String sql = "select \"key\",\"img_data\",\"width\",\"height\",\"channel\" from " + TABLE_NAME_IMG +
+    public List<FaceVector> findFace(int pageNo, int pageSize) throws SQLException, ClassNotFoundException {
+        String sql = "select \"id\",\"vector\",\"metadata\" from " + FACE_TABLE_NAME +
                 " limit " + pageNo * pageSize + "," + pageSize;
-        SqliteHelper sqliteHelper = new SqliteHelper(dbFilePath);
-        return sqliteHelper.executeQuery(sql, new RowMapper<FaceData>() {
+        SqliteHelper sqliteHelper = SqliteHelper.getInstance(dbFilePath);
+        return sqliteHelper.executeQuery(sql, new RowMapper<FaceVector>() {
             @Override
-            public FaceData mapRow(ResultSet rs, int index) throws SQLException {
-                FaceData face = new FaceData();
-                face.setKey(rs.getString("key"));
-                face.setImgData(rs.getBytes("img_data"));
-                face.setWidth(rs.getInt("width"));
-                face.setHeight(rs.getInt("height"));
-                face.setChannel(rs.getInt("channel"));
+            public FaceVector mapRow(ResultSet rs, int id) throws SQLException {
+                FaceVector face = new FaceVector();
+                face.setId(rs.getString("id"));
+                face.setVector(VectorUtils.toFloatArray(rs.getBytes("vector")));
+                face.setMetadata(rs.getString("metadata"));
                 return face;
             }
         });
     }
 
     /**
-     * 更新index
-     * @param index
-     * @param faceData
-     * @return
-     * @throws SQLException
-     * @throws ClassNotFoundException
+     * 关闭所有实例
      */
-    public int updateIndex(long index,FaceData faceData) throws SQLException, ClassNotFoundException {
-        SqliteHelper sqliteHelper = new SqliteHelper(dbFilePath);
-        return sqliteHelper.executeUpdate("INSERT OR REPLACE INTO " + TABLE_NAME_IMG + " (\"index\",\"key\",\"img_data\",\"width\",\"height\",\"channel\") VALUES (?,?,?,?,?,?)", new Object[]{index,faceData
-                .getKey(), faceData.getImgData(), faceData.getWidth(), faceData.getHeight(), faceData.getChannel()});
+    public static void closeAll() {
+        INSTANCES.clear();
+        log.debug("所有FaceDao实例已关闭");
     }
-
 }

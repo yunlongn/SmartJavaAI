@@ -57,7 +57,7 @@ public class DetectorModel implements AutoCloseable{
             model = criteria.loadModel();
             // 创建池子：每个线程独享 Predictor
             this.predictorPool = new GenericObjectPool<>(new PredictorFactory<>(model));
-            log.info("当前设备: " + model.getNDManager().getDevice());
+            log.debug("当前设备: " + model.getNDManager().getDevice());
         } catch (IOException | ModelNotFoundException | MalformedModelException e) {
             throw new DetectionException("模型加载失败", e);
         }
@@ -178,7 +178,7 @@ public class DetectorModel implements AutoCloseable{
             if (predictor != null) {
                 try {
                     predictorPool.returnObject(predictor); //归还
-                    log.info("释放资源");
+                    log.debug("释放资源");
                 } catch (Exception e) {
                     log.warn("归还Predictor失败", e);
                     try {

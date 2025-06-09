@@ -40,7 +40,7 @@ import java.util.Objects;
  * @author dwj
  */
 @Slf4j
-public class RetinaFaceModel extends AbstractFaceModel implements AutoCloseable{
+public class RetinaFaceModel implements FaceModel, AutoCloseable{
 
 
     private ObjectPool<Predictor<Image, DetectedObjects>> predictorPool;
@@ -174,7 +174,7 @@ public class RetinaFaceModel extends AbstractFaceModel implements AutoCloseable{
             }
             img.drawBoundingBoxes(detectedObjects);
             Path output = Paths.get(outputPath);
-            log.info("Saving to {}", output.toAbsolutePath().toString());
+            log.debug("Saving to {}", output.toAbsolutePath().toString());
             img.save(Files.newOutputStream(output), "png");
         } catch (IOException e) {
             throw new FaceException(e);

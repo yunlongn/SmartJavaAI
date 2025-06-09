@@ -43,7 +43,9 @@ public final class FaceFeatureTranslator implements Translator<Image, float[]> {
      */
     @Override
     public float[] processOutput(TranslatorContext ctx, NDList list) {
-        return list.singletonOrThrow().toFloatArray();
+        NDArray embedding = list.singletonOrThrow();
+        embedding = embedding.div(embedding.norm()); // L2归一化
+        return embedding.toFloatArray();
     }
 
     @Override

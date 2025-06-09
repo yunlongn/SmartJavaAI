@@ -22,7 +22,7 @@ public class ObjectDetectionModelFactory {
     private static final ConcurrentHashMap<String, DetectorModel> modelMap = new ConcurrentHashMap<>();
 
     static{
-        log.info("缓存目录：{}", Config.getCachePath());
+        log.debug("缓存目录：{}", Config.getCachePath());
     }
 
     // 私有构造函数，防止外部创建实例

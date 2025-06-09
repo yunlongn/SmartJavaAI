@@ -3,6 +3,8 @@ package cn.smartjavaai.face.config;
 import cn.smartjavaai.common.enums.DeviceEnum;
 import cn.smartjavaai.face.constant.FaceDetectConstant;
 import cn.smartjavaai.face.enums.FaceModelEnum;
+import cn.smartjavaai.face.enums.VectorDBType;
+import cn.smartjavaai.face.vector.config.VectorDBConfig;
 import lombok.Data;
 
 /**
@@ -25,7 +27,7 @@ public class FaceModelConfig {
     /**
      * 相似度阈值 作用：判断是否为同一人脸
      */
-    private double similarityThreshold = 0D;
+    //private double similarityThreshold = 0D;
 
     /**
      * 非极大抑制阈值 作用：消除重叠检测框，保留最优结果
@@ -56,6 +58,17 @@ public class FaceModelConfig {
      * 人脸特征提取配置
      */
     private FaceExtractConfig extractConfig;
+
+
+    /**
+     * 向量数据库配置
+     */
+    private VectorDBConfig vectorDBConfig;
+
+    /**
+     * 是否自动加载人脸到内存
+     */
+    private boolean isAutoLoadFace = true;
 
     public FaceModelConfig() {
     }

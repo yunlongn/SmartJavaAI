@@ -91,7 +91,7 @@ public class FaceAttributeModelFactory {
     // 初始化默认算法
     static {
         registerModel("seetaface6model", Seetaface6FaceAttributeModel.class);
-        log.info("缓存目录：{}", Config.getCachePath());
+        log.debug("缓存目录：{}", Config.getCachePath());
     }
 
 }

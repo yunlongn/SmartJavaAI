@@ -28,6 +28,16 @@ public class FaceInfo {
      */
     private LivenessStatus livenessStatus;
 
+    /**
+     * 人脸查询结果
+     */
+    private List<FaceSearchResult> faceSearchResults;
+
+    /**
+     * 人脸特征
+     */
+    private float[] feature;
+
     public FaceInfo() {
     }
 

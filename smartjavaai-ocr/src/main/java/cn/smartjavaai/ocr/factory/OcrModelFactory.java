@@ -205,7 +205,7 @@ public class OcrModelFactory {
         registerCommonDetModel("PADDLEOCR_V5_DET_MODEL", PpOCRV5DetModel.class);
         registerCommonRecModel("PADDLEOCR_V5_REC_MODEL", PpOCRV5RecModel.class);
         registerDirectionModel("CH_PPOCR_MOBILE_V2_CLS", PPOCRMobileV2Model.class);
-        log.info("缓存目录：{}", Config.getCachePath());
+        log.debug("缓存目录：{}", Config.getCachePath());
     }
 
 }

@@ -36,7 +36,7 @@ import java.util.Objects;
  * @author dwj
  */
 @Slf4j
-public class UltraLightFastGenericFaceModel extends AbstractFaceModel implements AutoCloseable{
+public class UltraLightFastGenericFaceModel implements FaceModel, AutoCloseable{
 
 
     private ObjectPool<Predictor<Image, DetectedObjects>> predictorPool;

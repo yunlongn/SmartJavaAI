@@ -79,7 +79,7 @@ public class FaceUtils {
      * @param seetaResult
      * @return
      */
-    public static DetectionResponse convertToDetectionResponse(SeetaRect[] seetaResult, FaceModelConfig config,List<SeetaPointF[]> seetaPointFSList){
+    public static DetectionResponse convertToDetectionResponse(SeetaRect[] seetaResult, List<SeetaPointF[]> seetaPointFSList){
         if(Objects.isNull(seetaResult) || seetaResult.length == 0){
             return null;
         }
@@ -102,6 +102,57 @@ public class FaceUtils {
         }
         detectionResponse.setDetectionInfoList(detectionInfoList);
         return detectionResponse;
+    }
+
+
+    /**
+     * 转换为FaceDetectedResult(人脸特征提取)
+     * @param seetaResult
+     * @return
+     */
+    public static DetectionResponse featuresConvertToResponse(SeetaRect[] seetaResult, List<SeetaPointF[]> seetaPointFSList, List<float[]> featureList){
+        if(Objects.isNull(seetaResult) || seetaResult.length == 0){
+            return null;
+        }
+        List<DetectionInfo> detectionInfoList = new ArrayList<DetectionInfo>();
+        for(int i = 0; i < seetaResult.length; i++){
+            SeetaRect rect  = seetaResult[i];
+            DetectionRectangle rectangle = new DetectionRectangle(rect.x, rect.y, rect.width, rect.height);
+            FaceInfo faceInfo = new FaceInfo();
+            if(seetaPointFSList != null && seetaPointFSList.size() > 0){
+                SeetaPointF[] seetaPointFS = seetaPointFSList.get(i);
+                List<Point> keyPoints = Arrays.stream(seetaPointFS)
+                        .map(p -> new Point(p.x, p.y))
+                        .collect(Collectors.toList());
+                faceInfo.setKeyPoints(keyPoints);
+            }
+            if(featureList != null && featureList.size() > 0){
+                faceInfo.setFeature(featureList.get(i));
+            }
+            detectionInfoList.add(new DetectionInfo(rectangle, 0, faceInfo));
+        }
+        return new DetectionResponse(detectionInfoList);
+    }
+
+
+    /**
+     * 转换为FaceDetectedResult(人脸特征提取)
+     * @param rect
+     * @param seetaPointFS
+     * @param feature
+     * @return
+     */
+    public static DetectionResponse featuresConvertToResponse(SeetaRect rect, SeetaPointF[] seetaPointFS, float[] feature){
+        List<DetectionInfo> detectionInfoList = new ArrayList<DetectionInfo>();
+        DetectionRectangle rectangle = new DetectionRectangle(rect.x, rect.y, rect.width, rect.height);
+        FaceInfo faceInfo = new FaceInfo();
+        List<Point> keyPoints = Arrays.stream(seetaPointFS)
+                .map(p -> new Point(p.x, p.y))
+                .collect(Collectors.toList());
+        faceInfo.setKeyPoints(keyPoints);
+        faceInfo.setFeature(feature);
+        detectionInfoList.add(new DetectionInfo(rectangle, 0, faceInfo));
+        return new DetectionResponse(detectionInfoList);
     }
 
     /**
@@ -569,6 +620,28 @@ public class FaceUtils {
         g.setColor(Color.WHITE);
         for (int i = 0; i < lines.size(); i++) {
             g.drawString(lines.get(i), x + padding, y + padding + (i + 1) * lineHeight - 4);
+        }
+    }
+
+    /**
+     * 将 Milvus 查询返回的得分转换为 0~1 范围的相似度
+     * @param metricType 向量度量方式：IP 或 L2
+     * @param score 原始得分（L2 为距离，IP 为相似度）
+     * @return 映射后的相似度（0~1）
+     */
+    public static float convertScoreToSimilarity(String metricType, float score) {
+        switch (metricType.toUpperCase()) {
+            case "IP":
+                // 内积 IP 的范围为 [-1, 1]，归一化为 [0, 1]
+                return (score + 1.0f) / 2.0f;
+            case "L2":
+                // 欧氏距离 L2：距离越小越相似，1 / (1 + 距离) 映射到 (0, 1]
+                return 1.0f / (1.0f + score);
+            case "COSINE":
+                // 余弦相似度 COSINE：本身范围为 [-1, 1]，也需要归一化到 [0, 1]
+                return (score + 1.0f) / 2.0f;
+            default:
+                throw new IllegalArgumentException("Unsupported metricType: " + metricType);
         }
     }
 

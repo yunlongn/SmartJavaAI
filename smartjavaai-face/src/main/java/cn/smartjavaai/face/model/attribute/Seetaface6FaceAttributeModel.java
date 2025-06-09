@@ -53,7 +53,7 @@ public class Seetaface6FaceAttributeModel implements FaceAttributeModel {
         this.config = config;
         //加载依赖库
         NativeLoader.loadNativeLibraries(config.getDevice());
-        log.info("Loading seetaFace6 library successfully.");
+        log.debug("Loading seetaFace6 library successfully.");
         String[] faceDetectorModelPath = {config.getModelPath() + File.separator + "face_detector.csta"};
         String[] faceLandmarkerModelPath = {config.getModelPath() + File.separator + "face_landmarker_pts5.csta"};
         String[] genderPredictorModelPath = {config.getModelPath() + File.separator + "gender_predictor.csta"};

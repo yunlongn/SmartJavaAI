@@ -80,8 +80,8 @@ public class PpOCRV5DetModel implements OcrCommonDetModel {
             ZooModel detectionModel = ModelZoo.loadModel(detCriteria);
             // 创建池子：每个线程独享 Predictor
             this.detPredictorPool = new GenericObjectPool<>(new PredictorFactory<>(detectionModel));
-            log.info("当前设备: " + detectionModel.getNDManager().getDevice());
-            log.info("当前引擎: " + Engine.getInstance().getEngineName());
+            log.debug("当前设备: " + detectionModel.getNDManager().getDevice());
+            log.debug("当前引擎: " + Engine.getInstance().getEngineName());
         } catch (IOException | ModelNotFoundException | MalformedModelException e) {
             throw new OcrException("检测模型加载失败", e);
         }
@@ -142,7 +142,7 @@ public class PpOCRV5DetModel implements OcrCommonDetModel {
             }
             OcrUtils.drawRect((Mat)img.getWrappedImage(), boxList);
             Path output = Paths.get(outputPath);
-            log.info("Saving to {}", output.toAbsolutePath().toString());
+            log.debug("Saving to {}", output.toAbsolutePath().toString());
             img.save(Files.newOutputStream(output), "png");
             ((Mat) img.getWrappedImage()).release();
         } catch (IOException e) {

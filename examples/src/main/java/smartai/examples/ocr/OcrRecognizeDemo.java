@@ -27,8 +27,7 @@ public class OcrRecognizeDemo {
 
     /**
      * 文本识别
-     * 本方法支持旋转角度范围为 -90 到 90 度的文字
-     * 同时兼容印刷体和手写体文字。
+     * 支持简体中文、繁体中文、英文、日文四种主要语言，以及手写、竖版、拼音、生僻字
      * 流程：文本检测 -> 文本识别
      * 模型需要放在单独文件夹
      */
@@ -38,21 +37,20 @@ public class OcrRecognizeDemo {
         //指定检测模型
         recModelConfig.setDetModelEnum(CommonDetModelEnum.PADDLEOCR_V5_DET_MODEL);
         //指定检测模型位置，需要更改为自己的模型路径（下载地址请查看文档）
-        recModelConfig.setDetModelPath("/PP-OCRv5_server_det_infer/PP-OCRv5_server_det.onnx");
+        recModelConfig.setDetModelPath("/Users/wenjie/Documents/develop/ocr模型/PP-OCRv5_server_det_infer/PP-OCRv5_server_det.onnx");
         //指定识别模型
         recModelConfig.setRecModelEnum(CommonRecModelEnum.PADDLEOCR_V5_REC_MODEL);
         //指定识别模型位置，需要更改为自己的模型路径（下载地址请查看文档）
-        recModelConfig.setRecModelPath("/PP-OCRv5_server_rec_infer/PP-OCRv5_server_rec.onnx");
+        recModelConfig.setRecModelPath("/Users/wenjie/Documents/develop/ocr模型/PP-OCRv5_server_rec_infer/PP-OCRv5_server_rec.onnx");
         OcrCommonRecModel recModel = OcrModelFactory.getInstance().getRecModel(recModelConfig);
-        OcrInfo ocrInfo = recModel.recognize("src/main/resources/general_ocr_002.png");
+        OcrInfo ocrInfo = recModel.recognize("src/main/resources/ocr_1.jpg");
         log.info("OCR识别结果：{}", JSONObject.toJSONString(ocrInfo));
     }
 
 
     /**
      * 文本识别（手写字）
-     * 本方法支持旋转角度范围为 -90 到 90 度的文字
-     * 同时兼容印刷体和手写体文字。
+     * 支持简体中文、繁体中文、英文、日文四种主要语言，以及手写、竖版、拼音、生僻字
      * 流程：文本检测 -> 文本识别
      * 模型需要放在单独文件夹
      */
@@ -74,8 +72,8 @@ public class OcrRecognizeDemo {
 
     /**
      * 文本识别（带方向矫正）
-     * 本方法支持任意角度文字识别
-     * 同时兼容印刷体和手写体文字。
+     * 支持简体中文、繁体中文、英文、日文四种主要语言，以及手写、竖版、拼音、生僻字
+     * 本方法支持多角度文字识别
      * 流程：文本检测 -> 方向检测 -> 方向矫正 ->  文本识别
      * 模型需要放在单独文件夹
      */
@@ -103,8 +101,7 @@ public class OcrRecognizeDemo {
 
     /**
      * 文本识别并绘制结果
-     * 本方法支持旋转角度范围为 -90 到 90 度的文字
-     * 同时兼容印刷体和手写体文字。
+     * 支持简体中文、繁体中文、英文、日文四种主要语言，以及手写、竖版、拼音、生僻字
      * 流程：文本检测 -> 文本识别
      * 模型需要放在单独文件夹
      */
@@ -114,16 +111,19 @@ public class OcrRecognizeDemo {
         //指定检测模型
         recModelConfig.setDetModelEnum(CommonDetModelEnum.PADDLEOCR_V5_DET_MODEL);
         //指定检测模型位置，需要更改为自己的模型路径（下载地址请查看文档）
-        recModelConfig.setDetModelPath("/PP-OCRv5_server_det_infer/PP-OCRv5_server_det.onnx");
+        recModelConfig.setDetModelPath("/Users/wenjie/Documents/develop/ocr模型/PP-OCRv5_server_det_infer/PP-OCRv5_server_det.onnx");
         //指定识别模型
         recModelConfig.setRecModelEnum(CommonRecModelEnum.PADDLEOCR_V5_REC_MODEL);
         //directionModelConfig.setDirectionModelEnum(DirectionModelEnum.CH_PPOCR_MOBILE_V2_CLS);
         //指定识别模型位置，需要更改为自己的模型路径（下载地址请查看文档）
-        recModelConfig.setRecModelPath("/PP-OCRv5_server_rec_infer/PP-OCRv5_server_rec.onnx");
-        //directionModelConfig.setDirectionModelPath("/Users/wenjie/Documents/develop/ocr模型/ch_ppocr_mobile_v2.0_cls.onnx");
+        recModelConfig.setRecModelPath("/Users/wenjie/Documents/develop/ocr模型/PP-OCRv5_server_rec_infer/PP-OCRv5_server_rec.onnx");
+        //指定方向检测模型
+        recModelConfig.setDirectionModelEnum(DirectionModelEnum.CH_PPOCR_MOBILE_V2_CLS);
+        //指定方向模型位置，需要更改为自己的模型路径（下载地址请查看文档）
+        recModelConfig.setDirectionModelPath("/Users/wenjie/Documents/develop/ocr模型/ch_ppocr_mobile_v2.0_cls.onnx");
         OcrCommonRecModel recModel = OcrModelFactory.getInstance().getRecModel(recModelConfig);
-        int fontSize = 20;
-        recModel.recognizeAndDraw("src/main/resources/general_ocr_002.png", "output/general_ocr_002_recognized.png", fontSize);
+        int fontSize = 25;
+        recModel.recognizeAndDraw("src/main/resources/ocr_4.jpg", "output/ocr_4_recognized.jpg", fontSize);
     }
 
 

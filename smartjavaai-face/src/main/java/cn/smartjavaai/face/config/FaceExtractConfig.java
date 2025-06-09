@@ -19,7 +19,7 @@ public class FaceExtractConfig {
     /**
      * 是否对齐人脸
      */
-    private boolean align = true;
+    private boolean align = false;
 
     /**
      * 人脸检测模型

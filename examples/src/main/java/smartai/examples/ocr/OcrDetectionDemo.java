@@ -38,7 +38,7 @@ public class OcrDetectionDemo {
         //指定检测模型
         config.setModelEnum(CommonDetModelEnum.PADDLEOCR_V5_DET_MODEL);
         //指定模型位置，需要更改为自己的模型路径（下载地址请查看文档）
-        config.setDetModelPath("/PP-OCRv5_server_det_infer/PP-OCRv5_server_det.onnx");
+        config.setDetModelPath("/Users/wenjie/Documents/develop/ocr模型/PP-OCRv5_server_det_infer/PP-OCRv5_server_det.onnx");
         OcrCommonDetModel model = OcrModelFactory.getInstance().getDetModel(config);
         List<OcrBox> boxes = model.detect("src/main/resources/ocr_1.jpg");
         log.info("OCR检测结果：{}", JSONObject.toJSONString(boxes));

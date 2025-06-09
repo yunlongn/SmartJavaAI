@@ -52,7 +52,7 @@ public class OcrUtils {
         List<OcrBox> boxList = new ArrayList<OcrBox>();
         for(NDArray box : dt_boxes){
             float[] pointsArr = box.toFloatArray();
-            //log.info("points: {}", pointsArr);
+            //log.debug("points: {}", pointsArr);
             float[] lt = java.util.Arrays.copyOfRange(pointsArr, 0, 2);
             float[] rt = java.util.Arrays.copyOfRange(pointsArr, 2, 4);
             float[] rb = java.util.Arrays.copyOfRange(pointsArr, 4, 6);

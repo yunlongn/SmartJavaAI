@@ -9,7 +9,7 @@ public enum FaceModelEnum {
 
     RETINA_FACE("RetinaFaceModel"),
     ULTRA_LIGHT_FAST_GENERIC_FACE("UltraLightFastGenericFaceModel"),
-    FACENET_FEATURE_EXTRACTION("FeatureExtractionModel"),
+    FACENET_MODEL("FaceNetModel"),
     SEETA_FACE6_MODEL("SeetaFace6Model");
 
     private final String modelClassName;

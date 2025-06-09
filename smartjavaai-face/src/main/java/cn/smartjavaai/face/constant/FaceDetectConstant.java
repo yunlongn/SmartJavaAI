@@ -26,6 +26,11 @@ public class FaceDetectConstant {
      */
     public static final float SEETAFACE_DEFAULT_SIMILARITY_THRESHOLD = 0.85F;
 
+    /**
+     * 默认相似度阈值
+     */
+    public static final float FACENET_DEFAULT_SIMILARITY_THRESHOLD = 0.8F;
+
 
 
 }

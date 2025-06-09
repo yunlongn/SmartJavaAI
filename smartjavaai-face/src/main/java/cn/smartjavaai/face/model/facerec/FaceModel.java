@@ -1,9 +1,11 @@
 package cn.smartjavaai.face.model.facerec;
 
 import cn.smartjavaai.common.entity.DetectionResponse;
-import cn.smartjavaai.face.config.FaceExtractConfig;
+import cn.smartjavaai.common.entity.R;
 import cn.smartjavaai.face.config.FaceModelConfig;
-import cn.smartjavaai.face.entity.FaceResult;
+import cn.smartjavaai.face.entity.FaceRegisterInfo;
+import cn.smartjavaai.face.entity.FaceSearchParams;
+import cn.smartjavaai.common.entity.FaceSearchResult;
 
 import java.awt.image.BufferedImage;
 import java.io.InputStream;
@@ -27,42 +29,54 @@ public interface FaceModel {
      * @param imagePath 图片路径
      * @return
      */
-    DetectionResponse detect(String imagePath);
+    default DetectionResponse detect(String imagePath){
+        throw new UnsupportedOperationException("默认不支持该功能");
+    }
 
     /**
      * 人脸检测
      * @param imageInputStream 图片输入流
      * @return
      */
-    DetectionResponse detect(InputStream imageInputStream);
+    default DetectionResponse detect(InputStream imageInputStream){
+        throw new UnsupportedOperationException("默认不支持该功能");
+    }
 
     /**
      * 人脸检测
      * @param image BufferedImage
      * @return
      */
-    DetectionResponse detect(BufferedImage image);
+    default DetectionResponse detect(BufferedImage image){
+        throw new UnsupportedOperationException("默认不支持该功能");
+    }
 
     /**
      * 人脸检测
      * @param imageData
      * @return
      */
-    DetectionResponse detect(byte[] imageData);
+    default DetectionResponse detect(byte[] imageData){
+        throw new UnsupportedOperationException("默认不支持该功能");
+    }
 
     /**
      * 检测并绘制人脸
      * @param imagePath 图片输入路径（包含文件名称）
      * @param outputPath 图片输出路径（包含文件名称）
      */
-    void detectAndDraw(String imagePath, String outputPath);
+    default void detectAndDraw(String imagePath, String outputPath){
+        throw new UnsupportedOperationException("默认不支持该功能");
+    }
 
     /**
      * 检测并绘制人脸
      * @param sourceImage
      * @return
      */
-    BufferedImage detectAndDraw(BufferedImage sourceImage);
+    default BufferedImage detectAndDraw(BufferedImage sourceImage){
+        throw new UnsupportedOperationException("默认不支持该功能");
+    }
 
     /**
      * 计算相似度
@@ -70,7 +84,9 @@ public interface FaceModel {
      * @param feature2 图2特征
      * @return
      */
-    float calculSimilar(float[] feature1, float[] feature2);
+    default float calculSimilar(float[] feature1, float[] feature2){
+        throw new UnsupportedOperationException("默认不支持该功能");
+    }
 
     /**
      * 特征比较
@@ -78,7 +94,9 @@ public interface FaceModel {
      * @param imagePath2 图2路径
      * @return
      */
-    float featureComparison(String imagePath1, String imagePath2);
+    default float featureComparison(String imagePath1, String imagePath2){
+        throw new UnsupportedOperationException("默认不支持该功能");
+    }
 
     /**
      * 特征比较
@@ -86,15 +104,9 @@ public interface FaceModel {
      * @param sourceImag2 图2BufferedImage
      * @return
      */
-    float featureComparison(BufferedImage sourceImage1, BufferedImage sourceImag2);
-
-    /**
-     * 特征比较
-     * @param inputStream1 图1输入流
-     * @param inputStream2 图2输入流
-     * @return
-     */
-    float featureComparison(InputStream inputStream1, InputStream inputStream2);
+    default float featureComparison(BufferedImage sourceImage1, BufferedImage sourceImag2){
+        throw new UnsupportedOperationException("默认不支持该功能");
+    }
 
 
     /**
@@ -103,124 +115,291 @@ public interface FaceModel {
      * @param imageData2
      * @return
      */
-    float featureComparison(byte[] imageData1, byte[] imageData2);
+    default float featureComparison(byte[] imageData1, byte[] imageData2){
+        throw new UnsupportedOperationException("默认不支持该功能");
+    }
 
     /**
      * 注册人脸
-     * @param key
-     * @param imagePath
+     * 提取分数最高人脸进行注册
+     * @param faceRegisterInfo 注册人脸信息
+     * @param imagePath 图片路径
      * @return
      */
-    boolean register(String key, String imagePath);
+    default R<String> register(FaceRegisterInfo faceRegisterInfo, String imagePath){
+        throw new UnsupportedOperationException("默认不支持该功能");
+    }
 
     /**
      * 注册人脸
-     * @param key
+     * 提取分数最高人脸进行注册
+     * @param faceRegisterInfo 注册人脸信息
      * @param inputStream
      * @return
      */
-    boolean register(String key, InputStream inputStream);
+    default R<String> register(FaceRegisterInfo faceRegisterInfo, InputStream inputStream){
+        throw new UnsupportedOperationException("默认不支持该功能");
+    }
 
     /**
      * 注册人脸
-     * @param key
+     * 提取分数最高人脸进行注册
+     * @param faceRegisterInfo 注册人脸信息
      * @param sourceImage
      * @return
      */
-    boolean register(String key, BufferedImage sourceImage);
+    default R<String> register(FaceRegisterInfo faceRegisterInfo, BufferedImage sourceImage){
+        throw new UnsupportedOperationException("默认不支持该功能");
+    }
 
 
     /**
      * 注册人脸
-     * @param key
+     * 提取分数最高人脸进行注册
+     * @param faceRegisterInfo 注册人脸信息
      * @param imageData
      * @return
      */
-    boolean register(String key, byte[] imageData);
+    default R<String> register(FaceRegisterInfo faceRegisterInfo, byte[] imageData){
+        throw new UnsupportedOperationException("默认不支持该功能");
+    }
 
     /**
-     * 查询人脸
+     * 注册人脸
+     * 提取分数最高人脸进行注册
+     * @param faceRegisterInfo 注册人脸信息
+     * @param feature 人脸特征
+     * @return
+     */
+    default R<String> register(FaceRegisterInfo faceRegisterInfo, float[] feature){
+        throw new UnsupportedOperationException("默认不支持该功能");
+    }
+
+    /**
+     * 更新或注册人脸
+     * 自动提取分数最高人脸进行更新
+     * @param faceRegisterInfo 注册人脸信息
      * @param imagePath
      * @return
      */
-    FaceResult search(String imagePath);
+    default void upsertFace(FaceRegisterInfo faceRegisterInfo, String imagePath){
+        throw new UnsupportedOperationException("默认不支持该功能");
+    }
+
 
     /**
-     * 查询人脸
-     * @param inputStream
-     * @return
-     */
-    FaceResult search(InputStream inputStream);
-
-    /**
-     * 查询人脸
+     * 更新或注册人脸
+     * 自动提取分数最高人脸进行更新
+     * @param faceRegisterInfo 注册人脸信息
      * @param sourceImage
      * @return
      */
-    FaceResult search(BufferedImage sourceImage);
+    default void upsertFace(FaceRegisterInfo faceRegisterInfo, BufferedImage sourceImage){
+        throw new UnsupportedOperationException("默认不支持该功能");
+    }
 
     /**
-     * 查询人脸
+     * 更新或注册人脸
+     * 自动提取分数最高人脸进行更新
+     * @param faceRegisterInfo 注册人脸信息
+     * @param feature 人脸特征
+     * @return
+     */
+    default void upsertFace(FaceRegisterInfo faceRegisterInfo, float[] feature){
+        throw new UnsupportedOperationException("默认不支持该功能");
+    }
+
+
+    /**
+     * 更新或注册人脸
+     * 自动提取分数最高人脸进行更新
+     * @param faceRegisterInfo 注册人脸信息
      * @param imageData
      * @return
      */
-    FaceResult search(byte[] imageData);
+    default void upsertFace(FaceRegisterInfo faceRegisterInfo, byte[] imageData){
+        throw new UnsupportedOperationException("默认不支持该功能");
+    }
+
 
     /**
-     * 删除已标记人脸
+     * 查询人脸（查询图片中所有人脸）
+     * @param imagePath
+     * @param params 人脸查询参数
+     * @return
+     */
+    default R<DetectionResponse> search(String imagePath, FaceSearchParams params){
+        throw new UnsupportedOperationException("默认不支持该功能");
+    }
+
+
+    /**
+     * 查询人脸（查询图片中所有人脸）
+     * 适用于多人脸场景
+     * @param sourceImage
+     * @return
+     */
+    default R<DetectionResponse> search(BufferedImage sourceImage, FaceSearchParams params){
+        throw new UnsupportedOperationException("默认不支持该功能");
+    }
+
+    /**
+     * 查询人脸（查询图片中所有人脸）
+     * 适用于多人脸场景
+     * @param imageData
+     * @return
+     */
+    default R<DetectionResponse> search(byte[] imageData, FaceSearchParams params){
+        throw new UnsupportedOperationException("默认不支持该功能");
+    }
+
+    /**
+     * 查询人脸
+     * 适用于多人脸场景
+     * @param feature 人脸特征
+     * @return
+     */
+    default List<FaceSearchResult> search(float[] feature, FaceSearchParams params){
+        throw new UnsupportedOperationException("默认不支持该功能");
+    }
+
+    /**
+     * 查询人脸
+     * 从图像中提取分数最高的人脸特征，并在人脸库中进行 1:N 查询
+     * 适用于单人脸场景
+     * @param imagePath
+     * @param params 人脸查询参数
+     * @return
+     */
+    default R<List<FaceSearchResult>> searchByTopFace(String imagePath, FaceSearchParams params){
+        throw new UnsupportedOperationException("默认不支持该功能");
+    }
+
+
+    /**
+     * 查询人脸
+     * 从图像中提取分数最高的人脸特征，并在人脸库中进行 1:N 查询
+     * 适用于单人脸场景
+     * @param sourceImage
+     * @return
+     */
+    default R<List<FaceSearchResult>> searchByTopFace(BufferedImage sourceImage, FaceSearchParams params){
+        throw new UnsupportedOperationException("默认不支持该功能");
+    }
+
+    /**
+     * 查询人脸
+     * 从图像中提取分数最高的人脸特征，并在人脸库中进行 1:N 查询
+     * 适用于单人脸场景
+     * @param imageData
+     * @return
+     */
+    default R<List<FaceSearchResult>> searchByTopFace(byte[] imageData, FaceSearchParams params){
+        throw new UnsupportedOperationException("默认不支持该功能");
+    }
+
+
+
+
+
+    /**
+     * 删除已注册人脸
      * @param keys
      * @return
      */
-    long removeRegister(String... keys);
+    default void removeRegister(String... keys){
+        throw new UnsupportedOperationException("默认不支持该功能");
+    }
 
     /**
      * 清空人脸库数据
      */
-    long clearFace();
+    default void clearFace(){
+        throw new UnsupportedOperationException("默认不支持该功能");
+    }
 
     /**
-     * 特征提取（使用默认配置）
+     * 特征提取（所有人脸）
+     * 适用于多人脸场景
      * @param imagePath 图片路径
      * @return
      */
-    List<float[]> extractFeatures(String imagePath);
+    default R<DetectionResponse> extractFeatures(String imagePath){
+        throw new UnsupportedOperationException("默认不支持该功能");
+    }
 
     /**
-     * 特征提取（使用默认配置）
+     * 特征提取（所有人脸）
+     * 适用于多人脸场景
      * @param imageData 图片字节流
      * @return
      */
-    List<float[]> extractFeatures(byte[] imageData);
+    default R<DetectionResponse> extractFeatures(byte[] imageData){
+        throw new UnsupportedOperationException("默认不支持该功能");
+    }
 
     /**
-     * 特征提取（使用默认配置）
+     * 特征提取（所有人脸）
+     * 适用于多人脸场景
      * @param image BufferedImage
      * @return
      */
-    List<float[]> extractFeatures(BufferedImage image);
+    default R<DetectionResponse> extractFeatures(BufferedImage image){
+        throw new UnsupportedOperationException("默认不支持该功能");
+    }
 
 
     /**
-     * 提取分数最高人脸特征（使用默认配置）
+     * 特征提取（提取分数最高人脸特征）
+     * 适用于单人脸场景
      * @param image BufferedImage
      * @return
      */
-    float[] extractTopFaceFeature(BufferedImage image);
+    default R<float[]> extractTopFaceFeature(BufferedImage image){
+        throw new UnsupportedOperationException("默认不支持该功能");
+    }
 
     /**
-     * 提取分数最高人脸特征（使用默认配置）
+     * 特征提取（提取分数最高人脸特征）
+     * 适用于单人脸场景
      * @param imagePath 图片路径
      * @return
      */
-    float[] extractTopFaceFeature(String imagePath);
+    default R<float[]> extractTopFaceFeature(String imagePath){
+        throw new UnsupportedOperationException("默认不支持该功能");
+    }
 
     /**
-     * 提取分数最高人脸特征（使用默认配置）
+     * 特征提取（提取分数最高人脸特征）
+     * 适用于单人脸场景
      * @param imageData 图片字节流
      * @return
      */
-    float[] extractTopFaceFeature(byte[] imageData);
+    default R<float[]> extractTopFaceFeature(byte[] imageData){
+        throw new UnsupportedOperationException("默认不支持该功能");
+    }
 
 
+    /**
+     *  加载人脸特征
+     */
+    default void loadFaceFeatures(){
+         throw new UnsupportedOperationException("默认不支持该功能");
+    }
+
+    /**
+     * 释放人脸特征缓存
+     */
+    default void releaseFaceFeatures(){
+        throw new UnsupportedOperationException("默认不支持该功能");
+    }
+
+    /**
+     * 是否加载人脸库完成
+     * @return
+     */
+    default boolean isLoadFaceCompleted(){
+        throw new UnsupportedOperationException("默认不支持该功能");
+    }
 
 }
