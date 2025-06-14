@@ -111,18 +111,21 @@ public class ObjectDetection {
 
 
     /**
-     * 使用yolo官方模型检测
+     * 使用yolo官方模型检测物品识别
      */
     @Test
     public void objectDetectionWithOfficialModel(){
         DetectorModelConfig config = new DetectorModelConfig();
+        config.setThreshold(0.3f);
         //也支持YoloV8：YOLOV8_OFFICIAL 模型可以从文档中提供的地址下载
         config.setModelEnum(DetectorModelEnum.YOLOV12_OFFICIAL);//检测模型，目前支持19种模型
         // 指定模型路径，需要更改为自己的模型路径
-        config.setModelPath("/Users/xxx/Documents/develop/face_model/yolov12n.onnx");
+        config.setModelPath("E:\\ai\\models\\yolo12m\\yolov12m.onnx");
         DetectorModel detectorModel = ObjectDetectionModelFactory.getInstance().getModel(config);
         //一定要将yolo官方的类别文件：synset.txt（文档中下载）放在模型同目录下，否则报错
-        detectorModel.detectAndDraw("src/main/resources/object_detection.jpg","output/object_detection_detected.png");
+        DetectionResponse detect = detectorModel.detect("E:\\ai\\testimage\\1.jpg");
+        log.info("目标检测结果：{}", JSONObject.toJSONString(detect));
+        detectorModel.detectAndDraw("E:\\ai\\testimage\\1.jpg","E:\\ai\\outimage\\11.png");
     }
 
     /**

@@ -12,6 +12,7 @@
     <description>SmartJavaAI</description>
     <modules>
         <module>smartjavaai-face</module>
+        <module>smartjavaai-translate</module>
         <module>smartjavaai-common</module>
         <module>smartjavaai-objectdetection</module>
         <module>smartjavaai-all</module>
@@ -53,14 +54,16 @@
             <groupId>ai.djl</groupId>
             <artifactId>model-zoo</artifactId>
         </dependency>
+        <dependency>
+            <groupId>ai.djl.huggingface</groupId>
+            <artifactId>tokenizers</artifactId>
+            <version>${djl.version}</version>
+        </dependency>
 <!--        <dependency>-->
 <!--            <groupId>ai.djl.timeseries</groupId>-->
 <!--            <artifactId>timeseries</artifactId>-->
 <!--        </dependency>-->
-<!--        <dependency>-->
-<!--            <groupId>ai.djl.huggingface</groupId>-->
-<!--            <artifactId>tokenizers</artifactId>-->
-<!--        </dependency>-->
+
 <!--        <dependency>-->
 <!--            <groupId>ai.djl.audio</groupId>-->
 <!--            <artifactId>audio</artifactId>-->

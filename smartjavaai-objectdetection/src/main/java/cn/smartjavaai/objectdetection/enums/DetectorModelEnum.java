@@ -9,7 +9,7 @@ public enum DetectorModelEnum {
 
     // resnet50 系列
     SSD_300_RESNET50("ai.djl.pytorch/ssd/0.0.1/ssd_300_resnet50"),
-    SSD_512_RESNET50_V1_VOC("ai.djl.mxnet/ssd/0.0.1/ssd_512_resnet50_v1_voc"),
+    SSD_512_RESNET50_V1_VOC("ai.djl./ssd/0.0.1/ssd_512_resnet50_v1_voc"),
 
     // vgg16 系列
     SSD_512_VGG16_ATROUS_COCO("ai.djl.mxnet/ssd/0.0.1/ssd_512_vgg16_atrous_coco"),
