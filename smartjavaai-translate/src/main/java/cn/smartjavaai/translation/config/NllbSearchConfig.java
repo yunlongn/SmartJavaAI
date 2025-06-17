@@ -4,7 +4,7 @@ package cn.smartjavaai.translation.config;
  * @author lwx
  * @date 2025/6/05
  */
-public class SearchConfig {
+public class NllbSearchConfig {
 
     private int maxSeqLength;
     private long padTokenId;
@@ -15,7 +15,7 @@ public class SearchConfig {
     private long forcedBosTokenId;
     private long srcLangId;
     private float lengthPenalty;
-    public SearchConfig() {
+    public NllbSearchConfig() {
         this.maxSeqLength = 512;
         this.eosTokenId = 2;
         this.bosTokenId = 0;

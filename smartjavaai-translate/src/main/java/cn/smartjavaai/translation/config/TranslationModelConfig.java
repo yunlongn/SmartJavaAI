@@ -2,7 +2,7 @@ package cn.smartjavaai.translation.config;
 
 import cn.smartjavaai.common.enums.DeviceEnum;
 
-import cn.smartjavaai.translation.enums.MachineTranslationModeEnum;
+import cn.smartjavaai.translation.enums.TranslationModeEnum;
 import lombok.Data;
 
 /**
@@ -11,11 +11,11 @@ import lombok.Data;
  * @date 2025/6/05
  */
 @Data
-public class MachineTranslationModelConfig {
+public class TranslationModelConfig {
     /**
      * 翻译模型
      */
-    private MachineTranslationModeEnum modelEnum;
+    private TranslationModeEnum modelEnum;
 
     /**
      * 设备类型
@@ -26,14 +26,7 @@ public class MachineTranslationModelConfig {
      * 翻译模型路径
      */
     private String modelPath;
-    /**
-     * 翻译模型路径
-     */
-    private String modelName;
-    /**
-     * 翻译模型配置
-     */
-    private SearchConfig  searchConfig;
+
 
 
 

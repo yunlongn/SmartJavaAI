@@ -2,7 +2,7 @@ package cn.smartjavaai.translation.utils;
 
 import ai.djl.huggingface.tokenizers.HuggingFaceTokenizer;
 import ai.djl.ndarray.NDArray;
-import cn.smartjavaai.translation.config.SearchConfig;
+import cn.smartjavaai.translation.config.NllbSearchConfig;
 
 
 import java.util.ArrayList;
@@ -25,7 +25,7 @@ public final class TokenUtils {
      * @param output
      * @return
      */
-    public static String decode(SearchConfig config, HuggingFaceTokenizer tokenizer, NDArray output) {
+    public static String decode(NllbSearchConfig config, HuggingFaceTokenizer tokenizer, NDArray output) {
         long[] outputIds = output.toLongArray();
         ArrayList<Long> outputIdsList = new ArrayList<>();
 
@@ -42,7 +42,6 @@ public final class TokenUtils {
             ids[i] = objArr[i];
         }
         String text = tokenizer.decode(ids);
-
         return text;
     }
 }

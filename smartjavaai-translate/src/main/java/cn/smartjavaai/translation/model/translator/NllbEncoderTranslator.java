@@ -1,4 +1,4 @@
-package smartai.examples.nlb.model;
+package cn.smartjavaai.translation.model.translator;
 
 import ai.djl.ndarray.NDArray;
 import ai.djl.ndarray.NDList;
@@ -15,10 +15,10 @@ import java.util.Arrays;
  * @mail 179209347@qq.com
  * @website www.aias.top
  */
-public class EncoderTranslator implements NoBatchifyTranslator<long[], NDArray> {
+public class NllbEncoderTranslator implements NoBatchifyTranslator<long[], NDArray> {
 
 
-    public EncoderTranslator() {
+    public NllbEncoderTranslator() {
     }
 
     @Override

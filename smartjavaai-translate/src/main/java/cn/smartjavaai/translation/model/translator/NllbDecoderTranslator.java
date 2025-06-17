@@ -1,4 +1,4 @@
-package cn.smartjavaai.translation.model.common.translator;
+package cn.smartjavaai.translation.model.translator;
 
 import ai.djl.ndarray.NDArray;
 import ai.djl.ndarray.NDList;
@@ -6,18 +6,17 @@ import ai.djl.translate.NoBatchifyTranslator;
 import ai.djl.translate.TranslatorContext;
 import cn.smartjavaai.translation.entity.CausalLMOutput;
 
-
 /**
- * 解碼器，參數支持 pastKeyValues
+ * 解碼器，參數沒有 pastKeyValues
  *
  * @author Calvin
  * @mail 179209347@qq.com
  * @website www.aias.top
  */
-public class Decoder2Translator implements NoBatchifyTranslator<NDList, CausalLMOutput> {
+public class NllbDecoderTranslator implements NoBatchifyTranslator<NDList, CausalLMOutput> {
     private String tupleName;
 
-    public Decoder2Translator() {
+    public NllbDecoderTranslator() {
         tupleName = "past_key_values(" + 12 + ',' + 4 + ')';
     }
 
@@ -25,7 +24,7 @@ public class Decoder2Translator implements NoBatchifyTranslator<NDList, CausalLM
     public NDList processInput(TranslatorContext ctx, NDList input) {
 
         NDArray placeholder = ctx.getNDManager().create(0);
-        placeholder.setName("module_method:decoder2");
+        placeholder.setName("module_method:decoder");
 
         input.add(placeholder);
 

@@ -2,6 +2,7 @@ package cn.smartjavaai.common.pool;
 
 import ai.djl.inference.Predictor;
 import ai.djl.repository.zoo.ZooModel;
+import ai.djl.translate.Translator;
 import org.apache.commons.pool2.BasePooledObjectFactory;
 import org.apache.commons.pool2.PooledObject;
 import org.apache.commons.pool2.impl.DefaultPooledObject;

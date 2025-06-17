@@ -4,16 +4,16 @@ package cn.smartjavaai.translation.enums;
  * @author lwx
  * @date 2025/6/05
  */
-public enum MachineTranslationModeEnum {
+public enum TranslationModeEnum {
 
-    TRACED_TRANSLATION_CPU;
+    NLLB_MODEL;
 
     /**
      * 根据名称获取枚举 (忽略大小写和下划线变体)
      */
-    public static MachineTranslationModeEnum fromName(String name) {
+    public static TranslationModeEnum fromName(String name) {
         String formatted = name.trim().toUpperCase().replaceAll("[-_]", "");
-        for (MachineTranslationModeEnum model : values()) {
+        for (TranslationModeEnum model : values()) {
             if (model.name().replaceAll("_", "").equals(formatted)) {
                 return model;
             }

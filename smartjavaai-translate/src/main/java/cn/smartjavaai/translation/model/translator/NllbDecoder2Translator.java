@@ -1,10 +1,11 @@
-package smartai.examples.nlb.model;
+package cn.smartjavaai.translation.model.translator;
 
 import ai.djl.ndarray.NDArray;
 import ai.djl.ndarray.NDList;
 import ai.djl.translate.NoBatchifyTranslator;
 import ai.djl.translate.TranslatorContext;
-import smartai.examples.nlb.generate.CausalLMOutput;
+import cn.smartjavaai.translation.entity.CausalLMOutput;
+
 
 /**
  * 解碼器，參數支持 pastKeyValues
@@ -13,10 +14,10 @@ import smartai.examples.nlb.generate.CausalLMOutput;
  * @mail 179209347@qq.com
  * @website www.aias.top
  */
-public class Decoder2Translator implements NoBatchifyTranslator<NDList, CausalLMOutput> {
+public class NllbDecoder2Translator implements NoBatchifyTranslator<NDList, CausalLMOutput> {
     private String tupleName;
 
-    public Decoder2Translator() {
+    public NllbDecoder2Translator() {
         tupleName = "past_key_values(" + 12 + ',' + 4 + ')';
     }
 
