@@ -397,11 +397,18 @@ public class MilvusClient implements VectorDBClient {
             // 构建IN表达式: id in ["id1", "id2", ...]
             StringBuilder expr = new StringBuilder(VectorDBConstants.FieldNames.ID_FIELD + " in [");
             for (int i = 0; i < ids.size(); i++) {
-                expr.append(ids.get(i)); // 不加引号
+                if(config.getIdStrategy() == IdStrategy.AUTO){
+                    expr.append(ids.get(i)); // 不加引号
+                }else{
+                    expr.append("'" + ids.get(i) + "'"); // 不加引号
+                }
                 if (i < ids.size() - 1) {
                     expr.append(", ");
                 }
             }
+
+
+
             expr.append("]");
             DeleteParam deleteParam = DeleteParam.newBuilder()
                     .withCollectionName(collectionName)
@@ -453,7 +460,6 @@ public class MilvusClient implements VectorDBClient {
             // 3. 获取字段数据（FieldData）
             List<SearchResultsWrapper.IDScore> scores = wrapper.getIDScore(0); // 默认只有一条 query 向量
 
-
             List<FaceSearchResult> finalResults = new ArrayList<>();
             for (int i = 0; i < scores.size(); i++) {
                 SearchResultsWrapper.IDScore score = scores.get(i);
@@ -464,9 +470,9 @@ public class MilvusClient implements VectorDBClient {
                 }
                 if (similarity >= faceSearchParams.getThreshold()) {
                     // 获取 Metadata
-                    String metadata = wrapper.getFieldData(VectorDBConstants.FieldNames.METADATA_FIELD, i).get(0).toString();
+                    String metadata = wrapper.getFieldData(VectorDBConstants.FieldNames.METADATA_FIELD, 0).get(i).toString();
                     // 获取 ID
-                    String id = wrapper.getFieldData(VectorDBConstants.FieldNames.ID_FIELD, i).get(0).toString();
+                    String id = wrapper.getFieldData(VectorDBConstants.FieldNames.ID_FIELD, 0).get(i).toString();
                     finalResults.add(new FaceSearchResult(id, similarity, metadata));
                 }
             }

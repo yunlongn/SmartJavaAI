@@ -34,6 +34,7 @@ import java.util.List;
  * FaceNet人脸算法模型demo
  * 支持系统：windows 64位，linux 64位，macOS M系列芯片
  * 支持功能：人脸特征提取、人脸比对（1：1）、人脸比对（1：N）、人脸注册
+ * 模型下载地址：https://pan.baidu.com/s/10l22x5fRz_gwLr8EAHa1Jg?pwd=1234 提取码: 1234
  * @author dwj
  * @date 2025/4/11
  */

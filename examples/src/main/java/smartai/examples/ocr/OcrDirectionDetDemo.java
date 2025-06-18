@@ -17,6 +17,7 @@ import java.util.List;
 
 /**
  * OCR 文本方向检测 示例
+ * 模型下载地址：https://pan.baidu.com/s/1MLfd73Vjdpnuls9-oqc9uw?pwd=1234 提取码: 1234
  * @author dwj
  * @date 2025/5/25
  */
@@ -37,11 +38,11 @@ public class OcrDirectionDetDemo {
         //指定检测模型
         directionModelConfig.setDetModelEnum(CommonDetModelEnum.PADDLEOCR_V5_DET_MODEL);
         //指定检测模型位置，需要更改为自己的模型路径（下载地址请查看文档）
-        directionModelConfig.setDetModelPath("/Users/wenjie/Documents/develop/ocr模型/PP-OCRv5_server_det_infer/PP-OCRv5_server_det.onnx");
+        directionModelConfig.setDetModelPath("/Users/xxx/Documents/develop/ocr模型/PP-OCRv5_server_det_infer/PP-OCRv5_server_det.onnx");
         //指定文本方向检测模型
         directionModelConfig.setModelEnum(DirectionModelEnum.CH_PPOCR_MOBILE_V2_CLS);
         //指定文本方向检测模型路径，需要更改为自己的模型路径（下载地址请查看文档）
-        directionModelConfig.setModelPath("/Users/wenjie/Documents/develop/ocr模型/ch_ppocr_mobile_v2.0_cls.onnx");
+        directionModelConfig.setModelPath("/Users/xxx/Documents/develop/ocr模型/ch_ppocr_mobile_v2.0_cls.onnx");
         OcrDirectionModel directionModel = OcrModelFactory.getInstance().getDirectionModel(directionModelConfig);
         List<OcrItem> itemList = directionModel.detect("src/main/resources/ocr_3.jpg");
         log.info("OCR方向检测结果：{}", JSONObject.toJSONString(itemList));

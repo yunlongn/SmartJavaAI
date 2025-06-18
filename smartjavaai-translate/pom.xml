@@ -20,8 +20,8 @@
         </dependency>
     </dependencies>
 
-    <version>1.0.16</version>
-    <name>smartjavaai-ocr</name>
+    <version>1.0.17</version>
+    <name>smartjavaai-translate</name>
     <description>SmartJavaAI</description>
     <url>https://github.com/geekwenjie/SmartJavaAI</url>
     <licenses>

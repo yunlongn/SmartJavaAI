@@ -95,7 +95,7 @@ public class TranslationModelFactory {
     // 初始化默认算法
     static {
         registerCommonDetModel("NLLB_MODEL", NllbModel.class);
-        log.info("缓存目录：{}", Config.getCachePath());
+        log.debug("缓存目录：{}", Config.getCachePath());
     }
 
 }

@@ -40,6 +40,7 @@ import java.util.concurrent.Future;
 /**
  * 目标检测模型demo
  * 支持功能：目标检测
+ * 模型下载地址：https://pan.baidu.com/s/1MeQ0oHGl8hneicUIUVJjbg?pwd=1234 提取码: 1234
  * @author dwj
  * @date 2025/4/11
  */

@@ -12,6 +12,7 @@ import org.junit.Test;
 
 /**
  * GPU 人脸检测
+ * 模型下载地址：https://pan.baidu.com/s/10l22x5fRz_gwLr8EAHa1Jg?pwd=1234 提取码: 1234
  * @author dwj
  * @date 2025/4/14
  */

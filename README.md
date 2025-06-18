@@ -154,6 +154,19 @@ SmartJavaAI是专为JAVA 开发者打造的一个功能丰富、开箱即用的 
         </div>
       </td>
     </tr> 
+    <tr>
+      <td>
+        <div align="left">
+          <p>机器翻译</p>
+          - 200多种语言互相翻译
+        </div>
+      </td>     
+      <td>
+        <div align="center">
+        <img src="https://cdn.jsdelivr.net/gh/geekwenjie/SmartJavaAI-Site/images/translate/translate.png" width = "500px"/>
+        </div>
+      </td>
+    </tr>
   </table>
 </div>
 
@@ -196,6 +209,8 @@ SmartJavaAI是专为JAVA 开发者打造的一个功能丰富、开箱即用的 
   - 支持PaddleOCR 3.0模型：集成最新PP-OCRv5模型
   - 支持任意角度识别，方向校准
   - 支持通用文字识别，通用手写字识别
+- **机器翻译**
+  - 集成NLLB-200模型：支持200+语言互相翻译
 
 ### ⌛ 规划中功能
 
@@ -241,6 +256,7 @@ SmartJavaAI是专为JAVA 开发者打造的一个功能丰富、开箱即用的 
 | smartjavaai-face            | 人脸功能模块                    |
 | smartjavaai-objectdetection | 目标检测模块                    |
 | smartjavaai-ocr             | OCR文字识别模块                 |
+| smartjavaai-translate       | 机器翻译模块                    |
 
 可以根据需求对每个模块单独引入，也可以通过引入`smartjavaai-all`方式引入所有模块。
 
@@ -263,7 +279,7 @@ SmartJavaAI是专为JAVA 开发者打造的一个功能丰富、开箱即用的 
 <dependency>
     <groupId>cn.smartjavaai</groupId>
     <artifactId>smartjavaai-all</artifactId>
-    <version>1.0.16</version>
+    <version>1.0.17</version>
 </dependency>
 ```
 ### 3、完整示例代码
@@ -273,6 +289,10 @@ SmartJavaAI是专为JAVA 开发者打造的一个功能丰富、开箱即用的 
 ### 4、文档地址
 
 [开发文档](http://doc.smartjavaai.cn)
+
+### 5、模型下载
+
+[模型下载](https://pan.baidu.com/s/1F6QtGrakEgnD1-hkWBfsUg?pwd=1234)
 
 
 ## 🙏 鸣谢
@@ -297,6 +317,11 @@ SmartJavaAI是专为JAVA 开发者打造的一个功能丰富、开箱即用的 
 
 
 ## 近期更新日志
+
+## [v1.0.17] - 2025-06-18
+- 新增机器翻译模块：支持 200+ 种语言之间的相互翻译
+- 人脸识别模块：修复批量删除人脸数据时的异常问题
+- 人脸识别模块：修复人脸检索 Top大于 1 时报异常问题
 
 ## [v1.0.16] - 2025-06-09
 - 人脸模块：人脸查询支持 Milvus 和 SQLite

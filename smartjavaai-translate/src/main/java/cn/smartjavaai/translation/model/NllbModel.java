@@ -91,8 +91,8 @@ public class NllbModel implements TranslationModel{
             tokenizer = HuggingFaceTokenizer.newInstance(tokenizerPath);
             //初始化searchConfig
             this.searchConfig = new NllbSearchConfig();
-            log.info("当前设备: " + nllbModel.getNDManager().getDevice());
-            log.info("当前引擎: " + Engine.getInstance().getEngineName());
+            log.debug("当前设备: " + nllbModel.getNDManager().getDevice());
+            log.debug("当前引擎: " + Engine.getInstance().getEngineName());
         } catch (IOException | ModelNotFoundException | MalformedModelException e) {
             throw new TranslationException("模型加载失败", e);
         }
