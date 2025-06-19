@@ -20,9 +20,12 @@ src/main/java/smartai/examples/
 ├── objectdetection/         目标检测模块
 │   └── ObjectDetection.java                 示例：使用目标检测模型识别图像中的目标
 └── ocr/                     OCR文字识别模块
-    ├── OcrDetectionDemo.java                示例：OCR通用文字检测示例
-    ├── OcrDirectionDetDemo.java             示例：OCR方向检测示例
-    └── OcrRecognizeDemo.java                示例：OCR通用文字识别示例
+│   ├── OcrDetectionDemo.java                示例：OCR通用文字检测示例
+│   ├── OcrDirectionDetDemo.java             示例：OCR方向检测示例
+│   └── OcrRecognizeDemo.java                示例：OCR通用文字识别示例
+├── nlp/                     NLP
+│   ├── translate/           机器翻译
+│       └── TranslationDemo.java         示例：机器翻译
 ```
 
 ## 快速开始
