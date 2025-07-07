@@ -1,10 +1,6 @@
 package cn.smartjavaai.common.entity;
 
-import cn.smartjavaai.common.enums.GenderType;
-import cn.smartjavaai.common.enums.LivenessStatus;
 import lombok.Data;
-
-import java.util.List;
 
 /**
  * 检测结果-矩形区域

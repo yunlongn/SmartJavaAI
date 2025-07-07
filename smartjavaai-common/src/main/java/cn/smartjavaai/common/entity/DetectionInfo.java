@@ -1,5 +1,6 @@
 package cn.smartjavaai.common.entity;
 
+import cn.smartjavaai.common.entity.face.FaceInfo;
 import lombok.Data;
 
 /**

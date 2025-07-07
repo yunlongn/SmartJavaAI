@@ -1,13 +1,16 @@
 package cn.smartjavaai.face.model.attribute;
 
 import cn.smartjavaai.common.entity.*;
+import cn.smartjavaai.common.entity.face.FaceAttribute;
+import cn.smartjavaai.common.entity.face.FaceInfo;
+import cn.smartjavaai.common.entity.face.HeadPose;
 import cn.smartjavaai.common.enums.DeviceEnum;
-import cn.smartjavaai.common.enums.EyeStatus;
+import cn.smartjavaai.common.enums.face.EyeStatus;
 import cn.smartjavaai.common.utils.FileUtils;
 import cn.smartjavaai.common.utils.ImageUtils;
 import cn.smartjavaai.common.utils.PoolUtils;
 import cn.smartjavaai.face.config.FaceAttributeConfig;
-import cn.smartjavaai.common.enums.GenderType;
+import cn.smartjavaai.common.enums.face.GenderType;
 import cn.smartjavaai.face.context.PredictorContext;
 import cn.smartjavaai.face.exception.FaceException;
 import cn.smartjavaai.face.seetaface.NativeLoader;
@@ -468,6 +471,28 @@ public class Seetaface6FaceAttributeModel implements FaceAttributeModel {
         }
     }
 
-
-
+    @Override
+    public void close() throws Exception {
+        if(Objects.nonNull(faceDetectorPool)){
+            faceDetectorPool.close();
+        }
+        if(Objects.nonNull(genderPredictorPool)){
+            genderPredictorPool.close();
+        }
+        if(Objects.nonNull(faceLandmarkerPool)){
+            faceLandmarkerPool.close();
+        }
+        if(Objects.nonNull(agePredictorPool)){
+            agePredictorPool.close();
+        }
+        if(Objects.nonNull(eyeStateDetectorPool)){
+            eyeStateDetectorPool.close();
+        }
+        if(Objects.nonNull(maskDetectorPool)){
+            maskDetectorPool.close();
+        }
+        if(Objects.nonNull(poseEstimatorPool)){
+            poseEstimatorPool.close();
+        }
+    }
 }

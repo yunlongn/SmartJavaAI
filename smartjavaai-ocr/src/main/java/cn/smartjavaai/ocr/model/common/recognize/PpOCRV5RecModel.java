@@ -67,6 +67,8 @@ public class PpOCRV5RecModel implements OcrCommonRecModel {
 
     private OcrDirectionModel directionModel;
 
+    private ZooModel<Image, String> recognitionModel;
+
     @Override
     public void loadModel(OcrRecModelConfig config){
         if(StringUtils.isBlank(config.getRecModelPath())){
@@ -88,7 +90,7 @@ public class PpOCRV5RecModel implements OcrCommonRecModel {
                         .optDevice(device)
                         .build();
         try{
-            ZooModel recognitionModel = ModelZoo.loadModel(recCriteria);
+            recognitionModel = ModelZoo.loadModel(recCriteria);
             this.recPredictorPool = new GenericObjectPool<>(new PredictorFactory<>(recognitionModel));
             log.debug("当前设备: " + recognitionModel.getNDManager().getDevice());
             log.debug("当前引擎: " + Engine.getInstance().getEngineName());
@@ -102,6 +104,7 @@ public class PpOCRV5RecModel implements OcrCommonRecModel {
             OcrDetModelConfig detModelConfig = new OcrDetModelConfig();
             detModelConfig.setModelEnum(config.getDetModelEnum());
             detModelConfig.setDetModelPath(config.getDetModelPath());
+            detModelConfig.setDevice(config.getDevice());
             detModel = OcrModelFactory.getInstance().getDetModel(detModelConfig);
         }
 
@@ -110,6 +113,7 @@ public class PpOCRV5RecModel implements OcrCommonRecModel {
             DirectionModelConfig directionModelConfig = new DirectionModelConfig();
             directionModelConfig.setModelEnum(config.getDirectionModelEnum());
             directionModelConfig.setModelPath(config.getDirectionModelPath());
+            directionModelConfig.setDevice(config.getDevice());
             directionModel = OcrModelFactory.getInstance().getDirectionModel(directionModelConfig);
         }
     }
@@ -318,6 +322,38 @@ public class PpOCRV5RecModel implements OcrCommonRecModel {
             return ImageIO.read(new ByteArrayInputStream(imageBytes));
         } catch (IOException e) {
             throw new OcrException("导出图片失败", e);
+        }
+    }
+
+    @Override
+    public void close() throws Exception {
+        try {
+            if (recPredictorPool != null) {
+                recPredictorPool.close();
+            }
+        } catch (Exception e) {
+            log.warn("关闭 predictorPool 失败", e);
+        }
+        try {
+            if (detModel != null) {
+                detModel.close();
+            }
+        } catch (Exception e) {
+            log.warn("关闭 model 失败", e);
+        }
+        try {
+            if (directionModel != null) {
+                directionModel.close();
+            }
+        } catch (Exception e) {
+            log.warn("关闭 model 失败", e);
+        }
+        try {
+            if (recognitionModel != null) {
+                recognitionModel.close();
+            }
+        } catch (Exception e) {
+            log.warn("关闭 model 失败", e);
         }
     }
 }

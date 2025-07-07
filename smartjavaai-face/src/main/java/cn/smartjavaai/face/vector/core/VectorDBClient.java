@@ -2,7 +2,7 @@ package cn.smartjavaai.face.vector.core;
 
 import cn.smartjavaai.face.entity.FaceSearchParams;
 import cn.smartjavaai.face.vector.entity.FaceVector;
-import cn.smartjavaai.common.entity.FaceSearchResult;
+import cn.smartjavaai.common.entity.face.FaceSearchResult;
 import cn.smartjavaai.face.vector.exception.VectorDBException;
 
 import java.util.List;

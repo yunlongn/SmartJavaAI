@@ -8,6 +8,7 @@ import org.opencv.core.Point;
 import org.opencv.core.Scalar;
 import org.opencv.imgproc.Imgproc;
 
+import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferByte;
 
@@ -111,7 +112,14 @@ public class OpenCVUtils {
     public static Mat image2Mat(BufferedImage img) {
         int width = img.getWidth();
         int height = img.getHeight();
-        byte[] data = ((DataBufferByte) img.getRaster().getDataBuffer()).getData();
+
+        // 强制转换为 TYPE_3BYTE_BGR，自动去除透明通道
+        BufferedImage convertedImg = new BufferedImage(width, height, BufferedImage.TYPE_3BYTE_BGR);
+        Graphics2D g2d = convertedImg.createGraphics();
+        g2d.drawImage(img, 0, 0, null);
+        g2d.dispose();
+
+        byte[] data = ((DataBufferByte) convertedImg.getRaster().getDataBuffer()).getData();
         Mat mat = new Mat(height, width, CvType.CV_8UC3);
         mat.put(0, 0, data);
         return mat;

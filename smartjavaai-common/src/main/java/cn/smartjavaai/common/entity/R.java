@@ -18,6 +18,12 @@ public class R<T> {
     private T data;
 
 
+    public static <T> R<T> ok() {
+        R<T> r = new R<>();
+        r.code = 0;
+        r.message = "成功";
+        return r;
+    }
 
     public static <T> R<T> ok(T data) {
         R<T> r = new R<>();
@@ -50,6 +56,7 @@ public class R<T> {
         FILE_NOT_FOUND(2, "图像文件不存在"),
         NO_FACE_DETECTED(3, "未检测到人脸"),
         PARAM_ERROR(4, "参数错误"),
+        INVALID_VIDEO(5, "视频无效"),
         Unknown(-1,  "未知错误");
 
         private final int code;

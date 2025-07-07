@@ -53,6 +53,8 @@ public class PpOCRV5DetModel implements OcrCommonDetModel {
 
     private ObjectPool<Predictor<Image, NDList>> detPredictorPool;
 
+    private ZooModel<Image, NDList> detectionModel;
+
     private OcrDetModelConfig config;
 
     @Override
@@ -77,7 +79,7 @@ public class PpOCRV5DetModel implements OcrCommonDetModel {
                         .build();
 
         try{
-            ZooModel detectionModel = ModelZoo.loadModel(detCriteria);
+            detectionModel = ModelZoo.loadModel(detCriteria);
             // 创建池子：每个线程独享 Predictor
             this.detPredictorPool = new GenericObjectPool<>(new PredictorFactory<>(detectionModel));
             log.debug("当前设备: " + detectionModel.getNDManager().getDevice());
@@ -196,6 +198,24 @@ public class PpOCRV5DetModel implements OcrCommonDetModel {
             return ImageIO.read(new ByteArrayInputStream(imageBytes));
         } catch (IOException e) {
             throw new OcrException("导出图片失败", e);
+        }
+    }
+
+    @Override
+    public void close() throws Exception {
+        try {
+            if (detPredictorPool != null) {
+                detPredictorPool.close();
+            }
+        } catch (Exception e) {
+            log.warn("关闭 predictorPool 失败", e);
+        }
+        try {
+            if (detectionModel != null) {
+                detectionModel.close();
+            }
+        } catch (Exception e) {
+            log.warn("关闭 model 失败", e);
         }
     }
 }

@@ -11,7 +11,7 @@ import java.util.List;
  * OCR 通用检测模型
  * @author dwj
  */
-public interface OcrCommonDetModel {
+public interface OcrCommonDetModel extends AutoCloseable{
 
     /**
      * 加载模型

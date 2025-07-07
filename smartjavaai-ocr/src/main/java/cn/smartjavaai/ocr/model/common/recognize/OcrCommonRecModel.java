@@ -13,7 +13,7 @@ import java.util.List;
  * OCR 通用识别模型
  * @author dwj
  */
-public interface OcrCommonRecModel {
+public interface OcrCommonRecModel extends AutoCloseable{
 
     /**
      * 加载模型

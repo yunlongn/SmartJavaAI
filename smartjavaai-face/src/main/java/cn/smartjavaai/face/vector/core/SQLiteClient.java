@@ -4,11 +4,10 @@ import cn.hutool.core.util.IdUtil;
 import cn.smartjavaai.common.config.Config;
 import cn.smartjavaai.face.dao.FaceDao;
 import cn.smartjavaai.face.entity.FaceSearchParams;
-import cn.smartjavaai.face.utils.FaceUtils;
 import cn.smartjavaai.face.utils.SimilarityUtil;
 import cn.smartjavaai.face.vector.config.SQLiteConfig;
 import cn.smartjavaai.face.vector.entity.FaceVector;
-import cn.smartjavaai.common.entity.FaceSearchResult;
+import cn.smartjavaai.common.entity.face.FaceSearchResult;
 import cn.smartjavaai.face.vector.exception.VectorDBException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
@@ -24,7 +23,8 @@ import java.util.stream.Collectors;
 public class SQLiteClient implements VectorDBClient {
 
     private final FaceDao faceDao;
-    private final List<FaceVector> memoryIndex = new CopyOnWriteArrayList<>();
+    //private final List<FaceVector> memoryIndex = new CopyOnWriteArrayList<>();
+    private final ConcurrentHashMap<String, FaceVector> memoryIndex = new ConcurrentHashMap<>();
     private int featureDimension; // 维度
 
     private final ExecutorService executor = Executors.newFixedThreadPool(4);
@@ -138,7 +138,7 @@ public class SQLiteClient implements VectorDBClient {
             // 从数据库中删除
             boolean isSuccess = faceDao.deleteFace(ids.toArray(new String[0]));
             // 从内存中删除
-            memoryIndex.removeIf(v -> ids.contains(v.getId()));
+            ids.forEach(memoryIndex::remove);
             if(!isSuccess){
                 throw new VectorDBException("删除失败");
             }
@@ -156,7 +156,7 @@ public class SQLiteClient implements VectorDBClient {
             return Collections.emptyList();
         }
         // 并行计算相似度
-        List<CompletableFuture<FaceSearchResult>> futures = memoryIndex.stream()
+        List<CompletableFuture<FaceSearchResult>> futures = memoryIndex.values().stream()
                 .map(vector -> CompletableFuture.supplyAsync(() -> {
                     float similarity = SimilarityUtil.calculate(queryVector, vector.getVector(), config.getSimilarityType(), faceSearchParams.getNormalizeSimilarity());
                     return similarity >= faceSearchParams.getThreshold() ?
@@ -219,7 +219,7 @@ public class SQLiteClient implements VectorDBClient {
     }
 
     private void addToMemoryIndex(FaceVector faceVector) {
-        memoryIndex.add(faceVector);
+        memoryIndex.put(faceVector.getId(), faceVector);
     }
 
     private void clearAllData() {

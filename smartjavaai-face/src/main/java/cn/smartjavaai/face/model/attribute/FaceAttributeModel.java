@@ -2,10 +2,9 @@ package cn.smartjavaai.face.model.attribute;
 
 import cn.smartjavaai.common.entity.DetectionRectangle;
 import cn.smartjavaai.common.entity.DetectionResponse;
-import cn.smartjavaai.common.entity.FaceAttribute;
+import cn.smartjavaai.common.entity.face.FaceAttribute;
 import cn.smartjavaai.common.entity.Point;
 import cn.smartjavaai.face.config.FaceAttributeConfig;
-import cn.smartjavaai.common.enums.GenderType;
 
 import java.awt.image.BufferedImage;
 import java.util.List;
@@ -14,7 +13,7 @@ import java.util.List;
  * 人脸属性识别模型
  * @author dwj
  */
-public interface FaceAttributeModel {
+public interface FaceAttributeModel extends AutoCloseable{
 
     /**
      * 加载模型

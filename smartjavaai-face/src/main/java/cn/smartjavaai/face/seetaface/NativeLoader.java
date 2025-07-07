@@ -7,7 +7,6 @@ import cn.hutool.system.OsInfo;
 import cn.hutool.system.SystemUtil;
 import cn.smartjavaai.common.config.Config;
 import cn.smartjavaai.common.enums.DeviceEnum;
-import cn.smartjavaai.face.config.FaceModelConfig;
 import cn.smartjavaai.face.exception.FaceException;
 import com.seeta.sdk.util.DllItem;
 import com.seeta.sdk.util.LoadNativeCore;

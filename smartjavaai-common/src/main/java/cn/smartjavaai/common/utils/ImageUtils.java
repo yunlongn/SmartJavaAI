@@ -332,5 +332,44 @@ public class ImageUtils {
     }
 
 
+    /**
+     * 画检测框(有倾斜角)和文本
+     *
+     * @param image
+     * @param box
+     * @param text
+     */
+    public static void drawImageRectWithText(BufferedImage image, DetectionRectangle box, String text, Color color) {
+        // 将绘制图像转换为Graphics2D
+        Graphics2D graphics = (Graphics2D) image.getGraphics();
+        try {
+            graphics.setColor(Color.RED);// 边框颜色
+            graphics.setStroke(new BasicStroke(2));   // 线宽2像素
+            graphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
+                    RenderingHints.VALUE_ANTIALIAS_ON); // 抗锯齿
+            int stroke = 2;
+            graphics.setColor(color);// 边框颜色
+            graphics.drawRect(box.getX(), box.getY(), box.getWidth(), box.getHeight());
+            drawText(graphics, text, box.getX(), box.getY(), stroke, 4);
+            graphics.dispose();
+        } finally {
+            graphics.dispose();
+        }
+    }
+
+    public static void drawText(Graphics2D g, String text, int x, int y, int stroke, int padding) {
+        FontMetrics metrics = g.getFontMetrics();
+        x += stroke / 2;
+        y += stroke / 2;
+        int width = metrics.stringWidth(text) + padding * 2 - stroke / 2;
+        int height = metrics.getHeight() + metrics.getDescent();
+        int ascent = metrics.getAscent();
+        java.awt.Rectangle background = new java.awt.Rectangle(x, y, width, height);
+        g.fill(background);
+        g.setPaint(Color.WHITE);
+        g.drawString(text, x + padding, y + ascent);
+    }
+
+
 
 }

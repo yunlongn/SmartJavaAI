@@ -3,8 +3,9 @@ package cn.smartjavaai.face.model.liveness;
 import cn.smartjavaai.common.entity.DetectionRectangle;
 import cn.smartjavaai.common.entity.DetectionResponse;
 import cn.smartjavaai.common.entity.Point;
+import cn.smartjavaai.common.entity.R;
+import cn.smartjavaai.common.entity.face.LivenessResult;
 import cn.smartjavaai.face.config.LivenessConfig;
-import cn.smartjavaai.common.enums.LivenessStatus;
 
 import java.awt.image.BufferedImage;
 import java.io.InputStream;
@@ -14,7 +15,7 @@ import java.util.List;
  * 活体检测模型
  * @author dwj
  */
-public interface LivenessDetModel {
+public interface LivenessDetModel extends AutoCloseable{
 
     /**
      * 加载模型
@@ -28,7 +29,7 @@ public interface LivenessDetModel {
      * @param imagePath 图片路径
      * @return
      */
-    default DetectionResponse detect(String imagePath){
+    default R<DetectionResponse> detect(String imagePath){
         throw new UnsupportedOperationException("默认不支持该功能");
     }
 
@@ -37,7 +38,7 @@ public interface LivenessDetModel {
      * @param image BufferedImage
      * @return
      */
-    default DetectionResponse detect(BufferedImage image){
+    default R<DetectionResponse> detect(BufferedImage image){
         throw new UnsupportedOperationException("默认不支持该功能");
     }
 
@@ -46,9 +47,20 @@ public interface LivenessDetModel {
      * @param imageData 图片字节流
      * @return
      */
-    default DetectionResponse detect(byte[] imageData){
+    default R<DetectionResponse> detect(byte[] imageData){
         throw new UnsupportedOperationException("默认不支持该功能");
     }
+
+
+    /**
+     * 活体检测(多人脸)
+     * @param base64Image
+     * @return
+     */
+    default R<DetectionResponse> detectBase64(String base64Image){
+        throw new UnsupportedOperationException("默认不支持该功能");
+    }
+
 
     /**
      * 活体检测(多人脸)
@@ -56,19 +68,10 @@ public interface LivenessDetModel {
      * @param faceDetectionResponse 人脸检测结果
      * @return
      */
-    default List<LivenessStatus> detect(String imagePath, DetectionResponse faceDetectionResponse){
+    default R<List<LivenessResult>> detect(String imagePath, DetectionResponse faceDetectionResponse){
         throw new UnsupportedOperationException("默认不支持该功能");
     }
 
-    /**
-     * 活体检测(单人脸)
-     * @param imagePath 图片路径
-     * @param faceDetectionRectangle 人脸检测结果-人脸框
-     * @return
-     */
-    default LivenessStatus detect(String imagePath, DetectionRectangle faceDetectionRectangle, List<Point> keyPoints){
-        throw new UnsupportedOperationException("默认不支持该功能");
-    }
 
     /**
      * 活体检测(多人脸)
@@ -76,20 +79,9 @@ public interface LivenessDetModel {
      * @param faceDetectionResponse 人脸检测结果
      * @return
      */
-    default List<LivenessStatus> detect(byte[] imageData,DetectionResponse faceDetectionResponse){
+    default R<List<LivenessResult>> detect(byte[] imageData,DetectionResponse faceDetectionResponse){
         throw new UnsupportedOperationException("默认不支持该功能");
     }
-
-    /**
-     * 活体检测(单人脸)
-     * @param imageData
-     * @param faceDetectionRectangle 人脸检测结果-人脸框
-     * @return
-     */
-    default LivenessStatus detect(byte[] imageData, DetectionRectangle faceDetectionRectangle, List<Point> keyPoints){
-        throw new UnsupportedOperationException("默认不支持该功能");
-    }
-
 
     /**
      * 活体检测(多人脸)
@@ -97,9 +89,43 @@ public interface LivenessDetModel {
      * @param faceDetectionResponse 人脸检测结果
      * @return
      */
-    default List<LivenessStatus> detect(BufferedImage image,DetectionResponse faceDetectionResponse){
+    default R<List<LivenessResult>> detect(BufferedImage image,DetectionResponse faceDetectionResponse){
         throw new UnsupportedOperationException("默认不支持该功能");
     }
+
+    /**
+     * 活体检测(多人脸)
+     * @param base64Image
+     * @param faceDetectionResponse 人脸检测结果
+     * @return
+     */
+    default R<List<LivenessResult>> detectBase64(String base64Image,DetectionResponse faceDetectionResponse){
+        throw new UnsupportedOperationException("默认不支持该功能");
+    }
+
+    /**
+     * 活体检测(单人脸)
+     * @param imagePath 图片路径
+     * @param faceDetectionRectangle 人脸检测结果-人脸框
+     * @return
+     */
+    default R<LivenessResult> detect(String imagePath, DetectionRectangle faceDetectionRectangle, List<Point> keyPoints){
+        throw new UnsupportedOperationException("默认不支持该功能");
+    }
+
+
+    /**
+     * 活体检测(单人脸)
+     * @param imageData
+     * @param faceDetectionRectangle 人脸检测结果-人脸框
+     * @return
+     */
+    default R<LivenessResult> detect(byte[] imageData, DetectionRectangle faceDetectionRectangle, List<Point> keyPoints){
+        throw new UnsupportedOperationException("默认不支持该功能");
+    }
+
+
+
 
     /**
      * 活体检测(单人脸)
@@ -107,7 +133,62 @@ public interface LivenessDetModel {
      * @param faceDetectionRectangle 人脸检测结果-人脸框
      * @return
      */
-    default LivenessStatus detect(BufferedImage image, DetectionRectangle faceDetectionRectangle, List<Point> keyPoints){
+    default R<LivenessResult> detect(BufferedImage image, DetectionRectangle faceDetectionRectangle, List<Point> keyPoints){
+        throw new UnsupportedOperationException("默认不支持该功能");
+    }
+
+    /**
+     * 活体检测(单人脸)
+     * @param base64Image
+     * @param faceDetectionRectangle 人脸检测结果-人脸框
+     * @return
+     */
+    default R<LivenessResult> detectBase64(String base64Image, DetectionRectangle faceDetectionRectangle, List<Point> keyPoints){
+        throw new UnsupportedOperationException("默认不支持该功能");
+    }
+
+
+    /**
+     * 活体检测(单人脸)
+     * @param imagePath 图片路径
+     * @param faceDetectionRectangle 人脸检测结果-人脸框
+     * @return
+     */
+    default R<LivenessResult> detect(String imagePath, DetectionRectangle faceDetectionRectangle){
+        throw new UnsupportedOperationException("默认不支持该功能");
+    }
+
+
+    /**
+     * 活体检测(单人脸)
+     * @param imageData
+     * @param faceDetectionRectangle 人脸检测结果-人脸框
+     * @return
+     */
+    default R<LivenessResult> detect(byte[] imageData, DetectionRectangle faceDetectionRectangle){
+        throw new UnsupportedOperationException("默认不支持该功能");
+    }
+
+
+
+
+    /**
+     * 活体检测(单人脸)
+     * @param image BufferedImage
+     * @param faceDetectionRectangle 人脸检测结果-人脸框
+     * @return
+     */
+    default R<LivenessResult> detect(BufferedImage image, DetectionRectangle faceDetectionRectangle){
+        throw new UnsupportedOperationException("默认不支持该功能");
+    }
+
+    /**
+     * 活体检测(单人脸)
+     * @param base64Image
+     * @param faceDetectionRectangle 人脸检测结果-人脸框
+     * @return
+     */
+    default R<LivenessResult> detectBase64(String base64Image, DetectionRectangle faceDetectionRectangle){
         throw new UnsupportedOperationException("默认不支持该功能");
     }
 
@@ -117,7 +198,7 @@ public interface LivenessDetModel {
      * @param image
      * @return
      */
-    default LivenessStatus detectTopFace(BufferedImage image){
+    default R<LivenessResult> detectTopFace(BufferedImage image){
         throw new UnsupportedOperationException("默认不支持该功能");
     }
 
@@ -127,7 +208,7 @@ public interface LivenessDetModel {
      * @param imagePath
      * @return
      */
-    default LivenessStatus detectTopFace(String imagePath){
+    default R<LivenessResult> detectTopFace(String imagePath){
         throw new UnsupportedOperationException("默认不支持该功能");
     }
 
@@ -136,9 +217,20 @@ public interface LivenessDetModel {
      * @param imageData
      * @return
      */
-    default LivenessStatus detectTopFace(byte[] imageData){
+    default R<LivenessResult> detectTopFace(byte[] imageData){
         throw new UnsupportedOperationException("默认不支持该功能");
     }
+
+
+    /**
+     * 活体检测(分数最高人脸)
+     * @param base64Image
+     * @return
+     */
+    default R<LivenessResult> detectTopFaceBase64(String base64Image){
+        throw new UnsupportedOperationException("默认不支持该功能");
+    }
+
 
 
     /**
@@ -147,9 +239,9 @@ public interface LivenessDetModel {
      * @param faceDetectionRectangle
      * @return
      */
-    default LivenessStatus detectVideoByFrame(BufferedImage frameImage, DetectionRectangle faceDetectionRectangle, List<Point> keyPoints){
-        throw new UnsupportedOperationException("默认不支持该功能");
-    }
+//    default R<LivenessResult> detectVideoByFrame(BufferedImage frameImage, DetectionRectangle faceDetectionRectangle, List<Point> keyPoints){
+//        throw new UnsupportedOperationException("默认不支持该功能");
+//    }
 
     /**
      * 视频活体检测(逐帧检测)
@@ -157,34 +249,34 @@ public interface LivenessDetModel {
      * @param faceDetectionRectangle
      * @return
      */
-    default LivenessStatus detectVideoByFrame(byte[] frameData, DetectionRectangle faceDetectionRectangle, List<Point> keyPoints){
-        throw new UnsupportedOperationException("默认不支持该功能");
-    }
+//    default R<LivenessResult> detectVideoByFrame(byte[] frameData, DetectionRectangle faceDetectionRectangle, List<Point> keyPoints){
+//        throw new UnsupportedOperationException("默认不支持该功能");
+//    }
 
     /**
      * 视频活体检测(逐帧检测)
      * @param frameImageData
      * @return
      */
-    default LivenessStatus detectVideoByFrame(byte[] frameImageData){
-        throw new UnsupportedOperationException("默认不支持该功能");
-    }
+//    default R<LivenessResult> detectVideoByFrame(byte[] frameImageData){
+//        throw new UnsupportedOperationException("默认不支持该功能");
+//    }
 
     /**
      * 视频活体检测(逐帧检测)
      * @param frameImageData
      * @return
      */
-    default LivenessStatus detectVideoByFrame(BufferedImage frameImageData){
-        throw new UnsupportedOperationException("默认不支持该功能");
-    }
+//    default R<LivenessResult> detectVideoByFrame(BufferedImage frameImageData){
+//        throw new UnsupportedOperationException("默认不支持该功能");
+//    }
 
     /**
      * 视频活体检测
      * @param videoInputStream
      * @return
      */
-    default LivenessStatus detectVideo(InputStream videoInputStream){
+    default R<LivenessResult> detectVideo(InputStream videoInputStream){
         throw new UnsupportedOperationException("默认不支持该功能");
     }
 
@@ -193,7 +285,7 @@ public interface LivenessDetModel {
      * @param videoPath
      * @return
      */
-    default LivenessStatus detectVideo(String videoPath){
+    default R<LivenessResult> detectVideo(String videoPath){
         throw new UnsupportedOperationException("默认不支持该功能");
     }
 

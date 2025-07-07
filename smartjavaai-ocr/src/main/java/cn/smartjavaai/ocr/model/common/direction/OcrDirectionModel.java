@@ -17,7 +17,7 @@ import java.util.List;
  * OCR 文本方向分类模型
  * @author dwj
  */
-public interface OcrDirectionModel {
+public interface OcrDirectionModel extends AutoCloseable{
 
     /**
      * 加载模型

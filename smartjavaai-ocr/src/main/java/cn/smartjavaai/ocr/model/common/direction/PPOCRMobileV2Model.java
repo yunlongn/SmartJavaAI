@@ -64,6 +64,8 @@ public class PPOCRMobileV2Model implements OcrDirectionModel {
 
     private OcrCommonDetModel detModel;
 
+    private ZooModel<Image, DirectionInfo> model;
+
 
     @Override
     public void loadModel(DirectionModelConfig config){
@@ -86,7 +88,7 @@ public class PPOCRMobileV2Model implements OcrDirectionModel {
                         .optProgress(new ProgressBar())
                         .build();
         try{
-            ZooModel model = ModelZoo.loadModel(criteria);
+            model = ModelZoo.loadModel(criteria);
             // 创建池子：每个线程独享 Predictor
             this.predictorPool = new GenericObjectPool<>(new PredictorFactory<>(model));
             log.debug("当前设备: " + model.getNDManager().getDevice());
@@ -100,6 +102,7 @@ public class PPOCRMobileV2Model implements OcrDirectionModel {
             OcrDetModelConfig detModelConfig = new OcrDetModelConfig();
             detModelConfig.setModelEnum(config.getDetModelEnum());
             detModelConfig.setDetModelPath(config.getDetModelPath());
+            detModelConfig.setDevice(config.getDevice());
             detModel = OcrModelFactory.getInstance().getDetModel(detModelConfig);
         }
     }
@@ -215,6 +218,19 @@ public class PPOCRMobileV2Model implements OcrDirectionModel {
             }
         } catch (Exception e) {
             throw new OcrException("OCR检测错误", e);
+        }finally {
+            if (predictor != null) {
+                try {
+                    predictorPool.returnObject(predictor); //归还
+                } catch (Exception e) {
+                    log.warn("归还Predictor失败", e);
+                    try {
+                        predictor.close(); // 归还失败才销毁
+                    } catch (Exception ex) {
+                        log.error("关闭Predictor失败", ex);
+                    }
+                }
+            }
         }
         return ocrItemList;
     }
@@ -285,6 +301,31 @@ public class PPOCRMobileV2Model implements OcrDirectionModel {
             return ImageIO.read(new ByteArrayInputStream(imageBytes));
         } catch (IOException e) {
             throw new OcrException("导出图片失败", e);
+        }
+    }
+
+    @Override
+    public void close() throws Exception {
+        try {
+            if (predictorPool != null) {
+                predictorPool.close();
+            }
+        } catch (Exception e) {
+            log.warn("关闭 predictorPool 失败", e);
+        }
+        try {
+            if (model != null) {
+                model.close();
+            }
+        } catch (Exception e) {
+            log.warn("关闭 model 失败", e);
+        }
+        try {
+            if (detModel != null) {
+                detModel.close();
+            }
+        } catch (Exception e) {
+            log.warn("关闭 model 失败", e);
         }
     }
 }

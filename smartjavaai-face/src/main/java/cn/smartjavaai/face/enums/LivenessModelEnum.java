@@ -7,7 +7,14 @@ package cn.smartjavaai.face.enums;
  */
 public enum LivenessModelEnum {
 
-    SEETA_FACE6_MODEL("SeetaFace6Model");
+    // SeetaFace6
+    SEETA_FACE6_MODEL("SeetaFace6Model"),
+
+    // MiniVision
+    MINI_VISION_MODEL("MiniVisionModel"),
+
+    //阿里通义实验室
+    IIC_FL_MODEL("IicFlModel");
 
     private final String modelClassName;
 

@@ -6,7 +6,7 @@ import cn.smartjavaai.face.utils.FaceUtils;
 import cn.smartjavaai.face.vector.config.MilvusConfig;
 import cn.smartjavaai.face.vector.constant.VectorDBConstants;
 import cn.smartjavaai.face.vector.entity.FaceVector;
-import cn.smartjavaai.common.entity.FaceSearchResult;
+import cn.smartjavaai.common.entity.face.FaceSearchResult;
 import cn.smartjavaai.face.vector.exception.VectorDBException;
 import io.milvus.client.MilvusServiceClient;
 import io.milvus.grpc.*;

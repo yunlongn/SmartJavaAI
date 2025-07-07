@@ -1,6 +1,5 @@
 package cn.smartjavaai.common.entity;
 
-import cn.smartjavaai.common.enums.LivenessStatus;
 import lombok.Data;
 
 /**

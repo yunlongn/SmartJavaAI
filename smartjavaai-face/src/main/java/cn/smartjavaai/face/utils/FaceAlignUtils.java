@@ -5,6 +5,7 @@ import ai.djl.ndarray.NDArray;
 import ai.djl.ndarray.NDManager;
 import ai.djl.opencv.OpenCVImageFactory;
 import cn.smartjavaai.common.utils.ImageUtils;
+import cn.smartjavaai.common.utils.OpenCVUtils;
 import com.seeta.sdk.SeetaImageData;
 import com.seeta.sdk.SeetaPointF;
 import org.opencv.core.Mat;
@@ -39,7 +40,8 @@ public class FaceAlignUtils {
     public static Mat warpAffine(Mat src, Mat rot_mat, int width, int height) {
         Mat rot = new Mat();
         Size size = new Size(width, height);
-        Imgproc.warpAffine(src, rot, rot_mat, size);
+        Scalar scalar = new Scalar(135, 133, 132);
+        Imgproc.warpAffine(src, rot, rot_mat, size,0, 0, scalar);
         return rot;
     }
 

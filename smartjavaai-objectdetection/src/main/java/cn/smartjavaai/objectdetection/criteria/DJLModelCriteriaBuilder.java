@@ -33,6 +33,7 @@ public class DJLModelCriteriaBuilder implements CriteriaBuilderStrategy {
                 .optArgument("threshold", config.getThreshold() > 0 ? config.getThreshold() : DetectorConstant.DEFAULT_THRESHOLD)
                 .optModelUrls(DJL_MODEL_PREFIX + config.getModelEnum().getModelUri())
                 .optDevice(device)
+                //.optOption("ortDevice", "TensorRT")
                 .optProgress(new ProgressBar())
                 .build();
         return criteria;

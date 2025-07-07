@@ -7,11 +7,14 @@ import ai.djl.ndarray.NDArray;
 import ai.djl.ndarray.NDManager;
 import cn.smartjavaai.common.entity.*;
 import cn.smartjavaai.common.entity.Point;
-import cn.smartjavaai.common.enums.EyeStatus;
-import cn.smartjavaai.common.enums.GenderType;
+import cn.smartjavaai.common.entity.face.FaceAttribute;
+import cn.smartjavaai.common.entity.face.FaceInfo;
+import cn.smartjavaai.common.entity.face.HeadPose;
+import cn.smartjavaai.common.entity.face.LivenessResult;
+import cn.smartjavaai.common.enums.face.EyeStatus;
+import cn.smartjavaai.common.enums.face.GenderType;
 import cn.smartjavaai.common.utils.ImageUtils;
-import cn.smartjavaai.face.config.FaceModelConfig;
-import cn.smartjavaai.common.enums.LivenessStatus;
+import cn.smartjavaai.common.enums.face.LivenessStatus;
 import cn.smartjavaai.face.exception.FaceException;
 import com.seeta.sdk.*;
 
@@ -341,6 +344,44 @@ public class FaceUtils {
     }
 
     /**
+     * 112x112的目标点 - Target point of 112x112
+     * standard 5 landmarks for FFHQ faces with 112x112
+     *
+     * @param manager
+     * @return
+     */
+    public static NDArray faceTemplate112x112(NDManager manager) {
+        double[][] coord5point = {
+                {30.29459953, 51.69630051}, // 112x112的目标点 - Target point of 512x512
+                {65.53179932, 51.50139999},
+                {48.02519989, 71.73660278},
+                {33.54930115, 87},
+                {62.72990036, 87}
+        };
+        NDArray points = manager.create(coord5point);
+        return points;
+    }
+
+    /**
+     * 96x112的目标点 - Target point of 96x112
+     * standard 5 landmarks for FFHQ faces with 96x112
+     *
+     * @param manager
+     * @return
+     */
+    public static NDArray faceTemplate96x112(NDManager manager) {
+        double[][] coord5point = {
+                {30.29459953,  51.69630051},
+                {65.53179932,  51.50139999},
+                {48.02519989,  71.73660278},
+                {33.54930115,  92.3655014},
+                {62.72990036,  92.20410156}
+        };
+        NDArray points = manager.create(coord5point);
+        return points;
+    }
+
+    /**
      * bgr转图片
      * @return 图片
      */
@@ -507,7 +548,7 @@ public class FaceUtils {
                     .map(p -> new Point(p.x, p.y))
                     .collect(Collectors.toList());
             FaceInfo faceInfo = new FaceInfo(keyPoints);
-            faceInfo.setLivenessStatus(livenessStatusList.get(i));
+            faceInfo.setLivenessStatus(new LivenessResult(livenessStatusList.get(i)));
             DetectionInfo detectionInfo = new DetectionInfo(rectangle, 0, faceInfo);
             detectionInfoList.add(detectionInfo);
         }

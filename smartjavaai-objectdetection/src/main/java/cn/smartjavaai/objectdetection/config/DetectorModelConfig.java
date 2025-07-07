@@ -5,6 +5,9 @@ import cn.smartjavaai.objectdetection.constant.DetectorConstant;
 import cn.smartjavaai.objectdetection.enums.DetectorModelEnum;
 import lombok.Data;
 
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * 目标检测模型参数配置
  *
@@ -41,6 +44,11 @@ public class DetectorModelConfig {
      */
     private int maxBox;
 
+    /**
+     * 个性化配置
+     */
+    private Map<String, Object> customParams = new HashMap<>();
+
     public DetectorModelConfig() {
     }
 
@@ -51,5 +59,21 @@ public class DetectorModelConfig {
 
     public DetectorModelConfig(DetectorModelEnum modelEnum) {
         this.modelEnum = modelEnum;
+    }
+
+    public <T> T getCustomParam(String key, Class<T> clazz) {
+        Object value = customParams.get(key);
+        if (value == null) return null;
+        return clazz.cast(value);
+    }
+
+    /**
+     * 添加个性化配置项
+     */
+    public void putCustomParam(String key, Object value) {
+        if (customParams == null) {
+            customParams = new HashMap<>();
+        }
+        customParams.put(key, value);
     }
 }

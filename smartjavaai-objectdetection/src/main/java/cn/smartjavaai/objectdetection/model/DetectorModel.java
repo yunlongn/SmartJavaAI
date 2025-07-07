@@ -41,10 +41,6 @@ public class DetectorModel implements AutoCloseable{
 
     private ZooModel<Image, DetectedObjects> model;
 
-    //private Predictor<Image, DetectedObjects> predictor;
-
-
-
     private ObjectPool<Predictor<Image, DetectedObjects>> predictorPool;
 
     public void loadModel(DetectorModelConfig config){
@@ -193,12 +189,23 @@ public class DetectorModel implements AutoCloseable{
 
 
     /**
-     * 显式释放资源（必须调用！）
+     * 显式释放资源
      */
     @Override
     public void close() {
-        if (predictorPool != null) {
-            predictorPool.close();
+        try {
+            if (predictorPool != null) {
+                predictorPool.close();
+            }
+        } catch (Exception e) {
+            log.warn("关闭 predictorPool 失败", e);
+        }
+        try {
+            if (model != null) {
+                model.close();
+            }
+        } catch (Exception e) {
+            log.warn("关闭 model 失败", e);
         }
     }
 }
