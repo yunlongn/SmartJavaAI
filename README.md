@@ -291,20 +291,182 @@ SmartJavaAI是专为JAVA 开发者打造的一个功能丰富、开箱即用的 
 
 [开发文档](http://doc.smartjavaai.cn)
 
-### 5、模型下载
+### 5、模型简介及下载
 
-[模型下载](https://pan.baidu.com/s/1F6QtGrakEgnD1-hkWBfsUg?pwd=1234)
+[模型下载](https://pan.baidu.com/s/1dlZxWEMULnaietMDUJh38g?pwd=1234)
+
+## 人脸模块
+
+#### 人脸检测模型(FaceDetection、FaceLandmarkExtraction)
+
+支持功能：
+- 人脸检测
+- 5点人脸关键点定位
+
+| 模型名称        | 模型简介                   | 模型开源网站                                                                                 |
+| ----------- |------------------------|----------------------------------------------------------------------------------------|
+| RetinaFace | 高精度人脸检测模型              | [Github](https://github.com/biubug6/Pytorch_Retinaface)                                   |
+| UltraLightFastGenericFace | 针对边缘计算设备设计的轻量人脸检测模型 | [Github](https://github.com/Linzaer/Ultra-Light-Fast-Generic-Face-Detector-1MB) |
+| SeetaFace6  | 中科视拓最新开放的开源免费的全栈人脸识别工具包       | [Github](https://github.com/seetafaceengine/SeetaFace6)     |
+
+---
+
+#### 人脸识别模型(FaceRecognition)
+
+支持功能：
+- 人脸512维特征提取
+- 人脸对齐(人脸矫正)
+- 人脸特征比对（内积[IP]、欧氏距离[L2]、余弦相似度[COSINE]）
+
+| 模型名称                | 模型简介                                                    | 模型开源网站                                                                                 |
+|---------------------|---------------------------------------------------------|----------------------------------------------------------------------------------------|
+| InsightFace_IR-SE50 | （高精度）这是对 ArcFace（论文）和 InsightFace（GitHub）的 PyTorch 重新实现 | [Github](https://github.com/TreB1eN/InsightFace_Pytorch)  |
+| InsightFace_Mobilefacenet  | （轻量级）这是对 ArcFace（论文）和 InsightFace（GitHub）的 PyTorch 重新实现 | [Github](https://github.com/TreB1eN/InsightFace_Pytorch)  |
+| FaceNet             | 基于 PyTorch 的 Inception ResNet（V1）模型仓库                   | [Github](https://github.com/timesler/facenet-pytorch)  |
+| ElasticFace         | 基于 CVPRW2022 论文《ElasticFace: Elastic Margin Loss for Deep Face Recognition》实现的人脸识别模型| [Github](https://github.com/fdbtrs/ElasticFace) |
+| SeetaFace6          | 中科视拓最新开放的开源免费的全栈人脸识别工具包  | [Github](https://github.com/seetafaceengine/SeetaFace6)     |
+
+
+#### 静态活体检测(RGB)模型（Silent face-anti-spoofing、FaceLivenessDetection）
+
+支持功能：
+- 检测图片中的人脸是否为来自认证设备端的近距离裸拍活体人脸对象(裸拍活体正面人脸是指真人未经重度PS、风格化、人工合成等后处理的含正面人脸)
+
+| 模型名称       | 模型简介                    | 模型开源网站                                                               |
+|------------|-------------------------|----------------------------------------------------------------------|
+| MiniVision | 小视科技的静默活体检测             | [Github](https://github.com/minivision-ai/Silent-Face-Anti-Spoofing) |
+| IIC_FL(cv_manual_face-liveness_flrgb)   | 阿里通义工作室人脸活体检测模型-RGB   | [魔塔](https://www.modelscope.cn/models/iic/cv_manual_face-liveness_flrgb/feedback)                 |
+| SeetaFace6 | 中科视拓最新开放的开源免费的全栈人脸识别工具包 | [Github](https://github.com/seetafaceengine/SeetaFace6)              |
+
+
+#### 人脸表情识别模型(FacialExpressionRecognition、fer)
+
+支持功能：
+- 支持识别7种表情：neutral（中性）、happy（高兴）、sad（悲伤）、surprise（惊讶）、fear（恐惧）、disgust（厌恶）、anger（愤怒）
+
+| 模型名称       | 模型简介                     | 模型开源网站                                                               |
+|------------|--------------------------|----------------------------------------------------------------------|
+| DensNet121 | FaceLib的densnet121表情识别模型 | [Github](https://github.com/sajjjadayobi/FaceLib/) |
+| FrEmotion   | FaceRecognition-LivenessDetection-Javascript      | [Github](https://github.com/Faceplugin-ltd/FaceRecognition-LivenessDetection-Javascript)                 |
+
+
+#### 人脸属性识别模型(GenderDetection、AgeDetection、EyeClosenessDetection、FacePoseEstimation)
+
+支持功能：
+- 性别检测
+- 年龄检测
+- 闭眼检测
+- 人脸姿态检测
+- 戴口罩检测
+
+| 模型名称       | 模型简介                     | 模型开源网站                                                               |
+|------------|--------------------------|----------------------------------------------------------------------|
+| SeetaFace6 | 中科视拓最新开放的开源免费的全栈人脸识别工具包 | [Github](https://github.com/seetafaceengine/SeetaFace6)              |
+
+
+#### 人脸质量评估模型(FaceQualityAssessment)
+
+支持功能：
+- 亮度评估
+- 清晰度评估
+- 完整度评估
+- 姿态评估
+- 遮挡评估
+
+| 模型名称       | 模型简介                     | 模型开源网站                                                               |
+|------------|--------------------------|----------------------------------------------------------------------|
+| SeetaFace6 | 中科视拓最新开放的开源免费的全栈人脸识别工具包 | [Github](https://github.com/seetafaceengine/SeetaFace6)              |
+
+
+---
+
+## 目标检测模型
+
+支持功能：
+- 自训练模型推理
+- yolov3~yolov12 系列
+
+#### SSD 系列
+
+| 模型名称 | 骨干网络 | 输入尺寸 | <div style="width: 60pt">训练数据集</div> | 精度（mAP） | <div style="width: 50pt">推理速度</div> | <div style="width: 150pt">适用场景</div>|
+| :------------------ | ------------- | ----------- |--------------------------------------| -------------|-------------------------------------| -------------|
+|SSD_300_RESNET50 | ResNet‑50 | 300×300 | COCO                                 | 中等 | 快                                   | 精度需求一般|
+|SSD_512_RESNET50_V1_VOC | ResNet‑50 | 512×512 | Pascal VOC                           | 稍高 | 中等                                  | 精度优先、可接受略低速度的场景|
+|SSD_512_VGG16_ATROUS_COCO | VGG‑16 | 512×512 | COCO                                 | 较高 | 中等                                  | 通用场景；对小目标有一定提升|
+|SSD_300_VGG16_ATROUS_VOC | VGG‑16 | 300×300 | Pascal VOC                           | 中等偏上 | 快                                   | VOC 数据集同类任务；资源受限时使用|
+|SSD_512_MOBILENET1_VOC | MobileNet‑1.0 | 512×512 | Pascal VOC                           | 中等 | 快                                   | 嵌入式/移动端设备；算力和内存都很有限|
+
+#### YOLO 系列
+
+|模型名称 | 版本 | 大小（Backbone） | <div style="width: 60pt">数据集</div> | <div style="width: 50pt">精度</div> | <div style="width: 50pt">速度</div> | <div style="width: 150pt">适用场景</div> |
+| :--------- | -------| ----------- |----------------------------------------|-----------------------------------|-------|--------------------------------------|
+| YOLO12N | v12 | 极轻量 | COCO                                   | 高                                | 极快 | YOLO 系列最新版本，精度与速度进一步优化，适合高实时性要求场景 |
+|YOLO11N | v11  | 极轻量 | COCO                                   | 中等偏上                              | 极快 | 与 v8n 类似，版本更新点在兼容性与 API              |
+|YOLOV8N | v8  | 极轻量 | COCO                                   | 中等偏上                              | 极快 | 对实时性要求极高的应用                          |
+|YOLOV5S | v5  | 小型 | COCO                                   | 较高                                | 非常快 | 常见通用场景，算力资源有限时优选                     |
+|YOLOV5S_ONNXRUNTIME | v5  | 小型 | COCO                                   | 较高                                | 加速（需 ONNX 支持） | Windows/Linux 通用加速部署                 |
+|YOLO (MXNet / 通用模型) | v3  | DarkNet‑53 | COCO                                   | 较高                                | 快 | 需要 MXNet 生态或复现老项目时使用                 |
+
+#### YOLOv3 变体系列
+
+|模型名称 | 骨干网络 |  <div style="width: 60pt">数据集</div> | 输入尺寸 | <div style="width: 50pt">精度</div> | <div style="width: 50pt">速度</div> | <div style="width: 200pt">适用场景</div> |
+| :--------- | -------| ----------- |------------| ---------|-------|--------------------------------------|
+|YOLO3_DARKNET_VOC_416 | DarkNet‑53 | VOC | 416×416 | 高 | 中等 | VOC 任务复现；精度优先                        |
+|YOLO3_DARKNET_COCO_320 | DarkNet‑53 | COCO | 320×320 | 中等 | 快 | COCO 小模型测试；资源受限                      |
+|YOLO3_DARKNET_COCO_416 | DarkNet‑53 | COCO | 416×416 | 高 | 中等 | 通用 COCO 部署；精度优先                      |
+|YOLO3_DARKNET_COCO_608 | DarkNet‑53 | COCO | 608×608 | 很高 | 慢| 批量离线推理；精度要求极高                        |
+|YOLO3_MOBILENET_VOC_320 | MobileNet‑V1 | VOC | 320×320 | 中等 | 非常快| 嵌入式设备；VOC 小目标任务                      |
+|YOLO3_MOBILENET_VOC_416 | MobileNet‑V1 | VOC | 416×416 | 高 | 快| 移动端 VOC 部署                           |
+|YOLO3_MOBILENET_COCO_320 | MobileNet‑V1 | COCO | 320×320 | 中等 | 非常快 | 嵌入式设备；COCO 小目标任务                     |
+|YOLO3_MOBILENET_COCO_416 | MobileNet‑V1 | COCO | 416×416 | 高 | 快 | 移动端 COCO 部署                          |
+|YOLO3_MOBILENET_COCO_608 | MobileNet‑V1 | COCO | 608×608 | 很高 | 中等 | 对精度要求较高的移动端任务                        |
+
+---
+
+## OCR 模型
+
+支持功能：
+- 支持简体中文、繁体中文、英文、日文四种主要语言
+- 手写、竖版、拼音、生僻字
+- 方向矫正
+
+#### 文本检测模型
+
+| 模型名称                | 模型简介 | 模型开源网站                                                                                                       |
+| ------------| ------------------- |--------------------------------------------------------------------------------------------------------------|
+| PP-OCRv5_server_det | 飞桨PaddleOCR 3.0         | [Github](https://github.com/PaddlePaddle/PaddleOCR/blob/main/docs/version3.x/algorithm/PP-OCRv5/PP-OCRv5.md) |
+
+#### 文本识别模型
+| 模型名称                | 模型简介 | 模型开源网站                                                                                                       |
+| ------------| ------------------- |--------------------------------------------------------------------------------------------------------------|
+| PP-OCRv5_server_rec | 飞桨PaddleOCR 3.0           | [Github](https://github.com/PaddlePaddle/PaddleOCR/blob/main/docs/version3.x/algorithm/PP-OCRv5/PP-OCRv5.md) |
+
+#### 文本方向分类模型(cls)
+
+| 模型名称                | 模型简介 | 模型开源网站     |
+| ------------| ------------------- |------------|
+| ch_ppocr_mobile_v2.0_cls   | 原始分类器模型，对检测到的文本行文字角度分类      | [Github](https://paddlepaddle.github.io/PaddleOCR/latest/en/version2.x/ppocr/model_list.html?h=models+list#13-multilingual-detection-model) |
+
+---
+
+## 🌍 机器翻译模型
+
+支持功能
+- 200多语言互相翻译
+
+| 模型名称                           | 模型简介                     | 模型官网                                          |
+| ------------------------------ | ------------------------ |-----------------------------------------------|
+| NLLB-200                       | Meta AI 开发的一个先进的单一多语言机器翻译模型 | [Github](https://github.com/facebookresearch/fairseq/tree/nllb) |
+
+---
 
 
 ## 🙏 鸣谢
 
 本项目在开发过程中借鉴或使用了以下优秀开源项目，特此致谢：
 
-- **[Seetaface6JNI](https://gitee.com/cnsugar/seetaface6JNI)**
 - **[Deep Java Library](https://docs.djl.ai)**
 - **[AIAS](https://gitee.com/mymagicpower/AIAS)**
-
-
 
 ## 联系方式
 
@@ -349,19 +511,4 @@ SmartJavaAI是专为JAVA 开发者打造的一个功能丰富、开箱即用的 
 ## [v1.0.15] - 2025-05-17
 - 新增OCR文字识别模块：支持最新 PP-OCRv5
 - OCR文本识别：支持文字方向检测与自动校正
-
-## [v1.0.13] - 2025-05-17
-- 支持 JDK8 环境运行
-- 引入离线依赖，支持完全离线使用
-- 优化 FaceNet 人脸比对性能，提升比对速度
-- 支持带 Alpha 通道的 4 通道图片检测
-- 目标检测：新增 YOLOv12 官方模型支持
-- 目标检测：支持加载自训练模型进行推理
-
-## [v1.0.12] - 2025-05-09
--  新增图片与视频活体检测
--  新增人脸属性识别（性别、年龄、口罩、姿态、眼睛状态）
--  优化检测返回与包结构
--  新增 dependencyManagement 统一依赖版本管理
-
 
