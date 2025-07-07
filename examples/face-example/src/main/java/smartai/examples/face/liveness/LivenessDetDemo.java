@@ -25,6 +25,7 @@ import cn.smartjavaai.face.factory.LivenessModelFactory;
 import cn.smartjavaai.face.model.expression.ExpressionModel;
 import cn.smartjavaai.face.model.facedect.FaceDetModel;
 import cn.smartjavaai.face.model.liveness.LivenessDetModel;
+import cn.smartjavaai.face.utils.FaceUtils;
 import com.alibaba.fastjson.JSONObject;
 import lombok.extern.slf4j.Slf4j;
 import nu.pattern.OpenCV;
@@ -71,7 +72,7 @@ public class LivenessDetDemo {
         config.setModelEnum(LivenessModelEnum.IIC_FL_MODEL);
         config.setDevice(device);
         //需替换为实际模型存储路径
-        config.setModelPath("/Users/xxx/Documents/develop/model/anti/model.onnx");
+        config.setModelPath("/Users/xxx/Documents/develop/model/anti/IIC_Fl.onnx");
         //人脸活体阈值,可选,默认0.8，超过阈值则认为是真人，低于阈值是非活体
         config.setRealityThreshold(LivenessConstant.DEFAULT_REALITY_THRESHOLD);
         /*视频检测帧数，可选，默认10，输出帧数超过这个number之后，就可以输出识别结果。
@@ -137,6 +138,29 @@ public class LivenessDetDemo {
             }else{
                 log.info("活体检测失败：{}", response.getMessage());
             }
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    /**
+     * 图片活体检测并绘制结果
+     */
+    @Test
+    public void testLivenessDetectAndDraw(){
+        try (LivenessDetModel livenessDetModel = getLivenessDetModel()){
+            BufferedImage image = ImageIO.read(new File(Paths.get("src/main/resources/liveness/1.jpg").toAbsolutePath().toString()));
+            R<DetectionResponse> response = livenessDetModel.detect(image);
+            if(response.isSuccess()){
+                for (DetectionInfo detectionInfo : response.getData().getDetectionInfoList()){
+                    log.info("活体检测结果：{}", JSONObject.toJSONString(detectionInfo.getFaceInfo().getLivenessStatus().getStatus().getDescription()));
+                    Color color = detectionInfo.getFaceInfo().getLivenessStatus().getStatus() == LivenessStatus.LIVE ? Color.GREEN : Color.RED;
+                    ImageUtils.drawImageRectWithText(image, detectionInfo.getDetectionRectangle(), detectionInfo.getFaceInfo().getLivenessStatus().getStatus().getDescription(), color);
+                }
+            }else{
+                log.info("活体检测失败：{}", response.getMessage());
+            }
+            ImageUtils.saveImage(image, "output/detect.jpg");
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

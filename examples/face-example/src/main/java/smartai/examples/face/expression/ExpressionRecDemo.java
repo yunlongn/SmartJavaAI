@@ -88,12 +88,15 @@ public class ExpressionRecDemo {
      */
     @Test
     public void testExpressionDetect() {
-        ExpressionModel model = getExpressionModel();
-        R<ExpressionResult> result = model.detectTopFace("src/main/resources/emotion/happy.png");
-        if(result.isSuccess()){
-            log.info("识别结果：{}", JSONObject.toJSONString(result.getData().getExpression().getDescription()));
-        }else{
-            log.info("识别失败：{}", result.getMessage());
+        try (ExpressionModel model = getExpressionModel()){
+            R<ExpressionResult> result = model.detectTopFace("src/main/resources/emotion/happy.png");
+            if(result.isSuccess()){
+                log.info("识别结果：{}", JSONObject.toJSONString(result.getData().getExpression().getDescription()));
+            }else{
+                log.info("识别失败：{}", result.getMessage());
+            }
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
     }
 
@@ -103,15 +106,18 @@ public class ExpressionRecDemo {
      */
     @Test
     public void testExpressionDetect2() {
-        ExpressionModel model = getExpressionModel();
-        R<DetectionResponse> result = model.detect("src/main/resources/emotion/happy.png");
-        if(result.isSuccess()){
-            //log.info("识别结果：{}", JSONObject.toJSONString(result.getData()));
-            for (DetectionInfo detectionInfo : result.getData().getDetectionInfoList()) {
-                log.info("识别结果：{}", JSONObject.toJSONString(detectionInfo.getFaceInfo().getExpressionResult().getExpression().getDescription()));
+        try (ExpressionModel model = getExpressionModel()){
+            R<DetectionResponse> result = model.detect("src/main/resources/emotion/happy.png");
+            if(result.isSuccess()){
+                //log.info("识别结果：{}", JSONObject.toJSONString(result.getData()));
+                for (DetectionInfo detectionInfo : result.getData().getDetectionInfoList()) {
+                    log.info("识别结果：{}", JSONObject.toJSONString(detectionInfo.getFaceInfo().getExpressionResult().getExpression().getDescription()));
+                }
+            }else{
+                log.info("识别失败：{}", result.getMessage());
             }
-        }else{
-            log.info("识别失败：{}", result.getMessage());
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
     }
 
@@ -122,27 +128,24 @@ public class ExpressionRecDemo {
      */
     @Test
     public void testExpressionDetect3() {
-        FaceDetModel faceDetModel = getFaceDetModel();
-        ExpressionModel model = getExpressionModel();
-        // 将图片路径转换为 BufferedImage
-        BufferedImage image = null;
-        try {
-            image = ImageIO.read(new File(Paths.get("src/main/resources/emotion/happy.png").toAbsolutePath().toString()));
-        } catch (IOException e) {
-            throw new FaceException("无效图片路径", e);
-        }
-        R<DetectionResponse> detResult = faceDetModel.detect(image);
-        if(detResult.isSuccess()){
-            R<List<ExpressionResult>> result = model.detect(image, detResult.getData());
-            if(result.isSuccess()){
-                result.getData().forEach(expressionResult -> {
-                    log.info("识别结果：{}", JSONObject.toJSONString(expressionResult.getExpression().getDescription()));
-                });
+        try (FaceDetModel faceDetModel = getFaceDetModel();
+                ExpressionModel model = getExpressionModel()){
+            BufferedImage image = ImageIO.read(new File(Paths.get("src/main/resources/emotion/happy.png").toAbsolutePath().toString()));
+            R<DetectionResponse> detResult = faceDetModel.detect(image);
+            if(detResult.isSuccess()){
+                R<List<ExpressionResult>> result = model.detect(image, detResult.getData());
+                if(result.isSuccess()){
+                    result.getData().forEach(expressionResult -> {
+                        log.info("识别结果：{}", JSONObject.toJSONString(expressionResult.getExpression().getDescription()));
+                    });
+                }else{
+                    log.info("识别失败：{}", result.getMessage());
+                }
             }else{
-                log.info("识别失败：{}", result.getMessage());
+                log.info("人脸检测失败：{}", detResult.getMessage());
             }
-        }else{
-            log.info("人脸检测失败：{}", detResult.getMessage());
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
     }
 
@@ -153,27 +156,47 @@ public class ExpressionRecDemo {
      */
     @Test
     public void testExpressionDetect4() {
-        FaceDetModel faceDetModel = getFaceDetModel();
-        ExpressionModel model = getExpressionModel();
-        // 将图片路径转换为 BufferedImage
-        BufferedImage image = null;
-        try {
-            image = ImageIO.read(new File(Paths.get("src/main/resources/emotion/happy.png").toAbsolutePath().toString()));
-        } catch (IOException e) {
-            throw new FaceException("无效图片路径", e);
-        }
-        R<DetectionResponse> detResult = faceDetModel.detect(image);
-        if(detResult.isSuccess()){
-            for (DetectionInfo detectionInfo : detResult.getData().getDetectionInfoList()) {
-                R<ExpressionResult> result = model.detect(image, detectionInfo.getDetectionRectangle(), detectionInfo.getFaceInfo().getKeyPoints());
-                if(result.isSuccess()){
-                    log.info("识别结果：{}", JSONObject.toJSONString(result.getData().getExpression().getDescription()));
-                }else{
-                    log.info("识别失败：{}", result.getMessage());
+        try (FaceDetModel faceDetModel = getFaceDetModel();
+             ExpressionModel model = getExpressionModel()){
+            BufferedImage image = ImageIO.read(new File(Paths.get("src/main/resources/emotion/happy.png").toAbsolutePath().toString()));
+            R<DetectionResponse> detResult = faceDetModel.detect(image);
+            if(detResult.isSuccess()){
+                for (DetectionInfo detectionInfo : detResult.getData().getDetectionInfoList()) {
+                    R<ExpressionResult> result = model.detect(image, detectionInfo.getDetectionRectangle(), detectionInfo.getFaceInfo().getKeyPoints());
+                    if(result.isSuccess()){
+                        log.info("识别结果：{}", JSONObject.toJSONString(result.getData().getExpression().getDescription()));
+                    }else{
+                        log.info("识别失败：{}", result.getMessage());
+                    }
                 }
+            }else{
+                log.info("人脸检测失败：{}", detResult.getMessage());
             }
-        }else{
-            log.info("人脸检测失败：{}", detResult.getMessage());
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    /**
+     * 图片活体检测并绘制结果
+     */
+    @Test
+    public void testExpressionDetectAndDraw(){
+        try (ExpressionModel model = getExpressionModel()){
+            BufferedImage image = ImageIO.read(new File(Paths.get("src/main/resources/emotion/surprise.png").toAbsolutePath().toString()));
+            R<DetectionResponse> result = model.detect(image);
+            if(result.isSuccess()){
+                //log.info("识别结果：{}", JSONObject.toJSONString(result.getData()));
+                for (DetectionInfo detectionInfo : result.getData().getDetectionInfoList()) {
+                    log.info("识别结果：{}", JSONObject.toJSONString(detectionInfo.getFaceInfo().getExpressionResult().getExpression().getDescription()));
+                    ImageUtils.drawImageRectWithText(image, detectionInfo.getDetectionRectangle(), detectionInfo.getFaceInfo().getExpressionResult().getExpression().getDescription(), Color.red);
+                }
+                ImageUtils.saveImage(image, "output/detect.jpg");
+            }else{
+                log.info("识别失败：{}", result.getMessage());
+            }
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
     }
 
@@ -182,7 +205,7 @@ public class ExpressionRecDemo {
      * 注意事项：如果视频比较卡，可以使用轻量的人脸检测模型
      */
     @Test
-    public void testLivenessDetectCamera(){
+    public void testExpressionDetectCamera(){
         try (ExpressionModel expressionModel = getExpressionModel()){
             OpenCV.loadShared();
             VideoCapture capture = new VideoCapture(0);
