@@ -23,15 +23,20 @@ import java.util.Map;
  * 文字识别前后处理
  *
  */
-public class PPOCRV5RecTranslator implements Translator<Image, String> {
+public class PPOCRRecTranslator implements Translator<Image, String> {
     private List<String> table;
     private final boolean use_space_char;
 
-    public PPOCRV5RecTranslator(Map<String, ?> arguments) {
+    private String batchifier;
+
+    public PPOCRRecTranslator(Map<String, ?> arguments) {
         use_space_char =
                 arguments.containsKey("use_space_char")
                         ? Boolean.parseBoolean(arguments.get("use_space_char").toString())
                         : true;
+        batchifier =  arguments.containsKey("batchifier")
+                ? arguments.get("batchifier").toString()
+                : "padding";
     }
 
     @Override
@@ -57,7 +62,8 @@ public class PPOCRV5RecTranslator implements Translator<Image, String> {
         StringBuilder sb = new StringBuilder();
         NDArray tokens = list.singletonOrThrow();
 
-        long[] indices = tokens.get(0).argMax(1).toLongArray();
+//        long[] indices = tokens.get(0).argMax(1).toLongArray();
+        long[] indices = tokens.argMax(1).toLongArray();
         boolean[] selection = new boolean[indices.length];
         Arrays.fill(selection, true);
         for (int i = 1; i < indices.length; i++) {
@@ -111,13 +117,13 @@ public class PPOCRV5RecTranslator implements Translator<Image, String> {
         padding_im.set(new NDIndex(":,:,0:" + resized_w), resized_image);
 
         padding_im = padding_im.flip(0);
-        padding_im = padding_im.expandDims(0);
+//        padding_im = padding_im.expandDims(0);
         return new NDList(padding_im);
     }
 
     @Override
     public Batchifier getBatchifier() {
-        return null;
+        return Batchifier.fromString(batchifier);
     }
 
 }

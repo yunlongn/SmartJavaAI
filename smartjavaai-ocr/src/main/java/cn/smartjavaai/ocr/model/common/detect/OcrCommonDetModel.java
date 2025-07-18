@@ -29,8 +29,6 @@ public interface OcrCommonDetModel extends AutoCloseable{
     }
 
 
-
-
     /**
      * 文本检测
      * @param image BufferedImage
@@ -76,5 +74,24 @@ public interface OcrCommonDetModel extends AutoCloseable{
     default BufferedImage detectAndDraw(BufferedImage sourceImage){
         throw new UnsupportedOperationException("默认不支持该功能");
     }
+
+    /**
+     * 文本检测（批量）
+     * @param imageList BufferedImage
+     * @return
+     */
+    default List<List<OcrBox>> batchDetect(List<BufferedImage> imageList) {
+        throw new UnsupportedOperationException("默认不支持该功能");
+    }
+
+    /**
+     * 文本检测（批量）
+     * @param imageList DJL Image
+     * @return
+     */
+    default List<List<OcrBox>> batchDetectDJLImage(List<Image> imageList){
+        throw new UnsupportedOperationException("默认不支持该功能");
+    }
+
 
 }

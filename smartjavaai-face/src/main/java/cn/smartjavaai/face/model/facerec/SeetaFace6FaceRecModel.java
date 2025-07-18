@@ -486,13 +486,13 @@ public class SeetaFace6FaceRecModel implements FaceRecModel{
      * 检查是否存在人脸库
      * @return
      */
-    private boolean checkFaceDb(){
-        if(Objects.nonNull(config) && StringUtils.isNotBlank(config.getFaceDbPath())){
-            File file = new File(config.getFaceDbPath());
-            return file.exists() && file.isFile();
-        }
-        return false;
-    }
+//    private boolean checkFaceDb(){
+//        if(Objects.nonNull(config) && StringUtils.isNotBlank(config.getFaceDbPath())){
+//            File file = new File(config.getFaceDbPath());
+//            return file.exists() && file.isFile();
+//        }
+//        return false;
+//    }
 
     private FaceResult searchFaceDb(long index,float similar) {
         if(index >= 0){
@@ -835,6 +835,22 @@ public class SeetaFace6FaceRecModel implements FaceRecModel{
     @Override
     public void upsertFace(FaceRegisterInfo faceRegisterInfo, byte[] imageData) {
         FaceRecModel.super.upsertFace(faceRegisterInfo, imageData);
+    }
+
+    @Override
+    public R<FaceVector> getFaceInfoById(String id) {
+        if(vectorDBClient == null){
+            return R.fail(1000, "向量数据库未初始化成功");
+        }
+        return R.ok(vectorDBClient.getFaceInfoById(id));
+    }
+
+    @Override
+    public R<List<FaceVector>> listFaces(long pageNum, long pageSize) {
+        if(vectorDBClient == null){
+            return R.fail(1000, "向量数据库未初始化成功");
+        }
+        return R.ok(vectorDBClient.listFaces(pageNum, pageSize));
     }
 
     @Override

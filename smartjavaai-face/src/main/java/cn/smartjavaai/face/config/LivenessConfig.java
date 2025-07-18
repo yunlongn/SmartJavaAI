@@ -49,6 +49,11 @@ public class LivenessConfig {
     private int frameCount = LivenessConstant.DEFAULT_FRAME_COUNT;
 
     /**
+     * 视频检测最大帧数
+     */
+    private int maxVideoDetectFrames = LivenessConstant.DEFAULT_MAX_VIDEO_DETECT_FRAMES;
+
+    /**
      * 真人阈值
      */
     private Float realityThreshold;

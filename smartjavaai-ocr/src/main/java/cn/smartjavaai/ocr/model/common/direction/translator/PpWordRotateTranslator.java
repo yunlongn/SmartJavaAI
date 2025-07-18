@@ -13,6 +13,7 @@ import cn.smartjavaai.ocr.entity.DirectionInfo;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 /**
  * 方向检测
@@ -24,7 +25,24 @@ import java.util.List;
 public class PpWordRotateTranslator implements Translator<Image, DirectionInfo> {
     List<String> classes = Arrays.asList("No Rotate", "Rotate");
 
-    public PpWordRotateTranslator() {
+    private String batchifier;
+
+    private int resizeHeight;
+
+    private int resizeWidth;
+
+    public PpWordRotateTranslator(Map<String, ?> arguments) {
+        batchifier =  arguments.containsKey("batchifier")
+                ? arguments.get("batchifier").toString()
+                : "padding";
+
+        resizeWidth =  arguments.containsKey("resizeWidth")
+                ? (Integer) arguments.get("resizeWidth")
+                : 192;
+
+        resizeHeight =  arguments.containsKey("resizeHeight")
+                ? (Integer) arguments.get("resizeHeight")
+                : 48;
     }
 
     @Override
@@ -51,8 +69,8 @@ public class PpWordRotateTranslator implements Translator<Image, DirectionInfo> 
     public NDList processInput(TranslatorContext ctx, Image input) {
         NDArray img = input.toNDArray(ctx.getNDManager());
         int imgC = 3;
-        int imgH = 48;
-        int imgW = 192;
+        int imgH = resizeHeight;
+        int imgW = resizeWidth;
 
         NDArray array = ctx.getNDManager().zeros(new Shape(imgC, imgH, imgW));
 
@@ -74,13 +92,14 @@ public class PpWordRotateTranslator implements Translator<Image, DirectionInfo> 
 
         array.set(new NDIndex(":,:,0:" + resized_w), img);
 
-        array = array.expandDims(0);
+//        array = array.expandDims(0);
 
         return new NDList(new NDArray[]{array});
     }
 
     @Override
     public Batchifier getBatchifier() {
-        return null;
+        return Batchifier.fromString(batchifier);
     }
+
 }

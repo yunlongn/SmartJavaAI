@@ -167,6 +167,19 @@ SmartJavaAI是专为JAVA 开发者打造的一个功能丰富、开箱即用的 
         </div>
       </td>
     </tr> 
+  <tr>
+      <td>
+        <div align="left">
+          <p>OCR文字识别</p>
+          - 表格识别 <br>
+        </div>
+      </td>     
+      <td>
+        <div align="center">
+        <img src="https://cdn.jsdelivr.net/gh/geekwenjie/SmartJavaAI-Site/images/ocr/table.jpg" width = "500px"/>
+        </div>
+      </td>
+    </tr>
     <tr>
       <td>
         <div align="left">
@@ -222,23 +235,25 @@ SmartJavaAI是专为JAVA 开发者打造的一个功能丰富、开箱即用的 
   - 支持多种主流模型：兼容 YOLOv3、YOLOv5、YOLOv8、YOLOv11、YOLOv12、SSD 等目标检测算法
   - 支持自定义模型加载：可无缝加载并部署用户自行训练的目标检测模型
 - **OCR文字识别**
-  - 支持PaddleOCR 3.0模型：集成最新PP-OCRv5模型
+  - 支持PaddleOCR 3.0模型：集成最新PP-OCRv5、PP-OCRv4、表格结构识别模型(SLANet_plus)、文本行方向分类模型
   - 支持任意角度识别，方向校准
   - 支持通用文字识别，通用手写字识别
+  - 支持表格识别
 - **机器翻译**
   - 集成NLLB-200模型：支持200+语言互相翻译
 
 
 ## 🌟 AI集成方式对比
 
-| 方案                | 技术特点                                                                 | 优点                                                                 | 缺点                                                                 |
-|---------------------|--------------------------------------------------------------------------|----------------------------------------------------------------------|----------------------------------------------------------------------|
-| **OpenCV**         | 传统图像处理方案                                                        | ✅ 提供java接口<br>✅ 轻量级部署<br>✅ 社区资源丰富                   | ❌ 基于传统算法精度低(60%-75%)<br>❌ 需本地安装环境 |
-| &zwnj;**虹软SDK**&zwnj;         | 商业级闭源解决方案                                                      | ✅ 开箱即用<br>✅ 提供完整文档和SDK<br>✅ 支持离线活体检测      | ❌ 免费版需年度授权更新<br>❌ 商业授权费用高<br>❌ 代码不可控 |
+| 方案                | 技术特点                                                                 | 优点                                                                | 缺点                                                                |
+|---------------------|--------------------------------------------------------------------------|---------------------------------------------------------------------|---------------------------------------------------------------------|
+| **OpenCV**         | 传统图像处理方案                                                        | ✅ 提供java接口<br>✅ 轻量级部署<br>✅ 社区资源丰富                  | ❌ 基于传统算法精度低(60%-75%)<br>❌ 需本地安装环境 |
+| &zwnj;**商业闭源SDK（如虹软等）**&zwnj;       | 商业级闭源解决方案                                                      | ✅ 开箱即用<br>✅ 提供完整文档和SDK<br>✅ 支持离线活体检测      | ❌ 免费版需年度授权更新<br>❌ 商业授权费用高<br>❌ 代码不可控 |
 | &zwnj;**云API(阿里云)**&zwnj;   | SaaS化云端服务                                                          | ✅ 零部署成本<br>✅ 支持高并发<br>✅ 自带模型迭代        | ❌ 网络延迟风险(200-800ms)<br>❌ 按调用量计费<br>❌ 有数据安全风险 |
 | &zwnj;**Python混合调用**&zwnj;  | 跨语言调用方案                                                          | ✅ 可集成PyTorch/TF等框架<br>✅ 支持自定义算法<br>✅ 识别精度高  | ❌ 需维护双语言环境<br>❌ 进程通信性能损耗(30%+)<br>❌ 异常处理复杂度翻倍 |
-| &zwnj;**DJL框架**&zwnj;         | 深度学习框架                                                            | ✅ 纯Java实现<br>✅ 支持主流深度学习框架<br>✅ 可加载预训练模型(99%+)    | ❌ 需掌握DL知识<br>❌ 需处理模型加载、预处理、后处理等复杂技术细节       |
-| &zwnj;**SmartJavaAI**&zwnj;         | java深度学习工具包                                                            | ✅ 支持主流深度学习框架<br>✅ 提供丰富、开箱即用API<br>  ✅ 上手简单，单一Jar包集成 |   ❌要求JDK版本11及以上  |
+| &zwnj;**JNI/JNA**&zwnj;         | 跨语言底层调用方案      | ✅ 直接调用 C/C++ 高性能算法库✅ 支持调用各种原生成熟库✅ 可封装成通用工具Jar   |❌ 开发成本高，JNI更复杂❌ 跨平台兼容性差       |
+| &zwnj;**DJL框架**&zwnj;         | 深度学习框架                                                            | ✅ 纯Java实现<br>✅ 支持主流深度学习框架<br>✅ 可加载预训练模型(99%+)   | ❌ 需掌握DL知识<br>❌ 需处理模型加载、预处理、后处理等复杂技术细节      |
+| &zwnj;**SmartJavaAI**&zwnj;       | java深度学习工具包                                                            | ✅ 支持主流深度学习框架<br>✅ 提供丰富、开箱即用API<br>  ✅ 上手简单，单一Jar包集成 |   ❌要求JDK版本11及以上  |
 
 
 
@@ -273,7 +288,7 @@ SmartJavaAI是专为JAVA 开发者打造的一个功能丰富、开箱即用的 
 <dependency>
     <groupId>cn.smartjavaai</groupId>
     <artifactId>smartjavaai-all</artifactId>
-    <version>1.0.19</version>
+    <version>1.0.20</version>
 </dependency>
 ```
 ### 3、完整示例代码
@@ -427,19 +442,37 @@ SmartJavaAI是专为JAVA 开发者打造的一个功能丰富、开箱即用的 
 
 | 模型名称                | 模型简介 | 模型开源网站                                                                                                       |
 | ------------| ------------------- |--------------------------------------------------------------------------------------------------------------|
-| PP-OCRv5_server_det | 飞桨PaddleOCR 3.0         | [Github](https://github.com/PaddlePaddle/PaddleOCR/blob/main/docs/version3.x/algorithm/PP-OCRv5/PP-OCRv5.md) |
+| PP-OCRv5_server_det | 服务端文本检测模型，精度更高，适合在性能较好的服务器上部署         | [Github](https://github.com/PaddlePaddle/PaddleOCR/blob/main/docs/version3.x/algorithm/PP-OCRv5/PP-OCRv5.md) |
+| PP-OCRv5_mobile_det | 轻量文本检测模型，效率更高，适合在端侧设备部署         | [Github](https://github.com/PaddlePaddle/PaddleOCR/blob/main/docs/version3.x/algorithm/PP-OCRv5/PP-OCRv5.md) |
+| PP-OCRv4_server_det | 服务端文本检测模型，精度更高，适合在性能较好的服务器上部署         | [Github](https://github.com/PaddlePaddle/PaddleOCR/blob/main/docs/version3.x/algorithm/PP-OCRv5/PP-OCRv5.md) |
+| PP-OCRv4_mobile_det | 轻量文本检测模型，效率更高，适合在端侧设备部署         | [Github](https://github.com/PaddlePaddle/PaddleOCR/blob/main/docs/version3.x/algorithm/PP-OCRv5/PP-OCRv5.md) |
 
 **文本识别模型**
 
-| 模型名称                | 模型简介 | 模型开源网站                                                                                                       |
-| ------------| ------------------- |--------------------------------------------------------------------------------------------------------------|
-| PP-OCRv5_server_rec | 飞桨PaddleOCR 3.0           | [Github](https://github.com/PaddlePaddle/PaddleOCR/blob/main/docs/version3.x/algorithm/PP-OCRv5/PP-OCRv5.md) |
+| 模型名称                | 模型简介                                                                                                                 | 模型开源网站                                                                                                       |
+| ------------|----------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------|
+| PP-OCRv5_server_rec | （服务端）致力于以单一模型高效、精准地支持简体中文、繁体中文、英文、日文四种主要语言，以及手写、竖版、拼音、生僻字等复杂文本场景的识别。在保持识别效果的同时，兼顾推理速度和模型鲁棒性，为各种场景下的文档理解提供高效、精准的技术支撑。 | [Github](https://github.com/PaddlePaddle/PaddleOCR/blob/main/docs/version3.x/algorithm/PP-OCRv5/PP-OCRv5.md) |
+| PP-OCRv5_mobile_rec | （轻量）致力于以单一模型高效、精准地支持简体中文、繁体中文、英文、日文四种主要语言，以及手写、竖版、拼音、生僻字等复杂文本场景的识别。在保持识别效果的同时，兼顾推理速度和模型鲁棒性，为各种场景下的文档理解提供高效、精准的技术支撑。  | [Github](https://github.com/PaddlePaddle/PaddleOCR/blob/main/docs/version3.x/algorithm/PP-OCRv5/PP-OCRv5.md) |
+| PP-OCRv4_server_rec | （服务端）推理精度高，可以部署在多种不同的服务器上                                                                                                    | [Github](https://github.com/PaddlePaddle/PaddleOCR/blob/main/docs/version3.x/algorithm/PP-OCRv5/PP-OCRv5.md) |
+| PP-OCRv4_mobile_rec | （轻量） 效率更高，适合在端侧设备部署                                                                                                  | [Github](https://github.com/PaddlePaddle/PaddleOCR/blob/main/docs/version3.x/algorithm/PP-OCRv5/PP-OCRv5.md) |
+
 
 **文本方向分类模型(cls)**
 
-| 模型名称                | 模型简介 | 模型开源网站     |
-| ------------| ------------------- |------------|
-| ch_ppocr_mobile_v2.0_cls   | 原始分类器模型，对检测到的文本行文字角度分类      | [Github](https://paddlepaddle.github.io/PaddleOCR/latest/en/version2.x/ppocr/model_list.html?h=models+list#13-multilingual-detection-model) |
+| 模型名称                | 模型简介                         | 模型开源网站     |
+| ------------|------------------------------|------------|
+| ch_ppocr_mobile_v2.0_cls   | 原始分类器模型，对检测到的文本行文字角度分类       | [Github](https://paddlepaddle.github.io/PaddleOCR/latest/en/version2.x/ppocr/model_list.html?h=models+list#13-multilingual-detection-model) |
+| PP_LCNET_X0_25   | （轻量）基于PP-LCNet_x0_25的文本行分类模型 | [Github](https://paddlepaddle.github.io/PaddleOCR/v3.1.0/version3.x/module_usage/textline_orientation_classification.html) |
+| PP_LCNET_X1_0   | 基于PP-LCNet_x1_0的文本行分类模型      | [Github](https://paddlepaddle.github.io/PaddleOCR/v3.1.0/version3.x/module_usage/textline_orientation_classification.html) |
+
+
+**表格结构识别(Table Structure Recognition)**
+
+| 模型名称                | 模型简介                         | 模型开源网站     |
+| ------------|------------------------------|------------|
+| SLANet   | 该模型通过轻量级骨干 PP-LCNet、CSP-PAN 融合与 SLA Head 解码，有效提升表格结构识别的精度与速度。       | [Github](https://paddlepaddle.github.io/PaddleOCR/v3.1.0/version3.x/module_usage/table_structure_recognition.html#_3) |
+| SLANet_plus   | （增强版）该模型通过轻量级骨干 PP-LCNet、CSP-PAN 融合与 SLA Head 解码，有效提升表格结构识别的精度与速度。 | [Github](https://paddlepaddle.github.io/PaddleOCR/v3.1.0/version3.x/module_usage/table_structure_recognition.html#_3) |
+
 
 ---
 
@@ -474,7 +507,7 @@ SmartJavaAI是专为JAVA 开发者打造的一个功能丰富、开箱即用的 
 
 ## 近期更新日志
 
-## [v1.0.19] - 2025-07-06
+## [v1.0.20] - 2025-07-06
 - 人脸模块：新增小视科技（MiniVision）活体检测模型
 - 人脸模块：新增阿里通义工作室活体检测模型
 - 人脸模块：新增 2 个表情识别模型

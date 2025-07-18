@@ -196,6 +196,42 @@ public class SQLiteClient implements VectorDBClient {
         }
     }
 
+    @Override
+    public FaceVector getFaceInfoById(String id) {
+        if (!isInit) {
+            throw new VectorDBException("人脸库未加载完毕");
+        }
+        // 先从内存缓存中获取
+        FaceVector faceVector = memoryIndex.get(id);
+        if (faceVector == null) {
+            // 如果内存中没有，则从数据库查询
+            try {
+                faceVector = faceDao.findById(id);
+            } catch (SQLException | ClassNotFoundException e) {
+                throw new VectorDBException("SQLite查询异常", e);
+            }
+        }
+        return faceVector;
+    }
+
+    @Override
+    public List<FaceVector> listFaces(long pageNum, long pageSize) {
+        if (!isInit) {
+            throw new VectorDBException("人脸库未加载完毕");
+        }
+
+        if (pageNum < 1 || pageSize < 1) {
+            throw new IllegalArgumentException("pageNum和pageSize必须大于0");
+        }
+
+        // 从数据库中查询指定分页的数据
+        try {
+            return faceDao.findFace((int)pageNum, (int)pageSize);
+        } catch (Exception e) {
+            throw new VectorDBException("分页查询失败", e);
+        }
+    }
+
     // ============= 私有辅助方法 =============
 
     private void loadAllFeaturesToMemory() {
@@ -231,19 +267,6 @@ public class SQLiteClient implements VectorDBClient {
             memoryIndex.clear();
         } catch (Exception e) {
             log.error("清空数据库失败", e);
-        }
-    }
-
-    @Override
-    public FaceSearchResult getById(String id) {
-        try {
-            FaceVector faceVector = faceDao.findById(id);
-            if(faceVector != null){
-                return new FaceSearchResult(faceVector.getId(), 1.0f, faceVector.getMetadata());
-            }
-            return null;
-        } catch (SQLException | RuntimeException | ClassNotFoundException e ) {
-            throw new VectorDBException("SQLite查询异常", e);
         }
     }
 

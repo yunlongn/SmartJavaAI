@@ -354,6 +354,9 @@ public class CommonLivenessModel implements LivenessDetModel{
             }
             // 逐帧处理视频
             for (int frameIndex = 0; frameIndex < totalFrames; frameIndex++) {
+                if(frameIndex >= config.getMaxVideoDetectFrames()){
+                    return R.fail(10002, "超出最大检测帧数：" + config.getMaxVideoDetectFrames());
+                }
                 // 获取当前帧
                 Frame frame = grabber.grabImage();
                 if (frame != null) {

@@ -24,4 +24,9 @@ public class LivenessConstant {
      * 视频默认检测帧数
      */
     public static final int DEFAULT_FRAME_COUNT = 10;
+
+    /**
+     * 视频默认最大检测帧数
+     */
+    public static final int DEFAULT_MAX_VIDEO_DETECT_FRAMES = Integer.MAX_VALUE;
 }

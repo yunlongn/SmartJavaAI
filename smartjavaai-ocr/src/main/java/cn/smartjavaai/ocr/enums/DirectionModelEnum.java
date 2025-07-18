@@ -7,7 +7,12 @@ package cn.smartjavaai.ocr.enums;
  */
 public enum DirectionModelEnum {
 
-    CH_PPOCR_MOBILE_V2_CLS;
+    CH_PPOCR_MOBILE_V2_CLS,
+
+    PP_LCNET_X0_25,
+
+    PP_LCNET_X1_0;
+
 
 
     /**

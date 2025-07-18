@@ -3,11 +3,16 @@ package cn.smartjavaai.ocr.enums;
 /**
  * OCR检测模型枚举
  * @author dwj
- * @date 2025/4/4
  */
 public enum CommonDetModelEnum {
 
-    PADDLEOCR_V5_DET_MODEL;
+    PP_OCR_V5_SERVER_DET_MODEL,
+
+    PP_OCR_V5_MOBILE_DET_MODEL,
+
+    PP_OCR_V4_SERVER_DET_MODEL,
+
+    PP_OCR_V4_MOBILE_DET_MODEL;
 
 
     /**

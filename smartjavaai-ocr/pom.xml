@@ -6,7 +6,7 @@
     <parent>
         <groupId>cn.smartjavaai</groupId>
         <artifactId>smartjavaai-parent</artifactId>
-        <version>1.0.19</version>
+        <version>1.0.20</version>
     </parent>
 
     <artifactId>smartjavaai-ocr</artifactId>
@@ -18,9 +18,31 @@
             <artifactId>smartjavaai-common</artifactId>
             <version>${project.version}</version>
         </dependency>
+
+<!--        <dependency>-->
+<!--            <groupId>ai.djl.paddlepaddle</groupId>-->
+<!--            <artifactId>paddlepaddle-engine</artifactId>-->
+<!--            <version>0.22.1</version>-->
+<!--        </dependency>-->
+<!--        <dependency>-->
+<!--            <groupId>ai.djl.paddlepaddle</groupId>-->
+<!--            <artifactId>paddlepaddle-model-zoo</artifactId>-->
+<!--            <version>0.22.1</version>-->
+<!--        </dependency>-->
+
+        <dependency>
+            <groupId>org.apache.poi</groupId>
+            <artifactId>poi</artifactId>
+            <version>4.0.0</version>
+        </dependency>
+        <dependency>
+            <groupId>dom4j</groupId>
+            <artifactId>dom4j</artifactId>
+            <version>1.6.1</version>
+        </dependency>
     </dependencies>
 
-    <version>1.0.19</version>
+    <version>1.0.20</version>
     <name>smartjavaai-ocr</name>
     <description>SmartJavaAI</description>
     <url>https://github.com/geekwenjie/SmartJavaAI</url>

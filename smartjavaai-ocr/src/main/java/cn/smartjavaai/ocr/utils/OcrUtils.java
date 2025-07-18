@@ -11,14 +11,12 @@ import ai.djl.ndarray.NDManager;
 import ai.djl.opencv.OpenCVImageFactory;
 import cn.smartjavaai.common.entity.*;
 import cn.smartjavaai.common.entity.Point;
-import cn.smartjavaai.ocr.entity.OcrBox;
-import cn.smartjavaai.ocr.entity.OcrInfo;
-import cn.smartjavaai.ocr.entity.OcrItem;
-import cn.smartjavaai.ocr.entity.RotatedBoxCompX;
+import cn.smartjavaai.ocr.entity.*;
 import cn.smartjavaai.ocr.enums.AngleEnum;
 import cn.smartjavaai.ocr.opencv.OcrNDArrayUtils;
 import cn.smartjavaai.ocr.opencv.OcrOpenCVUtils;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections.CollectionUtils;
 import org.opencv.core.Mat;
 import org.opencv.core.Scalar;
 import org.opencv.imgproc.Imgproc;
@@ -26,10 +24,8 @@ import org.opencv.imgproc.Imgproc;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.Iterator;
+import java.util.*;
 import java.util.List;
-import java.util.Objects;
 
 /**
  * @author dwj
@@ -42,26 +38,40 @@ public class OcrUtils {
     /**
      * 转换为OcrBox
      * @param dt_boxes
-     * @param img
      * @return
      */
-    public static List<OcrBox> convertToOcrBox(NDList dt_boxes, Image img){
-        if(Objects.isNull(dt_boxes) || dt_boxes.size() == 0){
-            return null;
-        }
-        List<OcrBox> boxList = new ArrayList<OcrBox>();
-        for(NDArray box : dt_boxes){
+    public static List<OcrBox> convertToOcrBox(NDList dt_boxes) {
+        List<OcrBox> boxList = new ArrayList<>();
+        for (NDArray box : dt_boxes) {
             float[] pointsArr = box.toFloatArray();
-            //log.debug("points: {}", pointsArr);
-            float[] lt = java.util.Arrays.copyOfRange(pointsArr, 0, 2);
-            float[] rt = java.util.Arrays.copyOfRange(pointsArr, 2, 4);
-            float[] rb = java.util.Arrays.copyOfRange(pointsArr, 4, 6);
-            float[] lb = java.util.Arrays.copyOfRange(pointsArr, 6, 8);
-            OcrBox ocrBox = new OcrBox(new Point(lt[0], lt[1]), new Point(rt[0], rt[1]), new Point(rb[0], rb[1]), new Point(lb[0], lb[1]));
+            OcrBox ocrBox = new OcrBox(
+                    new Point(pointsArr[0], pointsArr[1]),
+                    new Point(pointsArr[2], pointsArr[3]),
+                    new Point(pointsArr[4], pointsArr[5]),
+                    new Point(pointsArr[6], pointsArr[7])
+            );
             boxList.add(ocrBox);
         }
         return boxList;
     }
+
+    /**
+     * 转换为OcrBox
+     * @param dt_boxes
+     * @return
+     */
+    public static List<List<OcrBox>> convertToOcrBox(List<NDList> ndLists) {
+        if (ndLists == null || ndLists.isEmpty()) {
+            return Collections.emptyList();
+        }
+        List<List<OcrBox>> boxLists = new ArrayList<>();
+        for (NDList dt_boxes : ndLists) {
+            boxLists.add(convertToOcrBox(dt_boxes));
+        }
+        return boxLists;
+    }
+
+
 
     /**
      * 欧式距离计算
@@ -140,7 +150,6 @@ public class OcrUtils {
         if(Objects.isNull(lines) || lines.size() == 0){
             return null;
         }
-        List<DetectionInfo> detectionInfoList = new ArrayList<DetectionInfo>();
         List<List<OcrItem>> lineList = new ArrayList<List<OcrItem>>();
         String fullText = "";
         for(ArrayList<RotatedBoxCompX> boxList : lines){
@@ -164,6 +173,36 @@ public class OcrUtils {
         }
         return new OcrInfo(lineList, fullText);
     }
+
+    public static OcrInfo convertRotatedBoxesToOcrItems(List<RotatedBox> rotatedBoxes) {
+        OcrInfo ocrInfo = new OcrInfo();
+        List<OcrItem> ocrItems = new ArrayList<>();
+        StringBuilder fullText = new StringBuilder();
+        for (RotatedBox rotatedBox : rotatedBoxes) {
+            NDArray box = rotatedBox.getBox();
+            float[] points = box.toFloatArray();
+            Point topLeft = new Point(points[0], points[1]);
+            Point topRight = new Point(points[2], points[3]);
+            Point bottomRight = new Point(points[4], points[5]);
+            Point bottomLeft = new Point(points[6], points[7]);
+
+            OcrBox ocrBox = new OcrBox(topLeft, topRight, bottomRight, bottomLeft);
+            String text = rotatedBox.getText();
+
+            OcrItem item = new OcrItem();
+            item.setOcrBox(ocrBox);
+            item.setText(text);
+            ocrItems.add(item);
+            fullText.append(text + " ");
+        }
+        if (fullText.length() > 0) {
+            fullText.deleteCharAt(fullText.length() - 1);
+        }
+        ocrInfo.setOcrItemList(ocrItems);
+        ocrInfo.setFullText(fullText.toString());
+        return ocrInfo;
+    }
+
 
 
     /**
@@ -235,26 +274,28 @@ public class OcrUtils {
             // 声明画笔属性 ：粗 细（单位像素）末端无修饰 折线处呈尖角
             BasicStroke bStroke = new BasicStroke(2, BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER);
             g.setStroke(bStroke);
-            for(List<OcrItem> ocrItemList : ocrInfo.getLineList()){
-                for(OcrItem item : ocrItemList){
-                    OcrBox box = item.getOcrBox();
-                    int[] xPoints = {
-                            (int)box.getTopLeft().getX(),
-                            (int)box.getTopRight().getX(),
-                            (int)box.getBottomRight().getX(),
-                            (int)box.getBottomLeft().getX(),
-                            (int)box.getTopLeft().getX()
-                    };
-                    int[] yPoints = {
-                            (int)box.getTopLeft().getY(),
-                            (int)box.getTopRight().getY(),
-                            (int)box.getBottomRight().getY(),
-                            (int)box.getBottomLeft().getY(),
-                            (int)box.getTopLeft().getY()
-                    };
-                    g.drawPolyline(xPoints, yPoints, 5);
-                    g.drawString(item.getText(), xPoints[0], yPoints[0]);
-                }
+            List<OcrItem> ocrItemList = ocrInfo.getOcrItemList();
+            if(CollectionUtils.isNotEmpty(ocrInfo.getLineList())){
+                ocrItemList = ocrInfo.flattenLines();
+            }
+            for(OcrItem item : ocrItemList){
+                OcrBox box = item.getOcrBox();
+                int[] xPoints = {
+                        (int)box.getTopLeft().getX(),
+                        (int)box.getTopRight().getX(),
+                        (int)box.getBottomRight().getX(),
+                        (int)box.getBottomLeft().getX(),
+                        (int)box.getTopLeft().getX()
+                };
+                int[] yPoints = {
+                        (int)box.getTopLeft().getY(),
+                        (int)box.getTopRight().getY(),
+                        (int)box.getBottomRight().getY(),
+                        (int)box.getBottomLeft().getY(),
+                        (int)box.getTopLeft().getY()
+                };
+                g.drawPolyline(xPoints, yPoints, 5);
+                g.drawString(item.getText(), xPoints[0], yPoints[0]);
             }
         } finally {
             g.dispose();

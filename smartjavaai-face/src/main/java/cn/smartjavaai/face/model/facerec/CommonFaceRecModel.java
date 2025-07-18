@@ -9,8 +9,6 @@ import ai.djl.ndarray.NDManager;
 import ai.djl.repository.zoo.Criteria;
 import ai.djl.repository.zoo.ModelNotFoundException;
 import ai.djl.repository.zoo.ZooModel;
-import cn.hutool.core.lang.UUID;
-import cn.hutool.core.lang.generator.UUIDGenerator;
 import cn.smartjavaai.common.entity.*;
 import cn.smartjavaai.common.entity.face.FaceInfo;
 import cn.smartjavaai.common.entity.face.FaceSearchResult;
@@ -28,7 +26,7 @@ import cn.smartjavaai.face.enums.SimilarityType;
 import cn.smartjavaai.face.exception.FaceException;
 import cn.smartjavaai.face.factory.FaceDetModelFactory;
 import cn.smartjavaai.face.model.facedect.FaceDetModel;
-import cn.smartjavaai.face.model.facerec.criterial.FaceRecCriteriaFactory;
+import cn.smartjavaai.face.model.facerec.criteria.FaceRecCriteriaFactory;
 import cn.smartjavaai.face.preprocess.DJLImagePreprocessor;
 import cn.smartjavaai.face.utils.*;
 import cn.smartjavaai.face.vector.config.MilvusConfig;
@@ -644,6 +642,22 @@ public class CommonFaceRecModel implements FaceRecModel{
         } catch (IOException e) {
             throw new FaceException("错误的图像", e);
         }
+    }
+
+    @Override
+    public R<FaceVector> getFaceInfoById(String id) {
+        if(vectorDBClient == null){
+            return R.fail(1000, "向量数据库未初始化成功");
+        }
+        return R.ok(vectorDBClient.getFaceInfoById(id));
+    }
+
+    @Override
+    public R<List<FaceVector>> listFaces(long pageNum, long pageSize) {
+        if(vectorDBClient == null){
+            return R.fail(1000, "向量数据库未初始化成功");
+        }
+        return R.ok(vectorDBClient.listFaces(pageNum, pageSize));
     }
 
     @Override

@@ -8,6 +8,7 @@ import cn.smartjavaai.ocr.entity.DirectionInfo;
 import cn.smartjavaai.ocr.entity.OcrBox;
 import cn.smartjavaai.ocr.entity.OcrInfo;
 import cn.smartjavaai.ocr.entity.OcrItem;
+import cn.smartjavaai.ocr.model.common.detect.OcrCommonDetModel;
 import org.opencv.core.Mat;
 
 import java.awt.image.BufferedImage;
@@ -18,6 +19,14 @@ import java.util.List;
  * @author dwj
  */
 public interface OcrDirectionModel extends AutoCloseable{
+
+    default void setTextDetModel(OcrCommonDetModel detModel){
+        throw new UnsupportedOperationException("默认不支持该功能");
+    }
+
+    default OcrCommonDetModel getTextDetModel(){
+        throw new UnsupportedOperationException("默认不支持该功能");
+    }
 
     /**
      * 加载模型
@@ -71,7 +80,11 @@ public interface OcrDirectionModel extends AutoCloseable{
      * @param manager
      * @return
      */
-    default List<OcrItem> detect(List<OcrBox> boxList, Mat srcMat, NDManager manager) {
+    default List<OcrItem> detect(List<OcrBox> boxList, Mat srcMat) {
+        throw new UnsupportedOperationException("默认不支持该功能");
+    }
+
+    default List<List<OcrItem>> batchDetect(List<List<OcrBox>> boxList, List<Mat> srcMatList) {
         throw new UnsupportedOperationException("默认不支持该功能");
     }
 

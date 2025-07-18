@@ -6,6 +6,7 @@ import cn.smartjavaai.face.config.FaceRecConfig;
 import cn.smartjavaai.face.entity.FaceRegisterInfo;
 import cn.smartjavaai.face.entity.FaceSearchParams;
 import cn.smartjavaai.common.entity.face.FaceSearchResult;
+import cn.smartjavaai.face.vector.entity.FaceVector;
 
 import java.awt.image.BufferedImage;
 import java.io.InputStream;
@@ -245,7 +246,25 @@ public interface FaceRecModel extends AutoCloseable{
     }
 
 
+    /**
+     * 使用人脸ID获取人脸信息
+     * @param id
+     * @return
+     */
+    default R<FaceVector> getFaceInfoById(String id){
+        throw new UnsupportedOperationException("默认不支持该功能");
+    }
 
+
+    /**
+     * 获取人脸列表
+     * @param pageNum
+     * @param pageSize
+     * @return
+     */
+    default R<List<FaceVector>> listFaces(long pageNum, long pageSize){
+        throw new UnsupportedOperationException("默认不支持该功能");
+    }
 
 
     /**

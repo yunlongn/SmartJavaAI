@@ -1,6 +1,5 @@
 package cn.smartjavaai.face.dao;
 
-import cn.smartjavaai.face.entity.FaceData;
 import cn.smartjavaai.face.sqllite.RowMapper;
 import cn.smartjavaai.face.sqllite.SqliteHelper;
 import cn.smartjavaai.face.utils.VectorUtils;
@@ -80,7 +79,7 @@ public class FaceDao {
      */
     public FaceVector findById(String id) throws SQLException, ClassNotFoundException {
         SqliteHelper sqliteHelper = SqliteHelper.getInstance(dbFilePath);
-        String sql = "select \"id\",\"vector\",\"metadata\" from " + FACE_TABLE_NAME + " where \"id\"=" + id;
+        String sql = "select \"id\",\"vector\",\"metadata\" from " + FACE_TABLE_NAME + " where \"id\" = '" + id + "'";
         List<FaceVector> faceVectors = sqliteHelper.executeQuery(sql, new RowMapper<FaceVector>() {
             @Override
             public FaceVector mapRow(ResultSet rs, int id) throws SQLException {
@@ -164,8 +163,9 @@ public class FaceDao {
      * @throws ClassNotFoundException 类未找到异常
      */
     public List<FaceVector> findFace(int pageNo, int pageSize) throws SQLException, ClassNotFoundException {
+        long offset = (pageNo - 1) * pageSize;
         String sql = "select \"id\",\"vector\",\"metadata\" from " + FACE_TABLE_NAME +
-                " limit " + pageNo * pageSize + "," + pageSize;
+                " limit " + offset + "," + pageSize;
         SqliteHelper sqliteHelper = SqliteHelper.getInstance(dbFilePath);
         return sqliteHelper.executeQuery(sql, new RowMapper<FaceVector>() {
             @Override

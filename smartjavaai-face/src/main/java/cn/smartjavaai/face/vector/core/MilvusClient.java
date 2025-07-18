@@ -14,8 +14,11 @@ import io.milvus.param.*;
 import io.milvus.param.collection.*;
 import io.milvus.param.dml.*;
 import io.milvus.param.index.CreateIndexParam;
+import io.milvus.response.DescCollResponseWrapper;
 import io.milvus.response.QueryResultsWrapper;
 import io.milvus.response.SearchResultsWrapper;
+import io.milvus.v2.service.collection.request.DescribeCollectionReq;
+import io.milvus.v2.service.collection.response.DescribeCollectionResp;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 
@@ -53,6 +56,14 @@ public class MilvusClient implements VectorDBClient {
             serviceClient = new MilvusServiceClient(connectParam);
             collectionName = StringUtils.isNotBlank(config.getCollectionName()) ? config.getCollectionName() : VectorDBConstants.Defaults.DEFAULT_COLLECTION_NAME;
             createCollection(collectionName, config.getDimension());
+
+            boolean isAutoID = isAutoID(collectionName);
+            if(isAutoID && config.getIdStrategy() != IdStrategy.AUTO){
+                throw new VectorDBException("ID策略与当前Collection不匹配");
+            }
+            if(!isAutoID && config.getIdStrategy() == IdStrategy.AUTO){
+                throw new VectorDBException("ID策略与当前Collection不匹配");
+            }
             if(config.isUseMemoryCache()){
                 // 加载集合到内存
                 loadFaceFeatures();
@@ -152,6 +163,21 @@ public class MilvusClient implements VectorDBClient {
         }
     }
 
+    /**
+     * 判断是否为自增长ID
+     * @param collectionName
+     * @return
+     */
+    private boolean isAutoID(String collectionName) {
+        R<DescribeCollectionResponse> response = serviceClient.describeCollection(
+                DescribeCollectionParam.newBuilder()
+                        .withCollectionName(collectionName)
+                        .build()
+        );
+        DescCollResponseWrapper wrapper = new DescCollResponseWrapper(response.getData());
+        return wrapper.getPrimaryField().isAutoID();
+    }
+
     @Override
     public void dropCollection(String collectionName) {
         try {
@@ -204,6 +230,7 @@ public class MilvusClient implements VectorDBClient {
             if(faceVector.getVector() == null || faceVector.getVector().length == 0){
                 throw new VectorDBException("插入数据失败：vector不能为空");
             }
+
             //自定义ID
             if(config.getIdStrategy() == IdStrategy.CUSTOM){
                 if(StringUtils.isBlank(faceVector.getId())){
@@ -525,40 +552,22 @@ public class MilvusClient implements VectorDBClient {
         }
     }
 
-    public void releaseCollection(String collectionName) {
-        if (!isInit){
-            throw new VectorDBException("Milvus未初始化完毕");
-        }
-        R<RpcStatus> response = serviceClient.releaseCollection(ReleaseCollectionParam.newBuilder()
-                .withCollectionName(collectionName)
-                .build());
-
-        if (response.getStatus() != R.Status.Success.getCode()) {
-            throw new VectorDBException("Milvus releaseCollection失败，msg: " + response.getMessage());
-        }
-    }
-
-
     @Override
-    public FaceSearchResult getById(String id) {
+    public FaceVector getFaceInfoById(String id) {
         try {
-            if (!isInit){
+            if (!isInit) {
                 throw new VectorDBException("Milvus未初始化完毕");
             }
-            // 构造搜索参数
-            SearchParam searchParam = SearchParam.newBuilder()
-                    .withCollectionName(collectionName)
-                    .withExpr(VectorDBConstants.FieldNames.ID_FIELD + " == " + id)
-                    .withOutFields(Arrays.asList(VectorDBConstants.FieldNames.ID_FIELD, VectorDBConstants.FieldNames.METADATA_FIELD))
-                    .build();
-
-
+            String expr = VectorDBConstants.FieldNames.ID_FIELD + " == '" + id + "'";
+            if(config.getIdStrategy() == IdStrategy.AUTO){
+                expr = VectorDBConstants.FieldNames.ID_FIELD + " == " + id;
+            }
             // 5. 执行查询
             R<QueryResults> response = serviceClient.query(
                     QueryParam.newBuilder()
                             .withCollectionName(collectionName)
-                            .withExpr(VectorDBConstants.FieldNames.ID_FIELD + " == " + id)
-                            .withOutFields(Arrays.asList(VectorDBConstants.FieldNames.ID_FIELD, VectorDBConstants.FieldNames.METADATA_FIELD))
+                            .withExpr(expr)
+                            .withOutFields(Arrays.asList(VectorDBConstants.FieldNames.ID_FIELD, VectorDBConstants.FieldNames.VECTOR_FIELD, VectorDBConstants.FieldNames.METADATA_FIELD))
                             .build()
             );
 
@@ -574,11 +583,90 @@ public class MilvusClient implements VectorDBClient {
             }
             // 提取第一条记录
             QueryResultsWrapper.RowRecord row = records.get(0);
-            return new FaceSearchResult(id, 1,(String)row.get(VectorDBConstants.FieldNames.METADATA_FIELD));
+            Object vectorObj = row.get(VectorDBConstants.FieldNames.VECTOR_FIELD);
+            float[] vector = null;
+            if (vectorObj instanceof List<?>) {
+                // Milvus SDK通常返回List<Float>，转成float[]
+                List<Float> vectorList = (List<Float>) vectorObj;
+                vector = new float[vectorList.size()];
+                for (int i = 0; i < vectorList.size(); i++) {
+                    vector[i] = vectorList.get(i);
+                }
+            }
+            return new FaceVector(id, vector, (String) row.get(VectorDBConstants.FieldNames.METADATA_FIELD));
         } catch (Exception e) {
-            throw new VectorDBException("搜索 Milvus 向量失败", e);
+            throw new RuntimeException(e);
         }
     }
+
+    @Override
+    public List<FaceVector> listFaces(long pageNum, long pageSize) {
+        try {
+            if (!isInit) {
+                throw new VectorDBException("Milvus未初始化完毕");
+            }
+            if (pageNum < 1 || pageSize < 1) {
+                throw new IllegalArgumentException("pageNum和pageSize必须大于0");
+            }
+            long offset = (pageNum - 1) * pageSize;
+            // 构造查询参数，使用offset和limit实现分页
+            QueryParam queryParam = QueryParam.newBuilder()
+                    .withCollectionName(collectionName)
+                    .withOutFields(Arrays.asList(
+                            VectorDBConstants.FieldNames.ID_FIELD,
+                            VectorDBConstants.FieldNames.VECTOR_FIELD,
+                            VectorDBConstants.FieldNames.METADATA_FIELD))
+                    .withOffset(offset)
+                    .withLimit(pageSize)
+                    .build();
+
+            R<QueryResults> response = serviceClient.query(queryParam);
+
+            if (response.getStatus() != R.Status.Success.getCode()) {
+                throw new VectorDBException("分页查询失败: " + response.getMessage());
+            }
+
+            QueryResultsWrapper wrapper = new QueryResultsWrapper(response.getData());
+            List<QueryResultsWrapper.RowRecord> records = wrapper.getRowRecords();
+            if (records.isEmpty()) {
+                return Collections.emptyList();
+            }
+
+            List<FaceVector> result = new ArrayList<>();
+            for (QueryResultsWrapper.RowRecord row : records) {
+                String id = (String) row.get(VectorDBConstants.FieldNames.ID_FIELD);
+                Object vectorObj = row.get(VectorDBConstants.FieldNames.VECTOR_FIELD);
+                float[] vector = null;
+                if (vectorObj instanceof List<?>) {
+                    List<Float> vectorList = (List<Float>) vectorObj;
+                    vector = new float[vectorList.size()];
+                    for (int i = 0; i < vectorList.size(); i++) {
+                        vector[i] = vectorList.get(i);
+                    }
+                }
+                String metadata = (String) row.get(VectorDBConstants.FieldNames.METADATA_FIELD);
+                result.add(new FaceVector(id, vector, metadata));
+            }
+
+            return result;
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public void releaseCollection(String collectionName) {
+        if (!isInit){
+            throw new VectorDBException("Milvus未初始化完毕");
+        }
+        R<RpcStatus> response = serviceClient.releaseCollection(ReleaseCollectionParam.newBuilder()
+                .withCollectionName(collectionName)
+                .build());
+
+        if (response.getStatus() != R.Status.Success.getCode()) {
+            throw new VectorDBException("Milvus releaseCollection失败，msg: " + response.getMessage());
+        }
+    }
+
 
     @Override
     public void loadFaceFeatures() {

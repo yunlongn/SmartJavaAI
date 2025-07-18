@@ -27,24 +27,35 @@ import java.util.Map;
  * @mail 179209347@qq.com
  * @website www.aias.top
  */
-public class PPOCRV5DetTranslator implements Translator<Image, NDList> {
+public class PPOCRDetTranslator implements Translator<Image, NDList> {
     // det_algorithm == "DB"
     private final float thresh = 0.3f;
     private final boolean use_dilation = false;
     private final String score_mode = "fast";
     private final String box_type = "quad";
 
+    //检测的图像边长限制
     private final int limit_side_len;
+    //输出的最大文本框数量
     private final int max_candidates;
+    //文本框最小尺寸阈值
     private final int min_size;
+    //文本框的分数阈值
     private final float box_thresh;
+
+    /**
+     * 这个参数是检测后处理时控制文本框大小的，默认1.6，可以尝试改成2.5或者更大，反之，如果觉得文本框不够紧凑，也可以把该参数调小。
+     * 检测框大小过于紧贴文字或检测框过大，可以调整db_unclip_ratio这个参数，加大参数可以扩大检测框，减小参数可以减小检测框大小；
+     */
     private final float unclip_ratio;
     private float ratio_h;
     private float ratio_w;
     private int img_height;
     private int img_width;
 
-    public PPOCRV5DetTranslator(Map<String, ?> arguments) {
+    private String batchifier;
+
+    public PPOCRDetTranslator(Map<String, ?> arguments) {
         limit_side_len =
                 arguments.containsKey("limit_side_len")
                         ? Integer.parseInt(arguments.get("limit_side_len").toString())
@@ -65,6 +76,10 @@ public class PPOCRV5DetTranslator implements Translator<Image, NDList> {
                 arguments.containsKey("unclip_ratio")
                         ? Float.parseFloat(arguments.get("unclip_ratio").toString())
                         : 1.6f;
+
+        batchifier =  arguments.containsKey("batchifier")
+                ? arguments.get("batchifier").toString()
+                : "stack";
     }
 
     @Override
@@ -509,13 +524,13 @@ public class PPOCRV5DetTranslator implements Translator<Image, NDList> {
                         new float[]{0.485f, 0.456f, 0.406f},
                         new float[]{0.229f, 0.224f, 0.225f});
 
-        img = img.expandDims(0);
+//        img = img.expandDims(0);
 
         return new NDList(img);
     }
 
     @Override
     public Batchifier getBatchifier() {
-        return null;
+        return Batchifier.fromString(batchifier);
     }
 }

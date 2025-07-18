@@ -24,6 +24,9 @@ public class ExpressionModelFactory {
     // 使用 volatile 和双重检查锁定来确保线程安全的单例模式
     private static volatile ExpressionModelFactory instance;
 
+    /**
+     * 模型缓存
+     */
     private static final ConcurrentHashMap<ExpressionModelEnum, ExpressionModel> modelMap = new ConcurrentHashMap<>();
 
     /**

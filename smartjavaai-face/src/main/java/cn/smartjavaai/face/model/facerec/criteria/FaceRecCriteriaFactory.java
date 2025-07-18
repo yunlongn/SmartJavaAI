@@ -1,28 +1,15 @@
-package cn.smartjavaai.face.model.facerec.criterial;
+package cn.smartjavaai.face.model.facerec.criteria;
 
 import ai.djl.Device;
 import ai.djl.modality.cv.Image;
-import ai.djl.modality.cv.output.DetectedObjects;
-import ai.djl.modality.cv.transform.Normalize;
-import ai.djl.modality.cv.transform.Resize;
-import ai.djl.modality.cv.transform.ToTensor;
-import ai.djl.modality.cv.translator.ImageFeatureExtractor;
-import ai.djl.modality.cv.translator.ImageFeatureExtractorFactory;
 import ai.djl.repository.zoo.Criteria;
 import ai.djl.training.util.ProgressBar;
-import ai.djl.translate.Translator;
 import cn.smartjavaai.common.enums.DeviceEnum;
-import cn.smartjavaai.face.config.FaceDetConfig;
 import cn.smartjavaai.face.config.FaceRecConfig;
-import cn.smartjavaai.face.constant.FaceDetectConstant;
 import cn.smartjavaai.face.constant.FaceNetConstant;
-import cn.smartjavaai.face.constant.RetinaFaceConstant;
-import cn.smartjavaai.face.constant.UltraLightFastGenericFaceConstant;
-import cn.smartjavaai.face.enums.FaceDetModelEnum;
 import cn.smartjavaai.face.enums.FaceRecModelEnum;
 import cn.smartjavaai.face.model.facerec.translator.FaceFeatureTranslator;
 import cn.smartjavaai.face.model.facerec.translator.FaceNetRecTranslator;
-import cn.smartjavaai.face.translator.FaceDetectionTranslator;
 import org.apache.commons.lang3.StringUtils;
 
 import java.nio.file.Paths;

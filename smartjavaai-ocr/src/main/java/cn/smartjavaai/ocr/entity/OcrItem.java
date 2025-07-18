@@ -31,7 +31,6 @@ public class OcrItem {
     private float score;
 
 
-
     public OcrItem(OcrBox ocrBox, String text) {
         this.ocrBox = ocrBox;
         this.text = text;

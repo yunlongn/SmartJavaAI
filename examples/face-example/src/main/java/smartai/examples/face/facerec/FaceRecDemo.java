@@ -20,6 +20,7 @@ import cn.smartjavaai.face.model.facerec.FaceRecModel;
 import cn.smartjavaai.face.utils.SimilarityUtil;
 import cn.smartjavaai.face.vector.config.MilvusConfig;
 import cn.smartjavaai.face.vector.config.SQLiteConfig;
+import cn.smartjavaai.face.vector.entity.FaceVector;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import lombok.extern.slf4j.Slf4j;
@@ -355,6 +356,53 @@ public class FaceRecDemo {
             log.info("人脸删除成功");
         }
         catch (Exception e){
+            e.printStackTrace();
+        }
+    }
+
+
+    /**
+     * 获取人脸信息
+     */
+    @Test
+    public void getFaceInfo(){
+        //使用ID获取人脸信息
+        try (FaceRecModel faceRecModel = getFaceRecModelWithSQLiteConfig()){
+            //等待加载人脸库结束
+            while (!faceRecModel.isLoadFaceCompleted()){
+                Thread.sleep(100);
+            }
+            //ID需改为你需要查询的ID
+            R<FaceVector> faceInfoResult = faceRecModel.getFaceInfoById("9c4c316d53a74b1184195c1714c250c4");
+            if(faceInfoResult.isSuccess()){
+                log.info("人脸信息：{}", JSONObject.toJSONString(faceInfoResult.getData()));
+            }else{
+                log.info("获取人脸信息失败：{}", faceInfoResult.getMessage());
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * 获取人脸信息
+     */
+    @Test
+    public void listFaces(){
+        //使用ID获取人脸信息
+        try (FaceRecModel faceRecModel = getFaceRecModelWithDbConfig()){
+            //等待加载人脸库结束
+            while (!faceRecModel.isLoadFaceCompleted()){
+                Thread.sleep(100);
+            }
+            //ID需改为你需要查询的ID
+            R<List<FaceVector>> faceInfoResult = faceRecModel.listFaces(1, 10);
+            if(faceInfoResult.isSuccess()){
+                log.info("人脸信息：{}", JSONObject.toJSONString(faceInfoResult.getData()));
+            }else{
+                log.info("获取人脸信息失败：{}", faceInfoResult.getMessage());
+            }
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }

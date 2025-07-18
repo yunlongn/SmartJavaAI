@@ -1,4 +1,4 @@
-package smartai.examples.ocr;
+package smartai.examples.ocr.common;
 
 import cn.smartjavaai.common.enums.DeviceEnum;
 import cn.smartjavaai.ocr.config.DirectionModelConfig;
@@ -17,7 +17,7 @@ import org.junit.Test;
 import java.util.List;
 
 /**
- * OCR 文本方向检测 示例
+ * OCR 行文本方向检测 示例
  * 模型下载地址：https://pan.baidu.com/s/1MLfd73Vjdpnuls9-oqc9uw?pwd=1234 提取码: 1234
  * @author dwj
  * @date 2025/5/25
@@ -34,16 +34,27 @@ public class OcrDirectionDetDemo {
      */
     public OcrDirectionModel getDirectionModel(){
         DirectionModelConfig directionModelConfig = new DirectionModelConfig();
-        //指定检测模型
-        directionModelConfig.setDetModelEnum(CommonDetModelEnum.PADDLEOCR_V5_DET_MODEL);
-        //指定检测模型位置，需要更改为自己的模型路径（下载地址请查看文档）
-        directionModelConfig.setDetModelPath("/Users/xxx/Documents/develop/ocr模型/PP-OCRv5_server_det_infer/PP-OCRv5_server_det.onnx");
-        //指定文本方向检测模型
-        directionModelConfig.setModelEnum(DirectionModelEnum.CH_PPOCR_MOBILE_V2_CLS);
-        //指定文本方向检测模型路径，需要更改为自己的模型路径（下载地址请查看文档）
-        directionModelConfig.setModelPath("/Users/xxx/Documents/develop/ocr模型/ch_ppocr_mobile_v2.0_cls.onnx");
+        //指定行文本方向检测模型
+        directionModelConfig.setModelEnum(DirectionModelEnum.PP_LCNET_X0_25);
+        //指定行文本方向检测模型路径，需要更改为自己的模型路径（下载地址请查看文档）
+        directionModelConfig.setModelPath("/Users/xxx/Documents/develop/model/ocr/PP-LCNet_x0_25_textline_ori_infer/PP-LCNet_x0_25_textline_ori_infer.onnx");
         directionModelConfig.setDevice(device);
+        directionModelConfig.setTextDetModel(getDetectionModel());
         return OcrModelFactory.getInstance().getDirectionModel(directionModelConfig);
+    }
+
+    /**
+     * 获取文本检测模型
+     * @return
+     */
+    public OcrCommonDetModel getDetectionModel() {
+        OcrDetModelConfig config = new OcrDetModelConfig();
+        //指定检测模型
+        config.setModelEnum(CommonDetModelEnum.PP_OCR_V5_MOBILE_DET_MODEL);
+        //指定模型位置，需要更改为自己的模型路径（下载地址请查看文档）
+        config.setDetModelPath("/Users/xxx/Documents/develop/model/ocr/PP-OCRv5_mobile_det_infer/PP-OCRv5_mobile_det_infer.onnx");
+        config.setDevice(device);
+        return OcrModelFactory.getInstance().getDetModel(config);
     }
 
 
@@ -57,8 +68,8 @@ public class OcrDirectionDetDemo {
     @Test
     public void detect(){
         try (OcrDirectionModel directionModel = getDirectionModel()){
-            List<OcrItem> itemList = directionModel.detect("src/main/resources/ocr_3.jpg");
-            log.info("OCR方向检测结果：{}", JSONObject.toJSONString(itemList));
+            List<OcrItem> itemList = directionModel.detect("src/main/resources/ocr_1.jpg");
+            log.info("OCR方向检测结果1：{}", JSONObject.toJSONString(itemList));
         } catch (Exception e) {
             e.printStackTrace();
         }

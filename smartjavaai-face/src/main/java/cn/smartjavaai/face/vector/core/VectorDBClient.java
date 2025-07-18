@@ -1,5 +1,6 @@
 package cn.smartjavaai.face.vector.core;
 
+import cn.smartjavaai.common.entity.R;
 import cn.smartjavaai.face.entity.FaceSearchParams;
 import cn.smartjavaai.face.vector.entity.FaceVector;
 import cn.smartjavaai.common.entity.face.FaceSearchResult;
@@ -94,12 +95,21 @@ public interface VectorDBClient extends AutoCloseable {
     @Override
     void close();
 
-
     /**
-     *  获取指定ID的向量
+     * 使用人脸ID获取人脸信息
+     * @param id
      * @return
      */
-    FaceSearchResult getById(String id);
+    FaceVector getFaceInfoById(String id);
+
+
+    /**
+     * 获取人脸列表
+     * @param pageNum
+     * @param pageSize
+     * @return
+     */
+    List<FaceVector> listFaces(long pageNum, long pageSize);
 
     /**
      * 加载人脸特征到内存

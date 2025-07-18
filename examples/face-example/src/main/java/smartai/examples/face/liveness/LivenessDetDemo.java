@@ -79,6 +79,8 @@ public class LivenessDetDemo {
         这个数量相当于多帧识别结果融合的融合的帧数。当输入的帧数超过设定帧数的时候，会采用滑动窗口的方式，返回融合的最近输入的帧融合的识别结果。
         一般来说，在10以内，帧数越多，结果越稳定，相对性能越好，但是得到结果的延时越高。*/
         config.setFrameCount(LivenessConstant.DEFAULT_FRAME_COUNT);
+        //视频最大检测帧数
+        config.setMaxVideoDetectFrames(LivenessConstant.DEFAULT_MAX_VIDEO_DETECT_FRAMES);
         //指定人脸检测模型
         config.setDetectModel(getFaceDetModel());
         return LivenessModelFactory.getInstance().getModel(config);
@@ -103,6 +105,8 @@ public class LivenessDetDemo {
         这个数量相当于多帧识别结果融合的融合的帧数。当输入的帧数超过设定帧数的时候，会采用滑动窗口的方式，返回融合的最近输入的帧融合的识别结果。
         一般来说，在10以内，帧数越多，结果越稳定，相对性能越好，但是得到结果的延时越高。*/
         config.setFrameCount(LivenessConstant.DEFAULT_FRAME_COUNT);
+        //视频最大检测帧数
+        config.setMaxVideoDetectFrames(LivenessConstant.DEFAULT_MAX_VIDEO_DETECT_FRAMES);
         //指定人脸检测模型
         config.setDetectModel(getFaceDetModel());
         return LivenessModelFactory.getInstance().getModel(config);

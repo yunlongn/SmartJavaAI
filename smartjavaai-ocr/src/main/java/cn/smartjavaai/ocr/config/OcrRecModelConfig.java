@@ -1,9 +1,12 @@
 package cn.smartjavaai.ocr.config;
 
+import cn.smartjavaai.common.config.ModelConfig;
 import cn.smartjavaai.common.enums.DeviceEnum;
 import cn.smartjavaai.ocr.enums.CommonDetModelEnum;
 import cn.smartjavaai.ocr.enums.CommonRecModelEnum;
 import cn.smartjavaai.ocr.enums.DirectionModelEnum;
+import cn.smartjavaai.ocr.model.common.detect.OcrCommonDetModel;
+import cn.smartjavaai.ocr.model.common.direction.OcrDirectionModel;
 import lombok.Data;
 
 /**
@@ -12,12 +15,7 @@ import lombok.Data;
  * @date 2025/4/22
  */
 @Data
-public class OcrRecModelConfig {
-
-    /**
-     * 检测模型
-     */
-    private CommonDetModelEnum detModelEnum;
+public class OcrRecModelConfig extends ModelConfig {
 
     /**
      * 识别模型
@@ -25,28 +23,18 @@ public class OcrRecModelConfig {
     private CommonRecModelEnum recModelEnum;
 
     /**
-     * 设备类型
-     */
-    private DeviceEnum device;
-
-    /**
-     * 检测模型路径
-     */
-    private String detModelPath;
-
-    /**
      * 识别模型路径
      */
     private String recModelPath;
 
     /**
-     * 方向检测模型
+     * 文本检测模型
      */
-    private DirectionModelEnum directionModelEnum;
+    private OcrCommonDetModel textDetModel;
 
     /**
-     * 方向检测模型路径
+     * 文本方向模型
      */
-    private String directionModelPath;
+    private OcrDirectionModel directionModel;
 
 }

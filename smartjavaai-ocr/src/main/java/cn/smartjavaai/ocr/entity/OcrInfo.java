@@ -4,6 +4,7 @@ import lombok.Data;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * OCR信息
@@ -15,7 +16,10 @@ public class OcrInfo {
 
     private List<List<OcrItem>> lineList;
 
+    private List<OcrItem> ocrItemList;
+
     private String fullText;
+
 
 
     public OcrInfo(List<List<OcrItem>> lineList, String fullText) {
@@ -23,5 +27,11 @@ public class OcrInfo {
         this.fullText = fullText;
     }
     public OcrInfo() {
+    }
+
+    public List<OcrItem> flattenLines() {
+        return lineList.stream()
+                .flatMap(List::stream)
+                .collect(Collectors.toList());
     }
 }

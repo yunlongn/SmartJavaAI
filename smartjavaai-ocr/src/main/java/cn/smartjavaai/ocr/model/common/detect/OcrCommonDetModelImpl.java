@@ -1,20 +1,16 @@
 package cn.smartjavaai.ocr.model.common.detect;
 
-import ai.djl.Device;
 import ai.djl.MalformedModelException;
 import ai.djl.engine.Engine;
 import ai.djl.inference.Predictor;
 import ai.djl.modality.cv.Image;
 import ai.djl.modality.cv.ImageFactory;
-import ai.djl.modality.cv.output.DetectedObjects;
 import ai.djl.ndarray.NDList;
 import ai.djl.ndarray.NDManager;
 import ai.djl.repository.zoo.Criteria;
 import ai.djl.repository.zoo.ModelNotFoundException;
 import ai.djl.repository.zoo.ModelZoo;
 import ai.djl.repository.zoo.ZooModel;
-import ai.djl.training.util.ProgressBar;
-import cn.smartjavaai.common.enums.DeviceEnum;
 import cn.smartjavaai.common.pool.PredictorFactory;
 import cn.smartjavaai.common.utils.FileUtils;
 import cn.smartjavaai.common.utils.ImageUtils;
@@ -22,7 +18,7 @@ import cn.smartjavaai.common.utils.OpenCVUtils;
 import cn.smartjavaai.ocr.config.OcrDetModelConfig;
 import cn.smartjavaai.ocr.entity.OcrBox;
 import cn.smartjavaai.ocr.exception.OcrException;
-import cn.smartjavaai.ocr.model.common.detect.translator.PPOCRV5DetTranslator;
+import cn.smartjavaai.ocr.model.common.detect.criteria.OcrCommonDetCriterialFactory;
 import cn.smartjavaai.ocr.utils.OcrUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -38,18 +34,14 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.List;
-import java.util.Objects;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.*;
 
 /**
- * PPOCRV5 检测模型
+ * ocr通用检测模型实现类
  * @author dwj
- * @date 2025/4/21
  */
 @Slf4j
-public class PpOCRV5DetModel implements OcrCommonDetModel {
-
+public class OcrCommonDetModelImpl implements OcrCommonDetModel{
 
     private ObjectPool<Predictor<Image, NDList>> detPredictorPool;
 
@@ -62,22 +54,9 @@ public class PpOCRV5DetModel implements OcrCommonDetModel {
         if(StringUtils.isBlank(config.getDetModelPath())){
             throw new OcrException("modelPath is null");
         }
-        Device device = null;
-        if(!Objects.isNull(config.getDevice())){
-            device = config.getDevice() == DeviceEnum.CPU ? Device.cpu() : Device.gpu();
-        }
         this.config = config;
         //初始化 检测Criteria
-        Criteria<Image, NDList> detCriteria =
-                Criteria.builder()
-                        .optEngine("OnnxRuntime")
-                        .setTypes(Image.class, NDList.class)
-                        .optModelPath(Paths.get(config.getDetModelPath()))
-                        .optTranslator(new PPOCRV5DetTranslator(new ConcurrentHashMap<String, String>()))
-                        .optDevice(device)
-                        .optProgress(new ProgressBar())
-                        .build();
-
+        Criteria<Image, NDList> detCriteria = OcrCommonDetCriterialFactory.createCriteria(config);
         try{
             detectionModel = ModelZoo.loadModel(detCriteria);
             // 创建池子：每个线程独享 Predictor
@@ -107,28 +86,9 @@ public class PpOCRV5DetModel implements OcrCommonDetModel {
 
     @Override
     public List<OcrBox> detect(Image image){
-        Predictor<Image, NDList> predictor = null;
-        try (NDManager manager = NDManager.newBaseManager()) {
-            predictor = detPredictorPool.borrowObject();
-            NDList result = predictor.predict(image);
-            result.attach(manager);
-            return OcrUtils.convertToOcrBox(result, image);
-        } catch (Exception e) {
-            throw new OcrException("OCR检测错误", e);
-        }finally {
-            if (predictor != null) {
-                try {
-                    detPredictorPool.returnObject(predictor); //归还
-                } catch (Exception e) {
-                    log.warn("归还Predictor失败", e);
-                    try {
-                        predictor.close(); // 归还失败才销毁
-                    } catch (Exception ex) {
-                        log.error("关闭Predictor失败", ex);
-                    }
-                }
-            }
-        }
+        List<Image> imageList = Collections.singletonList(image);
+        List<List<OcrBox>> result = batchDetectDJLImage(imageList);
+        return result.get(0);
     }
 
     @Override
@@ -136,7 +96,7 @@ public class PpOCRV5DetModel implements OcrCommonDetModel {
         if(!FileUtils.isFileExists(imagePath)){
             throw new OcrException("图像文件不存在");
         }
-        try (NDManager manager = NDManager.newBaseManager()) {
+        try {
             Image img = ImageFactory.getInstance().fromFile(Paths.get(imagePath));
             List<OcrBox> boxList = detect(img);
             if(Objects.isNull(boxList) || boxList.isEmpty()){
@@ -194,10 +154,58 @@ public class PpOCRV5DetModel implements OcrCommonDetModel {
             img.save(outputStream, "png");
             // 将字节流转换为 BufferedImage
             byte[] imageBytes = outputStream.toByteArray();
-            ((Mat) img.getWrappedImage()).release();
             return ImageIO.read(new ByteArrayInputStream(imageBytes));
         } catch (IOException e) {
             throw new OcrException("导出图片失败", e);
+        } finally {
+            if (img != null){
+                ((Mat) img.getWrappedImage()).release();
+            }
+        }
+    }
+
+    @Override
+    public List<List<OcrBox>> batchDetect(List<BufferedImage> imageList) {
+        List<Image> djlImageList = new ArrayList<>(imageList.size());
+        try {
+            for (BufferedImage bufferedImage : imageList) {
+                djlImageList.add(ImageFactory.getInstance().fromImage(OpenCVUtils.image2Mat(bufferedImage)));
+            }
+            return batchDetectDJLImage(djlImageList);
+        } catch (Exception e) {
+            throw new OcrException(e);
+        } finally {
+            djlImageList.forEach(image -> ((Mat)image.getWrappedImage()).release());
+        }
+    }
+
+    @Override
+    public List<List<OcrBox>> batchDetectDJLImage(List<Image> imageList) {
+        if(!ImageUtils.isAllImageSizeEqual(imageList)){
+            throw new OcrException("图片尺寸不一致");
+        }
+        Predictor<Image, NDList> predictor = null;
+        try (NDManager manager = NDManager.newBaseManager()) {
+            predictor = detPredictorPool.borrowObject();
+            List<NDList> result = predictor.batchPredict(imageList);
+            result.forEach(ndList -> ndList.attach(manager));
+            return OcrUtils.convertToOcrBox(result);
+        } catch (Exception e) {
+            throw new OcrException("OCR检测错误", e);
+        }finally {
+            if (predictor != null) {
+                try {
+                    detPredictorPool.returnObject(predictor); //归还
+                } catch (Exception e) {
+                    log.warn("归还Predictor失败", e);
+                    try {
+                        predictor.close(); // 归还失败才销毁
+                    } catch (Exception ex) {
+                        log.error("关闭Predictor失败", ex);
+                    }
+                }
+            }
+
         }
     }
 
@@ -218,4 +226,6 @@ public class PpOCRV5DetModel implements OcrCommonDetModel {
             log.warn("关闭 model 失败", e);
         }
     }
+
+
 }

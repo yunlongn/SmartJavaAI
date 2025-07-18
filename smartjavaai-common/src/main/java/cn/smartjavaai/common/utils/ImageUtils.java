@@ -370,6 +370,104 @@ public class ImageUtils {
         g.drawString(text, x + padding, y + ascent);
     }
 
+    /**
+     * 计算左上角，右下角坐标 （x0,y0,x1,y1）
+     * Get absolute coordinations
+     *
+     * @param rect
+     * @param width
+     * @param height
+     * @return
+     */
+    public static int[] rectXYXY(ai.djl.modality.cv.output.Rectangle rect, int width, int height) {
+        int left = Math.max((int) (width * rect.getX()), 0);
+        int top = Math.max((int) (height * rect.getY()), 0);
+        int right = Math.min((int) (width * (rect.getX() + rect.getWidth())), width - 1);
+        int bottom = Math.min((int) (height * (rect.getY() + rect.getHeight())), height - 1);
+        return new int[] {left, top, right, bottom};
+    }
+
+    /**
+     * 列出文件夹下的所有图片文件
+     * List all image files under the folder
+     *
+     * @param folderPath
+     * @return
+     */
+    public static List<File> listImageFiles(String folderPath) {
+        File folder = new File(folderPath);
+        List<File> imageFiles = new ArrayList<>();
+        if (folder.exists() && folder.isDirectory()) {
+            File[] files = folder.listFiles();
+            if (files == null) {
+                return imageFiles;
+            }
+            for (File file : files) {
+                if (file.isFile()) {
+                    String name = file.getName().toLowerCase();
+                    if (name.endsWith(".jpg") || name.endsWith(".jpeg") ||
+                            name.endsWith(".png") || name.endsWith(".bmp") ||
+                            name.endsWith(".gif") || name.endsWith(".tiff") ||
+                            name.endsWith(".webp")) {
+                        imageFiles.add(file);
+                    }
+                }
+            }
+        }
+        return imageFiles;
+    }
+
+    /**
+     * 读取指定目录下所有图片，返回 List<Image>（DJL 格式）
+     *
+     * @param folderPath 图片文件夹路径
+     * @return List<Image>
+     * @throws IOException
+     */
+    public static List<Image> readImagesFromFolder(String folderPath) throws IOException {
+        File folder = new File(folderPath);
+        List<Image> imageList = new ArrayList<>();
+        if (folder.exists() && folder.isDirectory()) {
+            File[] files = folder.listFiles();
+            if (files == null) {
+                return imageList;
+            }
+            for (File file : files) {
+                if (file.isFile()) {
+                    String name = file.getName().toLowerCase();
+                    if (name.endsWith(".jpg") || name.endsWith(".jpeg") ||
+                            name.endsWith(".png") || name.endsWith(".bmp") ||
+                            name.endsWith(".gif") || name.endsWith(".tiff") ||
+                            name.endsWith(".webp")) {
+
+                        Image img = ImageFactory.getInstance().fromInputStream(Files.newInputStream(file.toPath()));
+                        imageList.add(img);
+                    }
+                }
+            }
+        }
+        return imageList;
+    }
+
+    /**
+     * 判断所有图片尺寸是否一致
+     *
+     * @param images 图片列表
+     */
+    public static boolean isAllImageSizeEqual(List<Image> images) {
+        if (images == null || images.isEmpty()) {
+            return true; // 空集合视为一致
+        }
+        int width = images.get(0).getWidth();
+        int height = images.get(0).getHeight();
+        for (Image img : images) {
+            if (img.getWidth() != width || img.getHeight() != height) {
+                return false;
+            }
+        }
+        return true;
+    }
+
 
 
 }
