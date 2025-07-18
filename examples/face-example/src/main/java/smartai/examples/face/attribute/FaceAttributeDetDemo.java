@@ -21,9 +21,7 @@ import org.junit.Test;
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.File;
-import java.io.IOException;
 import java.nio.file.Paths;
-import java.util.List;
 
 /**
  * 人脸属性检测demo
@@ -38,13 +36,13 @@ public class FaceAttributeDetDemo {
         FaceAttributeConfig config = new FaceAttributeConfig();
         config.setModelEnum(FaceAttributeModelEnum.SEETA_FACE6_MODEL);
         //需替换为实际模型存储路径
-        config.setModelPath("C:/Users/Administrator/Downloads/sf3.0_models/sf3.0_models");
+        config.setModelPath("C:\\Users\\yunlong.li\\Downloads\\sf3.0_models\\sf3.0_models");
         return FaceAttributeModelFactory.getInstance().getModel(config);
     }
 
     public FaceDetModel getFaceDetModel() {
         //需替换为实际模型存储路径
-        String modelPath = "C:/Users/Administrator/Downloads/sf3.0_models/sf3.0_models";
+        String modelPath = "C:\\Users\\yunlong.li\\Downloads\\sf3.0_models\\sf3.0_models";
         FaceDetConfig faceDetectModelConfig = new FaceDetConfig();
         faceDetectModelConfig.setModelEnum(FaceDetModelEnum.SEETA_FACE6_MODEL);
         faceDetectModelConfig.setModelPath(modelPath);

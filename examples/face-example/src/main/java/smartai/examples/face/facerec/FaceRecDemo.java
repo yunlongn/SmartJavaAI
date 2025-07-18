@@ -17,7 +17,6 @@ import cn.smartjavaai.face.factory.FaceDetModelFactory;
 import cn.smartjavaai.face.factory.FaceRecModelFactory;
 import cn.smartjavaai.face.model.facedect.FaceDetModel;
 import cn.smartjavaai.face.model.facerec.FaceRecModel;
-import cn.smartjavaai.face.utils.SimilarityUtil;
 import cn.smartjavaai.face.vector.config.MilvusConfig;
 import cn.smartjavaai.face.vector.config.SQLiteConfig;
 import cn.smartjavaai.face.vector.entity.FaceVector;
@@ -122,6 +121,29 @@ public class FaceRecDemo {
         //初始化SQLite数据库
         SQLiteConfig vectorDBConfig = new SQLiteConfig();
         vectorDBConfig.setSimilarityType(SimilarityType.IP);
+        config.setVectorDBConfig(vectorDBConfig);
+        return FaceRecModelFactory.getInstance().getModel(config);
+    }
+    /**
+     * 获取人脸识别模型(带SQLite数据库配置)
+     * @return
+     */
+    public FaceRecModel getFaceRecModelWithSQLiteConfig3(){
+        FaceRecConfig config = new FaceRecConfig();
+        config.setModelPath("C:\\Users\\yunlong.li\\Downloads\\sf3.0_models\\sf3.0_models");
+        config.setModelEnum(FaceRecModelEnum.SEETA_FACE6_MODEL);//人脸检测模型
+        //裁剪人脸：如果图片已经是裁剪过的，则请将此参数设置为false
+        config.setCropFace(true);
+        //开启人脸对齐：适用于人脸不正的场景，开启将提升人脸特征准确度，关闭可以提升性能
+        config.setAlign(true);
+        //指定人脸检测模型
+        config.setDetectModel(getFaceDetModel());
+        config.setDevice(device);
+
+        //初始化SQLite数据库
+        SQLiteConfig vectorDBConfig = new SQLiteConfig();
+        vectorDBConfig.setSimilarityType(SimilarityType.COSINE);
+        vectorDBConfig.setDbPath("/Users//face3.db");
         config.setVectorDBConfig(vectorDBConfig);
         return FaceRecModelFactory.getInstance().getModel(config);
     }
@@ -357,6 +379,50 @@ public class FaceRecDemo {
         }
         catch (Exception e){
             e.printStackTrace();
+        }
+    }
+    
+    @Test
+    public void searchFace3(){
+        try (FaceRecModel faceRecModel = getFaceRecModelWithSQLiteConfig3()){
+            //等待加载人脸库结束
+            while (!faceRecModel.isLoadFaceCompleted()){
+                Thread.sleep(100);
+            }
+            log.info("====================人脸注册==========================");
+            insertFace(faceRecModel, "src/main/resources/iu_1.jpg", "刘亦菲");
+            
+            FaceSearchParams faceSearchParams = new FaceSearchParams();
+            faceSearchParams.setTopK(5);
+            faceSearchParams.setThreshold(0.8f);
+            List<FaceSearchResult> faceSearchResults = faceRecModel.searchByTopFace("src/main/resources/iu_3.jpg", faceSearchParams).getData();
+            log.info("人脸查询结果：{}", JSONArray.toJSONString(faceSearchResults));
+            
+//            log.info("====================人脸删除==========================");
+//            faceRecModel.removeRegister(registerResult.getData());
+//            log.info("人脸删除成功");
+        }
+        catch (Exception e){
+            e.printStackTrace();
+        }
+    }
+
+    private static void insertFace(FaceRecModel faceRecModel, String featureResult, String name) {
+        //人脸注册信息
+        FaceRegisterInfo faceRegisterInfo = new FaceRegisterInfo();
+        //设置人脸注册的自定义元数据，本例中使用 JSON 格式存储用户信息
+        JSONObject metadataJson = new JSONObject();
+        metadataJson.put("name", name);
+        metadataJson.put("age", "25");
+        faceRegisterInfo.setMetadata(metadataJson.toJSONString());
+        //可自定义 ID，若未设置则自动生成。
+        //faceRegisterInfo.setId("00001");
+        //人脸注册，返回人脸库ID
+        R<String> registerResult = faceRecModel.register(faceRegisterInfo, featureResult);
+        if(registerResult.isSuccess()){
+            log.info("注册成功：ID-{}", registerResult.getData());
+        }else{
+            log.info("注册失败：{}", registerResult.getMessage());
         }
     }
 
