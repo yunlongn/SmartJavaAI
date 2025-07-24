@@ -148,7 +148,19 @@ SmartJavaAI是专为JAVA 开发者打造的一个功能丰富、开箱即用的 
       </td>     
       <td>
         <div align="center">
-        <img src="https://cdn.jsdelivr.net/gh/geekwenjie/SmartJavaAI-Site/images/object_detection_detected.png" width = "500px"/>
+        <img src="https://cdn.jsdelivr.net/gh/geekwenjie/SmartJavaAI-Site/images/object_detect_1.jpeg" width = "500px"/>
+        </div>
+      </td>
+    </tr>
+  <tr>
+      <td>
+        <div align="left">
+          <p>自定义目标训练+检测</p>
+        </div>
+      </td>     
+      <td>
+        <div align="center">
+        <img src="https://cdn.jsdelivr.net/gh/geekwenjie/SmartJavaAI-Site/images/objectdect_train/result.jpg" width = "500px"/>
         </div>
       </td>
     </tr>
