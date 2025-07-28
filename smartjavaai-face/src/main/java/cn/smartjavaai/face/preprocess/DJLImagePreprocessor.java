@@ -60,15 +60,13 @@ public class DJLImagePreprocessor {
     // 处理流程
     public Image process() {
         Image result = image;
-
-        if (enableCrop) {
-            result = result.getSubImage(cropRect.x, cropRect.y, cropRect.width, cropRect.height);
-        }
-
-        if (enableAffine) {
+        if(enableAffine){
             result = warpAffine(keyPoints, affineTargetWidth, affineTargetHeight);
+        }else {
+            if(enableCrop){
+                result = result.getSubImage(cropRect.x, cropRect.y, cropRect.width, cropRect.height);
+            }
         }
-
         return result;
     }
 

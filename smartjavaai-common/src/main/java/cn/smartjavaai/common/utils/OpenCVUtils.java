@@ -124,4 +124,20 @@ public class OpenCVUtils {
         mat.put(0, 0, data);
         return mat;
     }
+
+    /**
+     * 透视变换
+     *
+     * @param src
+     * @param srcPoints
+     * @param dstPoints
+     * @return
+     */
+    public static Mat perspectiveTransform(Mat src, Mat srcPoints, Mat dstPoints) {
+        Mat dst = src.clone();
+        Mat warp_mat = Imgproc.getPerspectiveTransform(srcPoints, dstPoints);
+        Imgproc.warpPerspective(src, dst, warp_mat, dst.size());
+        warp_mat.release();
+        return dst;
+    }
 }

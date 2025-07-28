@@ -78,8 +78,9 @@ public class FaceQualityDetDemo {
      */
     @Test
     public void evaluateBrightness(){
-        try (FaceQualityModel faceQualityModel = getFaceQualityModel();
-                FaceDetModel faceDetModel = getFaceDetModel()){
+        try {
+            FaceQualityModel faceQualityModel = getFaceQualityModel();
+            FaceDetModel faceDetModel = getFaceDetModel();
             //人脸检测
             BufferedImage image = ImageIO.read(new File(Paths.get("src/main/resources/iu_1.jpg").toAbsolutePath().toString()));
             R<DetectionResponse> detectionResponse = faceDetModel.detect(image);
@@ -110,8 +111,9 @@ public class FaceQualityDetDemo {
      */
     @Test
     public void evaluateCompleteness(){
-        try (FaceQualityModel faceQualityModel = getFaceQualityModel();
-             FaceDetModel faceDetModel = getFaceDetModel()){
+        try {
+            FaceQualityModel faceQualityModel = getFaceQualityModel();
+            FaceDetModel faceDetModel = getFaceDetModel();
             //人脸检测
             BufferedImage image = ImageIO.read(new File(Paths.get("src/main/resources/iu_1.jpg").toAbsolutePath().toString()));
             R<DetectionResponse> detectionResponse = faceDetModel.detect(image);
@@ -142,8 +144,9 @@ public class FaceQualityDetDemo {
      */
     @Test
     public void evaluateClarity(){
-        try (FaceQualityModel faceQualityModel = getFaceQualityModel();
-             FaceDetModel faceDetModel = getFaceDetModel()){
+        try {
+            FaceQualityModel faceQualityModel = getFaceQualityModel();
+            FaceDetModel faceDetModel = getFaceDetModel();
             //人脸检测
             BufferedImage image = ImageIO.read(new File(Paths.get("src/main/resources/iu_1.jpg").toAbsolutePath().toString()));
             R<DetectionResponse> detectionResponse = faceDetModel.detect(image);
@@ -174,8 +177,9 @@ public class FaceQualityDetDemo {
      */
     @Test
     public void evaluatePose(){
-        try (FaceQualityModel faceQualityModel = getFaceQualityModel();
-             FaceDetModel faceDetModel = getFaceDetModel()){
+        try {
+            FaceQualityModel faceQualityModel = getFaceQualityModel();
+            FaceDetModel faceDetModel = getFaceDetModel();
             //人脸检测
             BufferedImage image = ImageIO.read(new File(Paths.get("src/main/resources/iu_1.jpg").toAbsolutePath().toString()));
             R<DetectionResponse> detectionResponse = faceDetModel.detect(image);
@@ -207,8 +211,9 @@ public class FaceQualityDetDemo {
      */
     @Test
     public void evaluateResolution(){
-        try (FaceQualityModel faceQualityModel = getFaceQualityModel();
-             FaceDetModel faceDetModel = getFaceDetModel()){
+        try {
+            FaceQualityModel faceQualityModel = getFaceQualityModel();
+            FaceDetModel faceDetModel = getFaceDetModel();
             //人脸检测
             BufferedImage image = ImageIO.read(new File(Paths.get("src/main/resources/iu_1.jpg").toAbsolutePath().toString()));
             R<DetectionResponse> detectionResponse = faceDetModel.detect(image);
@@ -240,8 +245,9 @@ public class FaceQualityDetDemo {
      */
     @Test
     public void evaluateAll(){
-        try (FaceQualityModel faceQualityModel = getFaceQualityModel();
-             FaceDetModel faceDetModel = getFaceDetModel()){
+        try {
+            FaceQualityModel faceQualityModel = getFaceQualityModel();
+            FaceDetModel faceDetModel = getFaceDetModel();
             //人脸检测
             BufferedImage image = ImageIO.read(new File(Paths.get("src/main/resources/iu_1.jpg").toAbsolutePath().toString()));
             R<DetectionResponse> detectionResponse = faceDetModel.detect(image);

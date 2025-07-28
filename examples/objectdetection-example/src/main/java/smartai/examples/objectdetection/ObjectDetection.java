@@ -41,10 +41,8 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Iterator;
+import java.util.*;
 import java.util.List;
-import java.util.Objects;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -71,7 +69,8 @@ public class ObjectDetection {
     @Test
     public void objectDetection(){
         //默认cpu
-        try (DetectorModel detectorModel = ObjectDetectionModelFactory.getInstance().getModel()){
+        try {
+            DetectorModel detectorModel = ObjectDetectionModelFactory.getInstance().getModel();
             DetectionResponse detectionResponse = detectorModel.detect("src/main/resources/object_detection.jpg");
             log.info("目标检测结果：{}", JSONObject.toJSONString(detectionResponse));
         } catch (Exception e) {
@@ -84,10 +83,15 @@ public class ObjectDetection {
      */
     @Test
     public void objectDetection2(){
-        DetectorModelConfig config = new DetectorModelConfig();
-        config.setModelEnum(DetectorModelEnum.SSD_300_RESNET50);//检测模型，目前支持19种预置模型
-        config.setDevice(device);
-        try (DetectorModel detectorModel = ObjectDetectionModelFactory.getInstance().getModel(config)){
+        try {
+            DetectorModelConfig config = new DetectorModelConfig();
+            config.setModelEnum(DetectorModelEnum.SSD_300_RESNET50);//检测模型，目前支持19种预置模型
+            // 指定允许的类别
+//            config.setAllowedClasses(Arrays.asList("person"));
+            //指定返回检测数量
+            config.setTopK(100);
+            config.setDevice(device);
+            DetectorModel detectorModel = ObjectDetectionModelFactory.getInstance().getModel(config);
             DetectionResponse detectionResponse = detectorModel.detect("src/main/resources/dog_bike_car.jpg");
             log.info("目标检测结果：{}", JSONObject.toJSONString(detectionResponse));
         } catch (Exception e) {
@@ -100,7 +104,8 @@ public class ObjectDetection {
      */
     @Test
     public void objectDetectionAndDraw(){
-        try (DetectorModel detectorModel = ObjectDetectionModelFactory.getInstance().getModel()){
+        try {
+            DetectorModel detectorModel = ObjectDetectionModelFactory.getInstance().getModel();
             detectorModel.detectAndDraw("src/main/resources/object_detection.jpg","output/object_detection_detected.png");
         } catch (Exception e) {
             e.printStackTrace();
@@ -112,7 +117,8 @@ public class ObjectDetection {
      */
     @Test
     public void objectDetectionAndDraw2(){
-        try (DetectorModel detectorModel = ObjectDetectionModelFactory.getInstance().getModel()){
+        try {
+            DetectorModel detectorModel = ObjectDetectionModelFactory.getInstance().getModel();
             String imagePath = "src/main/resources/object_detection.jpg";
             BufferedImage image = ImageIO.read(new File(Paths.get(imagePath).toAbsolutePath().toString()));
             //可以根据后续业务场景使用detectedImage
@@ -131,15 +137,16 @@ public class ObjectDetection {
      */
     @Test
     public void objectDetectionWithOfficialModel(){
-        DetectorModelConfig config = new DetectorModelConfig();
-        config.setThreshold(0.3f);
-        //也支持YoloV8：YOLOV8_OFFICIAL 模型可以从文档中提供的地址下载
-        config.setModelEnum(DetectorModelEnum.YOLOV12_OFFICIAL);//检测模型，目前支持19种模型
-        // 指定模型路径，需要更改为自己的模型路径
-        config.setModelPath("/Users/xxx/Documents/yolov12n.onnx");
-        config.setDevice(device);
-        //一定要将yolo官方的类别文件：synset.txt（文档中下载）放在模型同目录下，否则报错
-        try (DetectorModel detectorModel = ObjectDetectionModelFactory.getInstance().getModel(config)){
+        try {
+            DetectorModelConfig config = new DetectorModelConfig();
+            config.setThreshold(0.3f);
+            //也支持YoloV8：YOLOV8_OFFICIAL 模型可以从文档中提供的地址下载
+            config.setModelEnum(DetectorModelEnum.YOLOV12_OFFICIAL);//检测模型，目前支持19种模型
+            // 指定模型路径，需要更改为自己的模型路径
+            config.setModelPath("/Users/xxx/Documents/yolov12n.onnx");
+            config.setDevice(device);
+            //一定要将yolo官方的类别文件：synset.txt（文档中下载）放在模型同目录下，否则报错
+            DetectorModel detectorModel = ObjectDetectionModelFactory.getInstance().getModel(config);
             DetectionResponse detect = detectorModel.detect("src/main/resources/dog_bike_car.jpg");
             log.info("目标检测结果：{}", JSONObject.toJSONString(detect));
         } catch (Exception e) {
@@ -152,16 +159,21 @@ public class ObjectDetection {
      */
     @Test
     public void objectDetectionWithCustomModel(){
-        DetectorModelConfig config = new DetectorModelConfig();
-        //也支持YoloV8：YOLOV8_CUSTOM 模型需要自己训练，训练教程可以查看文档
-        config.setModelEnum(DetectorModelEnum.YOLOV12_CUSTOM);//自定义YOLOV12模型
-        // 指定模型路径，需要更改为自己的模型路径
-        config.setModelPath("/Users/xxx/Documents/develop/fire_model/best.onnx");
-        config.putCustomParam("width", 640);//resize 宽
-        config.putCustomParam("height", 640);// resize 高
-        config.putCustomParam("nmsThreshold", 0.5f);
-        config.setDevice(device);
-        try (DetectorModel detectorModel = ObjectDetectionModelFactory.getInstance().getModel(config)){
+        try {
+            DetectorModelConfig config = new DetectorModelConfig();
+            //也支持YoloV8：YOLOV8_CUSTOM 模型需要自己训练，训练教程可以查看文档
+            config.setModelEnum(DetectorModelEnum.YOLOV12_CUSTOM);//自定义YOLOV12模型
+            // 指定模型路径，需要更改为自己的模型路径
+            config.setModelPath("/Users/xxx/Documents/develop/fire_model/best.onnx");
+            config.putCustomParam("width", 640);//resize 宽
+            config.putCustomParam("height", 640);// resize 高
+            config.putCustomParam("nmsThreshold", 0.5f);
+            // 指定允许的类别
+//            config.setAllowedClasses(Arrays.asList("person"));
+            //指定返回检测数量
+            config.setTopK(100);
+            config.setDevice(device);
+            DetectorModel detectorModel = ObjectDetectionModelFactory.getInstance().getModel(config);
             DetectionResponse detect = detectorModel.detect("src/main/resources/dog_bike_car.jpg");
             log.info("目标检测结果：{}", JSONObject.toJSONString(detect));
         } catch (Exception e) {
@@ -176,7 +188,8 @@ public class ObjectDetection {
      */
     @Test
     public void testDetectCamera(){
-        try (DetectorModel detectorModel = ObjectDetectionModelFactory.getInstance().getModel()){
+        try {
+            DetectorModel detectorModel = ObjectDetectionModelFactory.getInstance().getModel();
             OpenCV.loadShared();
             VideoCapture capture = new VideoCapture(0);
             if (!capture.isOpened()) {

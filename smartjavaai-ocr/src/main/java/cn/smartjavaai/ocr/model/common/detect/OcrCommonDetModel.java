@@ -1,8 +1,11 @@
 package cn.smartjavaai.ocr.model.common.detect;
 
+import ai.djl.inference.Predictor;
 import ai.djl.modality.cv.Image;
+import ai.djl.ndarray.NDList;
 import cn.smartjavaai.ocr.config.OcrDetModelConfig;
 import cn.smartjavaai.ocr.entity.OcrBox;
+import org.apache.commons.pool2.impl.GenericObjectPool;
 
 import java.awt.image.BufferedImage;
 import java.util.List;
@@ -90,6 +93,10 @@ public interface OcrCommonDetModel extends AutoCloseable{
      * @return
      */
     default List<List<OcrBox>> batchDetectDJLImage(List<Image> imageList){
+        throw new UnsupportedOperationException("默认不支持该功能");
+    }
+
+    default GenericObjectPool<Predictor<Image, NDList>> getPool(){
         throw new UnsupportedOperationException("默认不支持该功能");
     }
 

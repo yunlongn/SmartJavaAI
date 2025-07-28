@@ -9,6 +9,7 @@ import cn.smartjavaai.ocr.entity.OcrBox;
 import cn.smartjavaai.ocr.entity.OcrInfo;
 import cn.smartjavaai.ocr.entity.OcrItem;
 import cn.smartjavaai.ocr.model.common.detect.OcrCommonDetModel;
+import org.apache.commons.pool2.impl.GenericObjectPool;
 import org.opencv.core.Mat;
 
 import java.awt.image.BufferedImage;
@@ -103,6 +104,10 @@ public interface OcrDirectionModel extends AutoCloseable{
      * @return
      */
     default BufferedImage detectAndDraw(BufferedImage sourceImage){
+        throw new UnsupportedOperationException("默认不支持该功能");
+    }
+
+    default GenericObjectPool<Predictor<Image, DirectionInfo>> getPool() {
         throw new UnsupportedOperationException("默认不支持该功能");
     }
 

@@ -1,5 +1,6 @@
 package cn.smartjavaai.face.config;
 
+import cn.smartjavaai.common.config.ModelConfig;
 import cn.smartjavaai.common.enums.DeviceEnum;
 import cn.smartjavaai.face.constant.LivenessConstant;
 import cn.smartjavaai.face.enums.LivenessModelEnum;
@@ -15,7 +16,7 @@ import java.util.Map;
  * @author dwj
  */
 @Data
-public class LivenessConfig {
+public class LivenessConfig extends ModelConfig {
 
     /**
      * 活体检测模型枚举
@@ -27,20 +28,12 @@ public class LivenessConfig {
      */
     private String modelPath;
 
-    /**
-     * 设备类型
-     */
-    private DeviceEnum device;
 
     /**
      * 人脸检测模型
      */
     private FaceDetModel detectModel;
 
-    /**
-     * 个性化配置（按模型类型动态解析）
-     */
-    private Map<String, Object> customParams = new HashMap<>();
 
 
     /**
@@ -74,20 +67,4 @@ public class LivenessConfig {
         this.modelPath = modelPath;
     }
 
-    // 可选封装方法，便于类型转换和调用
-    public <T> T getCustomParam(String key, Class<T> clazz) {
-        Object value = customParams.get(key);
-        if (value == null) return null;
-        return clazz.cast(value);
-    }
-
-    /**
-     * 添加个性化配置项
-     */
-    public void putCustomParam(String key, Object value) {
-        if (customParams == null) {
-            customParams = new HashMap<>();
-        }
-        customParams.put(key, value);
-    }
 }

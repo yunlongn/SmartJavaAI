@@ -106,7 +106,8 @@ public class OcrRecognizeDemo {
      */
     @Test
     public void recognize(){
-        try (OcrCommonRecModel recModel = getRecModel()){
+        try {
+            OcrCommonRecModel recModel = getRecModel();
             //不带方向矫正，分行返回文本
             OcrRecOptions options = new OcrRecOptions(false, true);
             OcrInfo ocrInfo = recModel.recognize("src/main/resources/ocr_2.jpg",options);
@@ -127,7 +128,8 @@ public class OcrRecognizeDemo {
      */
     @Test
     public void recognizeHandWriting(){
-        try (OcrCommonRecModel recModel = getRecModel()){
+        try {
+            OcrCommonRecModel recModel = getRecModel();
             OcrInfo ocrInfo = recModel.recognize("src/main/resources/handwriting_1.jpg",new OcrRecOptions());
             log.info("OCR识别结果：{}", JSONObject.toJSONString(ocrInfo));
         } catch (Exception e) {
@@ -146,7 +148,8 @@ public class OcrRecognizeDemo {
      */
     @Test
     public void recognize2(){
-        try (OcrCommonRecModel recModel = getRecModelWithDirection()){
+        try {
+            OcrCommonRecModel recModel = getRecModelWithDirection();
             //带方向矫正，分行返回文本
             OcrRecOptions options = new OcrRecOptions(true, true);
             OcrInfo ocrInfo = recModel.recognize("src/main/resources/ocr_3.jpg",options);
@@ -168,7 +171,8 @@ public class OcrRecognizeDemo {
      */
     @Test
     public void recognizeAndDraw(){
-        try (OcrCommonRecModel recModel = getRecModelWithDirection()){
+        try {
+            OcrCommonRecModel recModel = getRecModelWithDirection();
             int fontSize = 18;
             recModel.recognizeAndDraw("src/main/resources/general_ocr_002.png", "output/ocr_4_recognized.jpg", fontSize, new OcrRecOptions());
         } catch (Exception e) {
@@ -184,7 +188,8 @@ public class OcrRecognizeDemo {
      */
     @Test
     public void batchRecognize(){
-        try (OcrCommonRecModel recModel = getRecModelWithDirection()){
+        try {
+            OcrCommonRecModel recModel = getRecModelWithDirection();
             //批量检测要求图片宽高一致
             String folderPath = "/Users/xxx/Downloads/testing33";
             //读取文件夹中所有图片

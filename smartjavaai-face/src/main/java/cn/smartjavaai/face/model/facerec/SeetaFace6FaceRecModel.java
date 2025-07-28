@@ -1,5 +1,6 @@
 package cn.smartjavaai.face.model.facerec;
 
+import ai.djl.engine.Engine;
 import cn.smartjavaai.common.entity.DetectionInfo;
 import cn.smartjavaai.common.entity.DetectionResponse;
 import cn.smartjavaai.common.entity.R;
@@ -89,13 +90,9 @@ public class SeetaFace6FaceRecModel implements FaceRecModel{
         String[] faceRecognizerModelPath = {config.getModelPath() + File.separator + "face_recognizer.csta"};
         String[] faceLandmarkerModelPath = {config.getModelPath() + File.separator + "face_landmarker_pts5.csta"};
         SeetaDevice device = SeetaDevice.SEETA_DEVICE_AUTO;
-        int gpuId = 0;
+        int gpuId = config.getGpuId();
         if(Objects.nonNull(config.getDevice())){
             device = config.getDevice() == DeviceEnum.CPU ? SeetaDevice.SEETA_DEVICE_CPU : SeetaDevice.SEETA_DEVICE_GPU;
-            Integer gpuIdValue = config.getCustomParam("gpuId", Integer.class);
-            if(Objects.nonNull(gpuIdValue) && device == SeetaDevice.SEETA_DEVICE_GPU){
-                gpuId = gpuIdValue;
-            }
         }
         try {
             SeetaModelSetting faceDetectorPoolSetting = new SeetaModelSetting(gpuId, faceDetectorModelPath, device);
@@ -114,6 +111,16 @@ public class SeetaFace6FaceRecModel implements FaceRecModel{
             this.faceRecognizerPool = new FaceRecognizerPool(faceRecognizerPoolConfSetting);
             this.faceLandmarkerPool = new FaceLandmarkerPool(faceLandmarkerPoolConfSetting);
             this.faceDatabasePool = new FaceDatabasePool(faceDatabasePoolConfSetting);
+
+            int predictorPoolSize = config.getPredictorPoolSize();
+            if(config.getPredictorPoolSize() <= 0){
+                predictorPoolSize = Runtime.getRuntime().availableProcessors(); // 默认等于CPU核心数
+            }
+            faceDetectorPool.setMaxTotal(predictorPoolSize);
+            faceRecognizerPool.setMaxTotal(predictorPoolSize);
+            faceLandmarkerPool.setMaxTotal(predictorPoolSize);
+            faceDatabasePool.setMaxTotal(predictorPoolSize);
+            log.debug("模型推理器线程池最大数量: " + predictorPoolSize);
 
 
             //初始化人脸库
@@ -739,6 +746,36 @@ public class SeetaFace6FaceRecModel implements FaceRecModel{
         }
     }
 
+    /**
+     * 特征提取
+     * @param image
+     * @return
+     */
+    public float[] featureExtraction(BufferedImage image){
+        FaceRecognizer faceRecognizer = null;
+        try {
+            faceRecognizer = faceRecognizerPool.borrowObject();
+            SeetaImageData imageData = new SeetaImageData(image.getWidth(), image.getHeight(), 3);
+            imageData.data = ImageUtils.getMatrixBGR(image);
+            //提取特征
+            float[] features = new float[faceRecognizer.GetExtractFeatureSize()];
+            faceRecognizer.ExtractCroppedFace(imageData, features);
+            return features;
+        } catch (FaceException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new FaceException("目标检测错误", e);
+        }finally {
+            if (faceRecognizer != null) {
+                try {
+                    faceRecognizerPool.returnObject(faceRecognizer); //归还
+                } catch (Exception e) {
+                    log.warn("归还Predictor失败", e);
+                }
+            }
+        }
+    }
+
     @Override
     public R<float[]> extractTopFaceFeature(String imagePath) {
         if(!FileUtils.isFileExists(imagePath)){
@@ -878,4 +915,19 @@ public class SeetaFace6FaceRecModel implements FaceRecModel{
     }
 
 
+    public FaceDetectorPool getFaceDetectorPool() {
+        return faceDetectorPool;
+    }
+
+    public FaceRecognizerPool getFaceRecognizerPool() {
+        return faceRecognizerPool;
+    }
+
+    public FaceLandmarkerPool getFaceLandmarkerPool() {
+        return faceLandmarkerPool;
+    }
+
+    public FaceDatabasePool getFaceDatabasePool() {
+        return faceDatabasePool;
+    }
 }

@@ -1,5 +1,6 @@
 package cn.smartjavaai.face.config;
 
+import cn.smartjavaai.common.config.ModelConfig;
 import cn.smartjavaai.common.enums.DeviceEnum;
 import cn.smartjavaai.face.constant.LivenessConstant;
 import cn.smartjavaai.face.enums.LivenessModelEnum;
@@ -11,7 +12,7 @@ import lombok.Data;
  * @author dwj
  */
 @Data
-public class QualityConfig {
+public class QualityConfig extends ModelConfig {
 
     /**
      * 活体检测模型枚举
@@ -22,16 +23,6 @@ public class QualityConfig {
      * 模型路径
      */
     private String modelPath;
-
-    /**
-     * 设备类型
-     */
-    private DeviceEnum device;
-
-    /**
-     * gpu设备ID 当device为GPU时生效
-     */
-    private int gpuId = 0;
 
 
     public QualityConfig() {

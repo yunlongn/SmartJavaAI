@@ -49,10 +49,13 @@ public class MilvusClient implements VectorDBClient {
     @Override
     public void initialize() {
         try {
-            ConnectParam connectParam = ConnectParam.newBuilder()
+            ConnectParam.Builder builder = ConnectParam.newBuilder()
                     .withHost(config.getHost())
-                    .withPort(config.getPort())
-                    .build();
+                    .withPort(config.getPort());
+            if (StringUtils.isNotBlank(config.getUsername()) && StringUtils.isNotBlank(config.getPassword())) {
+                builder.withAuthorization(config.getUsername(), config.getPassword());
+            }
+            ConnectParam connectParam = builder.build();
             serviceClient = new MilvusServiceClient(connectParam);
             collectionName = StringUtils.isNotBlank(config.getCollectionName()) ? config.getCollectionName() : VectorDBConstants.Defaults.DEFAULT_COLLECTION_NAME;
             createCollection(collectionName, config.getDimension());

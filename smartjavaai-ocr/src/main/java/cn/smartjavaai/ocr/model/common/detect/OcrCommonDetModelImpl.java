@@ -43,7 +43,7 @@ import java.util.*;
 @Slf4j
 public class OcrCommonDetModelImpl implements OcrCommonDetModel{
 
-    private ObjectPool<Predictor<Image, NDList>> detPredictorPool;
+    private GenericObjectPool<Predictor<Image, NDList>> detPredictorPool;
 
     private ZooModel<Image, NDList> detectionModel;
 
@@ -61,8 +61,14 @@ public class OcrCommonDetModelImpl implements OcrCommonDetModel{
             detectionModel = ModelZoo.loadModel(detCriteria);
             // 创建池子：每个线程独享 Predictor
             this.detPredictorPool = new GenericObjectPool<>(new PredictorFactory<>(detectionModel));
+            int predictorPoolSize = config.getPredictorPoolSize();
+            if(config.getPredictorPoolSize() <= 0){
+                predictorPoolSize = Runtime.getRuntime().availableProcessors(); // 默认等于CPU核心数
+            }
+            detPredictorPool.setMaxTotal(predictorPoolSize);
             log.debug("当前设备: " + detectionModel.getNDManager().getDevice());
             log.debug("当前引擎: " + Engine.getInstance().getEngineName());
+            log.debug("模型推理器线程池最大数量: " + predictorPoolSize);
         } catch (IOException | ModelNotFoundException | MalformedModelException e) {
             throw new OcrException("检测模型加载失败", e);
         }
@@ -207,6 +213,11 @@ public class OcrCommonDetModelImpl implements OcrCommonDetModel{
             }
 
         }
+    }
+
+    @Override
+    public GenericObjectPool<Predictor<Image, NDList>> getPool() {
+        return detPredictorPool;
     }
 
     @Override

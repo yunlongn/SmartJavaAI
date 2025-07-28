@@ -1,5 +1,6 @@
 package cn.smartjavaai.face.model.liveness;
 
+import ai.djl.engine.Engine;
 import cn.smartjavaai.common.entity.*;
 import cn.smartjavaai.common.entity.face.FaceInfo;
 import cn.smartjavaai.common.entity.face.LivenessResult;
@@ -56,13 +57,9 @@ public class Seetaface6LivenessModel implements LivenessDetModel{
         String[] faceAntiSpoofingModelPath = {config.getModelPath() + File.separator + "fas_first.csta",config.getModelPath() + File.separator + "fas_second.csta"};
         String[] faceLandmarkerModelPath = {config.getModelPath() + File.separator + "face_landmarker_pts5.csta"};
         SeetaDevice device = SeetaDevice.SEETA_DEVICE_AUTO;
-        int gpuId = 0;
+        int gpuId = config.getGpuId();
         if(Objects.nonNull(config.getDevice())){
             device = config.getDevice() == DeviceEnum.CPU ? SeetaDevice.SEETA_DEVICE_CPU : SeetaDevice.SEETA_DEVICE_GPU;
-            Integer gpuIdValue = config.getCustomParam("gpuId", Integer.class);
-            if(Objects.nonNull(gpuIdValue) && device == SeetaDevice.SEETA_DEVICE_GPU){
-                gpuId = gpuIdValue;
-            }
         }
 
         try {
@@ -78,6 +75,16 @@ public class Seetaface6LivenessModel implements LivenessDetModel{
             this.faceDetectorPool = new FaceDetectorPool(faceDetectorPoolConfSetting);
             this.faceAntiSpoofingPool = new FaceAntiSpoofingPool(faceAntiSpoofingPoolConfSetting);
             this.faceLandmarkerPool = new FaceLandmarkerPool(faceLandmarkerPoolConfSetting);
+
+            int predictorPoolSize = config.getPredictorPoolSize();
+            if(config.getPredictorPoolSize() <= 0){
+                predictorPoolSize = Runtime.getRuntime().availableProcessors(); // 默认等于CPU核心数
+            }
+
+            faceDetectorPool.setMaxTotal(predictorPoolSize);
+            faceAntiSpoofingPool.setMaxTotal(predictorPoolSize);
+            faceLandmarkerPool.setMaxTotal(predictorPoolSize);
+            log.debug("模型推理器线程池最大数量: " + predictorPoolSize);
 
             //初始化模型参数
             initConfig();
@@ -548,6 +555,18 @@ public class Seetaface6LivenessModel implements LivenessDetModel{
             }
         }
         return R.fail(1000, "有效帧数量不足，无法完成活体检测");
+    }
+
+    public FaceDetectorPool getFaceDetectorPool() {
+        return faceDetectorPool;
+    }
+
+    public FaceAntiSpoofingPool getFaceAntiSpoofingPool() {
+        return faceAntiSpoofingPool;
+    }
+
+    public FaceLandmarkerPool getFaceLandmarkerPool() {
+        return faceLandmarkerPool;
     }
 
     @Override

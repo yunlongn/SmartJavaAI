@@ -57,7 +57,8 @@ public class FaceAttributeDetDemo {
      */
     @Test
     public void testFaceAttributeDetect(){
-        try (FaceAttributeModel faceAttributeModel = getFaceAttributeModel()){
+        try {
+            FaceAttributeModel faceAttributeModel = getFaceAttributeModel();
             DetectionResponse detectionResponse = faceAttributeModel.detect("src/main/resources/iu_1.jpg");
             //绘制并导出人脸属性图片，小人脸仅有人脸框
             BufferedImage image = ImageIO.read(new File(Paths.get("src/main/resources/iu_1.jpg").toAbsolutePath().toString()));
@@ -73,7 +74,8 @@ public class FaceAttributeDetDemo {
      */
     @Test
     public void testFaceAttributeDetect2(){
-        try (FaceAttributeModel faceAttributeModel = getFaceAttributeModel()){
+        try {
+            FaceAttributeModel faceAttributeModel = getFaceAttributeModel();
             FaceAttribute faceAttribute = faceAttributeModel.detectTopFace("src/main/resources/iu_1.jpg");
             log.info("人脸属性检测结果：{}", JSONObject.toJSONString(faceAttribute));
         } catch (Exception e) {
@@ -86,7 +88,8 @@ public class FaceAttributeDetDemo {
      */
     @Test
     public void testFaceAttributeDetect3(){
-        try (FaceAttributeModel faceAttributeModel = getFaceAttributeModel()){
+        try {
+            FaceAttributeModel faceAttributeModel = getFaceAttributeModel();
             FaceAttribute faceAttribute = faceAttributeModel.detectTopFace("src/main/resources/iu_1.jpg");
             log.info("人脸属性检测结果：{}", JSONObject.toJSONString(faceAttribute));
         } catch (Exception e) {
@@ -103,8 +106,9 @@ public class FaceAttributeDetDemo {
      */
     @Test
     public void testFaceAttributeDetect4(){
-        try (FaceDetModel faceDetModel = getFaceDetModel();
-                FaceAttributeModel faceAttributeModel = getFaceAttributeModel()){
+        try {
+            FaceDetModel faceDetModel = getFaceDetModel();
+            FaceAttributeModel faceAttributeModel = getFaceAttributeModel();
             //人脸检测
             BufferedImage image = ImageIO.read(new File(Paths.get("src/main/resources/iu_1.jpg").toAbsolutePath().toString()));
             R<DetectionResponse> detectionResponse = faceDetModel.detect(image);

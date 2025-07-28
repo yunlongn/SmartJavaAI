@@ -1,11 +1,14 @@
 package cn.smartjavaai.face.model.liveness;
 
+import ai.djl.inference.Predictor;
+import ai.djl.modality.cv.Image;
 import cn.smartjavaai.common.entity.DetectionRectangle;
 import cn.smartjavaai.common.entity.DetectionResponse;
 import cn.smartjavaai.common.entity.Point;
 import cn.smartjavaai.common.entity.R;
 import cn.smartjavaai.common.entity.face.LivenessResult;
 import cn.smartjavaai.face.config.LivenessConfig;
+import org.apache.commons.pool2.impl.GenericObjectPool;
 
 import java.awt.image.BufferedImage;
 import java.io.InputStream;
@@ -292,6 +295,9 @@ public interface LivenessDetModel extends AutoCloseable{
 
 
 
+    default GenericObjectPool<Predictor<Image, Float>> getPool() {
+        throw new UnsupportedOperationException("默认不支持该功能");
+    }
 
 
 

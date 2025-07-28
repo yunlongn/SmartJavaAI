@@ -1,5 +1,7 @@
 package cn.smartjavaai.face.model.facerec;
 
+import ai.djl.inference.Predictor;
+import ai.djl.modality.cv.Image;
 import cn.smartjavaai.common.entity.DetectionResponse;
 import cn.smartjavaai.common.entity.R;
 import cn.smartjavaai.face.config.FaceRecConfig;
@@ -7,6 +9,7 @@ import cn.smartjavaai.face.entity.FaceRegisterInfo;
 import cn.smartjavaai.face.entity.FaceSearchParams;
 import cn.smartjavaai.common.entity.face.FaceSearchResult;
 import cn.smartjavaai.face.vector.entity.FaceVector;
+import org.apache.commons.pool2.impl.GenericObjectPool;
 
 import java.awt.image.BufferedImage;
 import java.io.InputStream;
@@ -364,6 +367,11 @@ public interface FaceRecModel extends AutoCloseable{
      * @return
      */
     default boolean isLoadFaceCompleted(){
+        throw new UnsupportedOperationException("默认不支持该功能");
+    }
+
+
+    default GenericObjectPool<Predictor<Image, float[]>> getPool() {
         throw new UnsupportedOperationException("默认不支持该功能");
     }
 

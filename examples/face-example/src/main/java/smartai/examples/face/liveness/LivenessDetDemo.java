@@ -133,7 +133,8 @@ public class LivenessDetDemo {
      */
     @Test
     public void testLivenessDetect(){
-        try (LivenessDetModel livenessDetModel = getLivenessDetModel()){
+        try {
+            LivenessDetModel livenessDetModel = getLivenessDetModel();
             R<DetectionResponse> response = livenessDetModel.detect("src/main/resources/liveness/1.jpg");
             if(response.isSuccess()){
                 for (DetectionInfo detectionInfo : response.getData().getDetectionInfoList()){
@@ -152,7 +153,8 @@ public class LivenessDetDemo {
      */
     @Test
     public void testLivenessDetectAndDraw(){
-        try (LivenessDetModel livenessDetModel = getLivenessDetModel()){
+        try {
+            LivenessDetModel livenessDetModel = getLivenessDetModel();
             BufferedImage image = ImageIO.read(new File(Paths.get("src/main/resources/liveness/1.jpg").toAbsolutePath().toString()));
             R<DetectionResponse> response = livenessDetModel.detect(image);
             if(response.isSuccess()){
@@ -175,7 +177,8 @@ public class LivenessDetDemo {
      */
     @Test
     public void testLivenessDetect2(){
-        try (LivenessDetModel livenessDetModel = getLivenessDetModel()){
+        try {
+            LivenessDetModel livenessDetModel = getLivenessDetModel();
             //指定文件夹路径
             File dir = new File("face-example/src/main/resources/liveness");
             File[] files = dir.listFiles();
@@ -198,8 +201,9 @@ public class LivenessDetDemo {
      */
     @Test
     public void testLivenessDetect3(){
-        try (FaceDetModel faceDetectModel = getFaceDetModel();
-             LivenessDetModel livenessDetModel = getLivenessDetModel()){
+        try {
+            FaceDetModel faceDetectModel = getFaceDetModel();
+            LivenessDetModel livenessDetModel = getLivenessDetModel();
             // 将图片路径转换为 BufferedImage
             BufferedImage image = ImageIO.read(new File(Paths.get("src/main/resources/liveness/1.jpg").toAbsolutePath().toString()));
             //人脸检测
@@ -230,8 +234,9 @@ public class LivenessDetDemo {
      */
     @Test
     public void testLivenessDetect4(){
-        try (FaceDetModel faceDetModel = getFaceDetModel();
-             LivenessDetModel livenessDetModel = getMiniVisionLivenessDetModel()){
+        try {
+            FaceDetModel faceDetModel = getFaceDetModel();
+            LivenessDetModel livenessDetModel = getMiniVisionLivenessDetModel();
             // 将图片路径转换为 BufferedImage
             BufferedImage image = ImageIO.read(new File(Paths.get("src/main/resources/liveness/1.jpg").toAbsolutePath().toString()));
             R<DetectionResponse> detResult = faceDetModel.detect(image);
@@ -259,7 +264,8 @@ public class LivenessDetDemo {
      */
     @Test
     public void testLivenessDetectVideo(){
-        try (LivenessDetModel livenessDetModel = getLivenessDetModel()){
+        try {
+            LivenessDetModel livenessDetModel = getLivenessDetModel();
             //视频路径
             R<LivenessResult> livenessStatus = livenessDetModel.detectVideo("video.mp4");
             if (livenessStatus.isSuccess()){
@@ -278,7 +284,8 @@ public class LivenessDetDemo {
      */
     @Test
     public void testLivenessDetectCamera(){
-        try (LivenessDetModel livenessDetModel = getLivenessDetModel()){
+        try {
+            LivenessDetModel livenessDetModel = getLivenessDetModel();
             OpenCV.loadShared();
             VideoCapture capture = new VideoCapture(0);
             if (!capture.isOpened()) {

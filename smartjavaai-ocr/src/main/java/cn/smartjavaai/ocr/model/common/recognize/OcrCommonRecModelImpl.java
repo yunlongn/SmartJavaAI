@@ -24,7 +24,6 @@ import cn.smartjavaai.ocr.exception.OcrException;
 import cn.smartjavaai.ocr.model.common.detect.OcrCommonDetModel;
 import cn.smartjavaai.ocr.model.common.direction.OcrDirectionModel;
 import cn.smartjavaai.ocr.model.common.recognize.criteria.OcrCommonRecCriterialFactory;
-import cn.smartjavaai.ocr.opencv.OcrOpenCVUtils;
 import cn.smartjavaai.ocr.utils.OcrUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
@@ -49,7 +48,7 @@ import java.util.stream.Collectors;
 @Slf4j
 public class OcrCommonRecModelImpl implements OcrCommonRecModel {
 
-    private ObjectPool<Predictor<Image, String>> recPredictorPool;
+    private GenericObjectPool<Predictor<Image, String>> recPredictorPool;
 
     private OcrRecModelConfig config;
 
@@ -72,8 +71,14 @@ public class OcrCommonRecModelImpl implements OcrCommonRecModel {
         try{
             recognitionModel = ModelZoo.loadModel(recCriteria);
             this.recPredictorPool = new GenericObjectPool<>(new PredictorFactory<>(recognitionModel));
+            int predictorPoolSize = config.getPredictorPoolSize();
+            if(config.getPredictorPoolSize() <= 0){
+                predictorPoolSize = Runtime.getRuntime().availableProcessors(); // 默认等于CPU核心数
+            }
+            recPredictorPool.setMaxTotal(predictorPoolSize);
             log.debug("当前设备: " + recognitionModel.getNDManager().getDevice());
             log.debug("当前引擎: " + Engine.getInstance().getEngineName());
+            log.debug("模型推理器线程池最大数量: " + predictorPoolSize);
         } catch (IOException | ModelNotFoundException | MalformedModelException e) {
             throw new OcrException("识别模型加载失败", e);
         }
@@ -238,7 +243,7 @@ public class OcrCommonRecModelImpl implements OcrCommonRecModel {
                 throw new OcrException("未检测到文字");
             }
             Mat wrappedImage = (Mat) img.getWrappedImage();
-            BufferedImage bufferedImage = OcrOpenCVUtils.mat2Image(wrappedImage);
+            BufferedImage bufferedImage = OpenCVUtils.mat2Image(wrappedImage);
             OcrUtils.drawRectWithText(bufferedImage, ocrInfo, fontSize);
             ImageUtils.saveImage(bufferedImage, outputPath);
             wrappedImage.release();
@@ -441,6 +446,11 @@ public class OcrCommonRecModelImpl implements OcrCommonRecModel {
     @Override
     public OcrDirectionModel getDirectionModel() {
         return directionModel;
+    }
+
+
+    public GenericObjectPool<Predictor<Image, String>> getRecPredictorPool() {
+        return recPredictorPool;
     }
 
     @Override

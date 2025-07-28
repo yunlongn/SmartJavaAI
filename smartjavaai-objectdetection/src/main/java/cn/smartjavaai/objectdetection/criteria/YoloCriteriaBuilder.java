@@ -25,7 +25,7 @@ public class YoloCriteriaBuilder implements CriteriaBuilderStrategy {
     public Criteria<Image, DetectedObjects> buildCriteria(DetectorModelConfig config) {
         Device device = null;
         if(!Objects.isNull(config.getDevice())){
-            device = config.getDevice() == DeviceEnum.CPU ? Device.cpu() : Device.gpu();
+            device = config.getDevice() == DeviceEnum.CPU ? Device.cpu() : Device.gpu(config.getGpuId());
         }
 
         Map<String, Object> customParams = getDefaultConfig();

@@ -1,5 +1,6 @@
 package cn.smartjavaai.face.config;
 
+import cn.smartjavaai.common.config.ModelConfig;
 import cn.smartjavaai.common.enums.DeviceEnum;
 import cn.smartjavaai.face.constant.FaceDetectConstant;
 import cn.smartjavaai.face.enums.FaceDetModelEnum;
@@ -13,7 +14,7 @@ import java.util.Map;
  * @author dwj
  */
 @Data
-public class FaceDetConfig {
+public class FaceDetConfig extends ModelConfig {
 
     /**
      * 人脸检测模型枚举
@@ -36,16 +37,6 @@ public class FaceDetConfig {
      */
     private String modelPath;
 
-    /**
-     * 设备类型
-     */
-    private DeviceEnum device;
-
-    /**
-     * 个性化配置（按模型类型动态解析）
-     */
-    private Map<String, Object> customParams = new HashMap<>();
-
 
     public FaceDetConfig() {
     }
@@ -59,19 +50,4 @@ public class FaceDetConfig {
         this.modelPath = modelPath;
     }
 
-    public <T> T getCustomParam(String key, Class<T> clazz) {
-        Object value = customParams.get(key);
-        if (value == null) return null;
-        return clazz.cast(value);
-    }
-
-    /**
-     * 添加个性化配置项
-     */
-    public void putCustomParam(String key, Object value) {
-        if (customParams == null) {
-            customParams = new HashMap<>();
-        }
-        customParams.put(key, value);
-    }
 }

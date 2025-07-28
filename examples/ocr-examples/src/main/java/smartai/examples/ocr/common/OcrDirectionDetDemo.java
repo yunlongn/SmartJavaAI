@@ -67,7 +67,8 @@ public class OcrDirectionDetDemo {
      */
     @Test
     public void detect(){
-        try (OcrDirectionModel directionModel = getDirectionModel()){
+        try {
+            OcrDirectionModel directionModel = getDirectionModel();
             List<OcrItem> itemList = directionModel.detect("src/main/resources/ocr_1.jpg");
             log.info("OCR方向检测结果1：{}", JSONObject.toJSONString(itemList));
         } catch (Exception e) {
@@ -84,7 +85,8 @@ public class OcrDirectionDetDemo {
      */
     @Test
     public void detectAndDraw(){
-        try (OcrDirectionModel directionModel = getDirectionModel()){
+        try {
+            OcrDirectionModel directionModel = getDirectionModel();
             directionModel.detectAndDraw("src/main/resources/ocr_3.jpg",  "output/ocr_3_detected.png");
         } catch (Exception e) {
             e.printStackTrace();

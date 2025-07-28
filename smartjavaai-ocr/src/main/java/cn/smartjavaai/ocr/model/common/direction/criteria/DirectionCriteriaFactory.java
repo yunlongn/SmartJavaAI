@@ -28,7 +28,7 @@ public class DirectionCriteriaFactory {
     public static Criteria<Image, DirectionInfo> createCriteria(DirectionModelConfig config) {
         Device device = null;
         if(!Objects.isNull(config.getDevice())){
-            device = config.getDevice() == DeviceEnum.CPU ? Device.cpu() : Device.gpu();
+            device = config.getDevice() == DeviceEnum.CPU ? Device.cpu() : Device.gpu(config.getGpuId());
         }
         Criteria<Image, DirectionInfo> criteria = null;
         ConcurrentHashMap params = new ConcurrentHashMap<String, String>();

@@ -82,7 +82,8 @@ public class FaceDetDemo {
      */
     @Test
     public void testFaceDetect(){
-        try (FaceDetModel faceModel = FaceDetModelFactory.getInstance().getModel()) {
+        try {
+            FaceDetModel faceModel = FaceDetModelFactory.getInstance().getModel();
             R<DetectionResponse> detectedResult = faceModel.detect(imgPath);
             if(detectedResult.isSuccess()){
                 log.info("人脸检测结果：{}", JSONObject.toJSONString(detectedResult.getData()));
@@ -100,7 +101,8 @@ public class FaceDetDemo {
      */
     @Test
     public void testFaceDetectCustomConfig(){
-        try (FaceDetModel faceModel = getFaceDetModel()){
+        try {
+            FaceDetModel faceModel = getFaceDetModel();
             R<DetectionResponse> detectedResult = faceModel.detect(imgPath);
             if(detectedResult.isSuccess()){
                 log.info("人脸检测结果：{}", JSONObject.toJSONString(detectedResult.getData()));
@@ -118,7 +120,8 @@ public class FaceDetDemo {
      */
     @Test
     public void testFaceDetectAndDraw(){
-        try (FaceDetModel faceModel = getFaceDetModel()){
+        try {
+            FaceDetModel faceModel = getFaceDetModel();
             faceModel.detectAndDraw("src/main/resources/largest_selfie.jpg","output/largest_selfie_detected.png");
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -131,7 +134,8 @@ public class FaceDetDemo {
      */
     @Test
     public void testFaceDetectAndDraw2(){
-        try (FaceDetModel faceModel = getFaceDetModel()){
+        try {
+            FaceDetModel faceModel = getFaceDetModel();
             BufferedImage image = null;
             String imagePath = "src/main/resources/largest_selfie.jpg";
             image = ImageIO.read(new File(Paths.get(imagePath).toAbsolutePath().toString()));
@@ -154,11 +158,12 @@ public class FaceDetDemo {
      */
     @Test
     public void testDetectFaceOffine(){
-        FaceDetConfig config = new FaceDetConfig();
-        config.setModelEnum(FaceDetModelEnum.RETINA_FACE);//人脸模型
-        //模型路径,不同模型下载路径请参看文档
-        config.setModelPath("/Users/xxx/Documents/develop/face_model/retinaface.pt");
-        try (FaceDetModel faceModel = FaceDetModelFactory.getInstance().getModel(config)) {
+        try {
+            FaceDetConfig config = new FaceDetConfig();
+            config.setModelEnum(FaceDetModelEnum.RETINA_FACE);//人脸模型
+            //模型路径,不同模型下载路径请参看文档
+            config.setModelPath("/Users/xxx/Documents/develop/face_model/retinaface.pt");
+            FaceDetModel faceModel = FaceDetModelFactory.getInstance().getModel(config);
             R<DetectionResponse> detectedResult = faceModel.detect(imgPath);
             if(detectedResult.isSuccess()){
                 log.info("人脸检测结果：{}", JSONObject.toJSONString(detectedResult.getData()));
@@ -175,10 +180,11 @@ public class FaceDetDemo {
      */
     @Test
     public void testDetectFaceGPU(){
-        FaceDetConfig config = new FaceDetConfig();
-        config.setModelEnum(FaceDetModelEnum.RETINA_FACE);//人脸模型
-        config.setDevice(DeviceEnum.GPU);
-        try (FaceDetModel faceModel = FaceDetModelFactory.getInstance().getModel(config)) {
+        try {
+            FaceDetConfig config = new FaceDetConfig();
+            config.setModelEnum(FaceDetModelEnum.RETINA_FACE);//人脸模型
+            config.setDevice(DeviceEnum.GPU);
+            FaceDetModel faceModel = FaceDetModelFactory.getInstance().getModel(config);
             R<DetectionResponse> detectedResult = faceModel.detect(imgPath);
             if(detectedResult.isSuccess()){
                 log.info("人脸检测结果：{}", JSONObject.toJSONString(detectedResult.getData()));
@@ -196,7 +202,8 @@ public class FaceDetDemo {
      */
     @Test
     public void testFaceDetectSeetaface6(){
-        try (FaceDetModel faceModel = getSeetaface6DetModel()){
+        try {
+            FaceDetModel faceModel = getSeetaface6DetModel();
             R<DetectionResponse> detectedResult = faceModel.detect(imgPath);
             if(detectedResult.isSuccess()){
                 log.info("人脸检测结果：{}", JSONObject.toJSONString(detectedResult.getData()));
@@ -215,7 +222,8 @@ public class FaceDetDemo {
      */
     @Test
     public void testDetectCamera(){
-        try (FaceDetModel faceModel = getFaceDetModel()){
+        try {
+            FaceDetModel faceModel = getFaceDetModel();
             OpenCV.loadShared();
             VideoCapture capture = new VideoCapture(0);
             if (!capture.isOpened()) {

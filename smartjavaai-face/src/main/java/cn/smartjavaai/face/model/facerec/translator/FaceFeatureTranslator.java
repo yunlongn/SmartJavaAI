@@ -31,7 +31,7 @@ public final class FaceFeatureTranslator implements Translator<Image, float[]> {
         NDArray array = input.toNDArray(ctx.getNDManager(), Image.Flag.COLOR);
         Pipeline pipeline = new Pipeline();
         if(input.getWidth() != 112 || input.getHeight() != 112){
-            pipeline.add(new Resize(112));
+            pipeline.add(new Resize(112,112));
         }
         pipeline
                 .add(new ToTensor())

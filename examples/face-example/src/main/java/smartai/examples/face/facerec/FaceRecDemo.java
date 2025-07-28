@@ -95,6 +95,8 @@ public class FaceRecDemo {
         MilvusConfig vectorDBConfig = new MilvusConfig();
         vectorDBConfig.setHost("127.0.0.1");
         vectorDBConfig.setPort(19530);
+        //vectorDBConfig.setUsername("root");
+        //vectorDBConfig.setPassword("Milvus");
         //vectorDBConfig.setCollectionName("face5");
         //ID策略：自动生成
         vectorDBConfig.setIdStrategy(IdStrategy.AUTO);
@@ -135,7 +137,8 @@ public class FaceRecDemo {
      */
     @Test
     public void testExtractFeatures(){
-        try (FaceRecModel faceRecModel = getFaceRecModel()){
+        try {
+            FaceRecModel faceRecModel = getFaceRecModel();
             //提取图片中所有人脸特征
             R<DetectionResponse> faceResult  = faceRecModel.extractFeatures("src/main/resources/iu_1.jpg");
             if(faceResult.isSuccess()){
@@ -158,7 +161,8 @@ public class FaceRecDemo {
      */
     @Test
     public void featureComparison(){
-        try (FaceRecModel faceRecModel = getFaceRecModel()){
+        try {
+            FaceRecModel faceRecModel = getFaceRecModel();
             //基于图像直接比对人脸特征
             R<Float> similarResult = faceRecModel.featureComparison("src/main/resources/iu_1.jpg","src/main/resources/iu_2.jpg");
             if(similarResult.isSuccess()){
@@ -183,7 +187,8 @@ public class FaceRecDemo {
      */
     @Test
     public void featureComparison2(){
-        try (FaceRecModel faceRecModel = getFaceRecModel()){
+        try {
+            FaceRecModel faceRecModel = getFaceRecModel();
             //特征提取（提取分数最高人脸特征）,适用于单人脸场景
             R<float[]> featureResult1 = faceRecModel.extractTopFaceFeature("src/main/resources/iu_1.jpg");
             if(featureResult1.isSuccess()){
@@ -220,7 +225,8 @@ public class FaceRecDemo {
      */
     @Test
     public void searchFace(){
-        try (FaceRecModel faceRecModel = getFaceRecModelWithDbConfig()){
+        try {
+            FaceRecModel faceRecModel = getFaceRecModelWithDbConfig();
             //等待加载人脸库结束
             while (!faceRecModel.isLoadFaceCompleted()){
                 Thread.sleep(100);
@@ -296,7 +302,8 @@ public class FaceRecDemo {
      */
     @Test
     public void searchFace2(){
-        try (FaceRecModel faceRecModel = getFaceRecModelWithSQLiteConfig()){
+        try {
+            FaceRecModel faceRecModel = getFaceRecModelWithSQLiteConfig();
             //等待加载人脸库结束
             while (!faceRecModel.isLoadFaceCompleted()){
                 Thread.sleep(100);
@@ -367,7 +374,8 @@ public class FaceRecDemo {
     @Test
     public void getFaceInfo(){
         //使用ID获取人脸信息
-        try (FaceRecModel faceRecModel = getFaceRecModelWithSQLiteConfig()){
+        try {
+            FaceRecModel faceRecModel = getFaceRecModelWithSQLiteConfig();
             //等待加载人脸库结束
             while (!faceRecModel.isLoadFaceCompleted()){
                 Thread.sleep(100);
@@ -390,7 +398,8 @@ public class FaceRecDemo {
     @Test
     public void listFaces(){
         //使用ID获取人脸信息
-        try (FaceRecModel faceRecModel = getFaceRecModelWithDbConfig()){
+        try {
+            FaceRecModel faceRecModel = getFaceRecModelWithDbConfig();
             //等待加载人脸库结束
             while (!faceRecModel.isLoadFaceCompleted()){
                 Thread.sleep(100);

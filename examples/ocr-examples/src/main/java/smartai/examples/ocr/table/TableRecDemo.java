@@ -113,10 +113,11 @@ public class TableRecDemo {
      */
     @Test
     public void recognize(){
-        try (TableStructureModel tableStructureModel = getTableStructureModel();
-             OcrCommonDetModel detModel = getDetectionModel();
-             OcrCommonRecModel recModel = getRecModel();
-             OcrDirectionModel directionModel = getDirectionModel()){
+        try {
+            TableStructureModel tableStructureModel = getTableStructureModel();
+            OcrCommonDetModel detModel = getDetectionModel();
+            OcrCommonRecModel recModel = getRecModel();
+            OcrDirectionModel directionModel = getDirectionModel();
             //创建表格识别器
             TableRecognizer tableRecognizer = TableRecognizer.builder()
                     .withStructureModel(tableStructureModel)

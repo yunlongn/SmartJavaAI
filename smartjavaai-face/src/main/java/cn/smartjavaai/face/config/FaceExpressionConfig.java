@@ -1,5 +1,6 @@
 package cn.smartjavaai.face.config;
 
+import cn.smartjavaai.common.config.ModelConfig;
 import cn.smartjavaai.common.enums.DeviceEnum;
 import cn.smartjavaai.face.enums.ExpressionModelEnum;
 import cn.smartjavaai.face.model.facedect.FaceDetModel;
@@ -14,7 +15,7 @@ import java.util.Map;
  * @date 2025/7/1
  */
 @Data
-public class FaceExpressionConfig {
+public class FaceExpressionConfig extends ModelConfig {
 
     /**
      * 模型枚举
@@ -25,11 +26,6 @@ public class FaceExpressionConfig {
      * 模型路径
      */
     private String modelPath;
-
-    /**
-     * 设备类型
-     */
-    private DeviceEnum device;
 
     /**
      * 人脸检测模型

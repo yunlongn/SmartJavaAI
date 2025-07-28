@@ -57,6 +57,7 @@ public class R<T> {
         NO_FACE_DETECTED(3, "未检测到人脸"),
         PARAM_ERROR(4, "参数错误"),
         INVALID_VIDEO(5, "视频无效"),
+        NO_OBJECT_DETECTED(6, "未检测到目标"),
         Unknown(-1,  "未知错误");
 
         private final int code;

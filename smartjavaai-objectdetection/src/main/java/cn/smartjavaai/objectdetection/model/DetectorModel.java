@@ -1,16 +1,22 @@
 package cn.smartjavaai.objectdetection.model;
 
 import ai.djl.MalformedModelException;
+import ai.djl.engine.Engine;
 import ai.djl.inference.Predictor;
 import ai.djl.modality.cv.Image;
 import ai.djl.modality.cv.ImageFactory;
+import ai.djl.modality.cv.output.BoundingBox;
 import ai.djl.modality.cv.output.DetectedObjects;
 import ai.djl.modality.cv.translator.YoloV8TranslatorFactory;
 import ai.djl.repository.zoo.Criteria;
 import ai.djl.repository.zoo.ModelNotFoundException;
 import ai.djl.repository.zoo.ZooModel;
 import ai.djl.training.util.ProgressBar;
+import cn.smartjavaai.common.entity.DetectionInfo;
+import cn.smartjavaai.common.entity.DetectionRectangle;
 import cn.smartjavaai.common.entity.DetectionResponse;
+import cn.smartjavaai.common.entity.Point;
+import cn.smartjavaai.common.entity.face.FaceInfo;
 import cn.smartjavaai.common.pool.PredictorFactory;
 import cn.smartjavaai.common.utils.FileUtils;
 import cn.smartjavaai.common.utils.ImageUtils;
@@ -21,39 +27,53 @@ import cn.smartjavaai.objectdetection.criteria.CriteriaBuilderFactory;
 import cn.smartjavaai.objectdetection.exception.DetectionException;
 import cn.smartjavaai.objectdetection.utils.DetectorUtils;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.pool2.ObjectPool;
 import org.apache.commons.pool2.impl.GenericObjectPool;
+import org.opencv.core.Mat;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.*;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 /**
  * 目标检测模型
  * @author dwj
- * @date 2025/4/4
  */
 @Slf4j
 public class DetectorModel implements AutoCloseable{
 
     private ZooModel<Image, DetectedObjects> model;
 
-    private ObjectPool<Predictor<Image, DetectedObjects>> predictorPool;
+    private GenericObjectPool<Predictor<Image, DetectedObjects>> predictorPool;
+
+    private DetectorModelConfig config;
 
     public void loadModel(DetectorModelConfig config){
         if(Objects.isNull(config.getModelEnum())){
             throw new DetectionException("未配置模型枚举");
         }
         Criteria<Image, DetectedObjects> criteria = CriteriaBuilderFactory.createCriteria(config);
-
+        this.config = config;
         try {
             model = criteria.loadModel();
             // 创建池子：每个线程独享 Predictor
             this.predictorPool = new GenericObjectPool<>(new PredictorFactory<>(model));
+            int predictorPoolSize = config.getPredictorPoolSize();
+            if(config.getPredictorPoolSize() <= 0){
+                predictorPoolSize = Runtime.getRuntime().availableProcessors(); // 默认等于CPU核心数
+            }
+            predictorPool.setMaxTotal(predictorPoolSize);
             log.debug("当前设备: " + model.getNDManager().getDevice());
+            log.debug("当前引擎: " + Engine.getInstance().getEngineName());
+            log.debug("模型推理器线程池最大数量: " + predictorPoolSize);
         } catch (IOException | ModelNotFoundException | MalformedModelException e) {
             throw new DetectionException("模型加载失败", e);
         }
@@ -72,11 +92,16 @@ public class DetectorModel implements AutoCloseable{
         Image image = null;
         try {
             image = ImageFactory.getInstance().fromFile(Paths.get(imagePath));
-        } catch (IOException e) {
-            throw new DetectionException("图片转换错误", e);
+            DetectedObjects detectedObjects = detect(image);
+            return DetectorUtils.convertToDetectionResponse(detectedObjects, image);
+        } catch (Exception e) {
+            throw new DetectionException(e);
+        } finally {
+            if (image != null){
+                ((Mat)image.getWrappedImage()).release();
+            }
         }
-        DetectedObjects detectedObjects = detect(image);
-        return DetectorUtils.convertToDetectionResponse(detectedObjects, image);
+
     }
 
 
@@ -89,8 +114,9 @@ public class DetectorModel implements AutoCloseable{
         if(!FileUtils.isFileExists(imagePath)){
             throw new DetectionException("图像文件不存在");
         }
+        Image img = null;
         try {
-            Image img = ImageFactory.getInstance().fromFile(Paths.get(imagePath));
+            img = ImageFactory.getInstance().fromFile(Paths.get(imagePath));
             DetectedObjects detectedObjects = detect(img);
             img.drawBoundingBoxes(detectedObjects);
             ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
@@ -98,6 +124,10 @@ public class DetectorModel implements AutoCloseable{
             img.save(new FileOutputStream(Paths.get(outputPath).toAbsolutePath().toString()), "png");
         } catch (IOException e) {
             throw new DetectionException(e);
+        } finally {
+            if (img != null){
+                ((Mat)img.getWrappedImage()).release();
+            }
         }
     }
 
@@ -129,9 +159,19 @@ public class DetectorModel implements AutoCloseable{
         if(!ImageUtils.isImageValid(image)){
             throw new DetectionException("图像无效");
         }
-        Image img = ImageFactory.getInstance().fromImage(OpenCVUtils.image2Mat(image));
-        DetectedObjects detectedObjects = detect(img);
-        return DetectorUtils.convertToDetectionResponse(detectedObjects, img);
+        Image img = null;
+        try {
+            img = ImageFactory.getInstance().fromImage(OpenCVUtils.image2Mat(image));
+            DetectedObjects detectedObjects = detect(img);
+            return DetectorUtils.convertToDetectionResponse(detectedObjects, img);
+        } catch (Exception e) {
+            throw new DetectionException(e);
+        } finally {
+            if (img != null) {
+                ((Mat)img.getWrappedImage()).release();
+            }
+        }
+
     }
 
     /**
@@ -155,6 +195,10 @@ public class DetectorModel implements AutoCloseable{
             return ImageIO.read(new ByteArrayInputStream(imageBytes));
         } catch (IOException e) {
             throw new DetectionException("导出图片失败", e);
+        } finally {
+            if (img != null) {
+                ((Mat)img.getWrappedImage()).release();
+            }
         }
     }
 
@@ -163,11 +207,13 @@ public class DetectorModel implements AutoCloseable{
      * @param image
      * @return
      */
-    private DetectedObjects detect(Image image){
+    public DetectedObjects detect(Image image){
         Predictor<Image, DetectedObjects> predictor = null;
         try {
             predictor = predictorPool.borrowObject();
-            return predictor.predict(image);
+            DetectedObjects detectedObjects = predictor.predict(image);
+            detectedObjects = filterDetections(detectedObjects);
+            return detectedObjects;
         } catch (Exception e) {
             throw new DetectionException("目标检测错误", e);
         }finally {
@@ -185,6 +231,50 @@ public class DetectorModel implements AutoCloseable{
                 }
             }
         }
+    }
+
+    /**
+     * 筛选检测结果
+     * @param detectedObjects
+     * @return
+     */
+    private DetectedObjects filterDetections(DetectedObjects detectedObjects) {
+        if (Objects.isNull(detectedObjects) || detectedObjects.getNumberOfObjects() == 0) {
+            return detectedObjects;
+        }
+        List<DetectedObjects.DetectedObject> items = detectedObjects.items();
+        // 按照允许的类别进行过滤
+        List<DetectedObjects.DetectedObject> filtered = new ArrayList<>();
+        //过滤类别
+        if(!CollectionUtils.isEmpty(config.getAllowedClasses())){
+            for (DetectedObjects.DetectedObject obj : items) {
+                if(config.getAllowedClasses().contains(obj.getClassName())){
+                    filtered.add(obj);
+                }
+            }
+        }else{
+            filtered = items;
+        }
+        // 按照概率进行排序
+        filtered.sort((o1, o2) -> Double.compare(o2.getProbability(), o1.getProbability()));
+        if(config.getTopK() > 0 && filtered.size() > config.getTopK()){
+            filtered = filtered.subList(0, config.getTopK());
+        }
+        // 构建新的 DetectedObjects 返回
+        List<String> names = new ArrayList<>();
+        List<Double> probs = new ArrayList<>();
+        List<BoundingBox> boxes = new ArrayList<>();
+
+        for (DetectedObjects.DetectedObject obj : filtered) {
+            names.add(obj.getClassName());
+            probs.add(obj.getProbability());
+            boxes.add(obj.getBoundingBox());
+        }
+        return new DetectedObjects(names, probs, boxes);
+    }
+
+    public GenericObjectPool<Predictor<Image, DetectedObjects>> getPool() {
+        return predictorPool;
     }
 
 

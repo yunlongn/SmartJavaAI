@@ -31,7 +31,7 @@ public class LivenessCriteriaFactory {
     public static Criteria<Image, Float> createCriteria(LivenessConfig config) {
         Device device = null;
         if(!Objects.isNull(config.getDevice())){
-            device = config.getDevice() == DeviceEnum.CPU ? Device.cpu() : Device.gpu();
+            device = config.getDevice() == DeviceEnum.CPU ? Device.cpu() : Device.gpu(config.getGpuId());
         }
         Criteria<Image, Float> criteria = null;
         if(config.getModelEnum() == LivenessModelEnum.IIC_FL_MODEL){

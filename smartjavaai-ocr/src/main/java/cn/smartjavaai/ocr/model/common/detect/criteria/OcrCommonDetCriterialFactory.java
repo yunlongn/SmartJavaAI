@@ -25,7 +25,7 @@ public class OcrCommonDetCriterialFactory {
     public static Criteria<Image, NDList> createCriteria(OcrDetModelConfig config) {
         Device device = null;
         if(!Objects.isNull(config.getDevice())){
-            device = config.getDevice() == DeviceEnum.CPU ? Device.cpu() : Device.gpu();
+            device = config.getDevice() == DeviceEnum.CPU ? Device.cpu() : Device.gpu(config.getGpuId());
         }
         Criteria<Image, NDList> criteria = null;
         ConcurrentHashMap params = new ConcurrentHashMap<String, String>();

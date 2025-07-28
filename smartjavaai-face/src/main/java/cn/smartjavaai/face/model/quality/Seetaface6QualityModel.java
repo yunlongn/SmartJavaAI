@@ -1,5 +1,6 @@
 package cn.smartjavaai.face.model.quality;
 
+import ai.djl.engine.Engine;
 import cn.smartjavaai.common.entity.*;
 import cn.smartjavaai.common.enums.DeviceEnum;
 import cn.smartjavaai.common.utils.FileUtils;
@@ -74,6 +75,8 @@ public class Seetaface6QualityModel implements FaceQualityModel {
      */
     private QualityOfResolutionPool qualityOfResolutionPool;
 
+    int predictorPoolSize = 0;
+
 
     @Override
     public void loadModel(QualityConfig config) {
@@ -84,6 +87,11 @@ public class Seetaface6QualityModel implements FaceQualityModel {
         //加载依赖库
         NativeLoader.loadNativeLibraries(device);
         this.config = config;
+        int predictorPoolSize = config.getPredictorPoolSize();
+        if(config.getPredictorPoolSize() <= 0){
+            predictorPoolSize = Runtime.getRuntime().availableProcessors(); // 默认等于CPU核心数
+        }
+        log.debug("模型推理器线程池最大数量: " + predictorPoolSize);
         log.debug("Loading seetaFace6 library successfully.");
     }
 
@@ -104,6 +112,7 @@ public class Seetaface6QualityModel implements FaceQualityModel {
         try {
             if(Objects.isNull(this.qualityOfBrightnessPool)){
                 this.qualityOfBrightnessPool = new QualityOfBrightnessPool(new SeetaConfSetting());
+                qualityOfBrightnessPool.setMaxTotal(predictorPoolSize);
             }
             qualityOfBrightness = qualityOfBrightnessPool.borrowObject();
             SeetaImageData imageData = new SeetaImageData(image.getWidth(), image.getHeight(), 3);
@@ -170,6 +179,7 @@ public class Seetaface6QualityModel implements FaceQualityModel {
         try {
             if(Objects.isNull(this.qualityOfClarityPool)){
                 this.qualityOfClarityPool = new QualityOfClarityPool(new SeetaConfSetting());
+                qualityOfClarityPool.setMaxTotal(predictorPoolSize);
             }
             qualityOfClarity = qualityOfClarityPool.borrowObject();
             SeetaImageData imageData = new SeetaImageData(image.getWidth(), image.getHeight(), 3);
@@ -236,6 +246,7 @@ public class Seetaface6QualityModel implements FaceQualityModel {
         try {
             if(Objects.isNull(this.qualityOfIntegrityPool)){
                 this.qualityOfIntegrityPool = new QualityOfIntegrityPool(new SeetaConfSetting());
+                qualityOfIntegrityPool.setMaxTotal(predictorPoolSize);
             }
             qualityOfIntegrity = qualityOfIntegrityPool.borrowObject();
             SeetaImageData imageData = new SeetaImageData(image.getWidth(), image.getHeight(), 3);
@@ -302,6 +313,7 @@ public class Seetaface6QualityModel implements FaceQualityModel {
         try {
             if(Objects.isNull(this.qualityOfPosePool)){
                 this.qualityOfPosePool = new QualityOfPosePool(new SeetaConfSetting());
+                qualityOfPosePool.setMaxTotal(predictorPoolSize);
             }
             qualityOfPose = qualityOfPosePool.borrowObject();
             SeetaImageData imageData = new SeetaImageData(image.getWidth(), image.getHeight(), 3);
@@ -368,6 +380,7 @@ public class Seetaface6QualityModel implements FaceQualityModel {
         try {
             if(Objects.isNull(this.qualityOfResolutionPool)){
                 this.qualityOfResolutionPool = new QualityOfResolutionPool(new SeetaConfSetting());
+                qualityOfResolutionPool.setMaxTotal(predictorPoolSize);
             }
             qualityOfResolution = qualityOfResolutionPool.borrowObject();
             SeetaImageData imageData = new SeetaImageData(image.getWidth(), image.getHeight(), 3);
@@ -438,6 +451,7 @@ public class Seetaface6QualityModel implements FaceQualityModel {
                 }
                 SeetaConfSetting setting = getClarityMLSetting();
                 this.qualityOfLBNPool = new QualityOfLBNPool(setting);
+                qualityOfLBNPool.setMaxTotal(predictorPoolSize);
             }
             qualityOfLBN = qualityOfLBNPool.borrowObject();
             SeetaImageData imageData = new SeetaImageData(image.getWidth(), image.getHeight(), 3);
@@ -509,6 +523,7 @@ public class Seetaface6QualityModel implements FaceQualityModel {
                 }
                 SeetaConfSetting setting = getPoseMLSetting();
                 this.qualityOfPoseExPool = new QualityOfPoseExPool(setting);
+                qualityOfPoseExPool.setMaxTotal(predictorPoolSize);
             }
             qualityOfPoseEx = qualityOfPoseExPool.borrowObject();
             SeetaImageData imageData = new SeetaImageData(image.getWidth(), image.getHeight(), 3);
@@ -628,18 +643,23 @@ public class Seetaface6QualityModel implements FaceQualityModel {
         try {
             if(Objects.isNull(this.qualityOfBrightnessPool)){
                 this.qualityOfBrightnessPool = new QualityOfBrightnessPool(new SeetaConfSetting());
+                qualityOfBrightnessPool.setMaxTotal(predictorPoolSize);
             }
             if(Objects.isNull(this.qualityOfClarityPool)){
                 this.qualityOfClarityPool = new QualityOfClarityPool(new SeetaConfSetting());
+                qualityOfClarityPool.setMaxTotal(predictorPoolSize);
             }
             if(Objects.isNull(this.qualityOfIntegrityPool)){
                 this.qualityOfIntegrityPool = new QualityOfIntegrityPool(new SeetaConfSetting());
+                qualityOfIntegrityPool.setMaxTotal(predictorPoolSize);
             }
             if(Objects.isNull(this.qualityOfPosePool)){
                 this.qualityOfPosePool = new QualityOfPosePool(new SeetaConfSetting());
+                qualityOfPosePool.setMaxTotal(predictorPoolSize);
             }
             if(Objects.isNull(this.qualityOfResolutionPool)){
                 this.qualityOfResolutionPool = new QualityOfResolutionPool(new SeetaConfSetting());
+                qualityOfResolutionPool.setMaxTotal(predictorPoolSize);
             }
             FaceQualitySummary summary = new FaceQualitySummary();
             qualityOfBrightness = qualityOfBrightnessPool.borrowObject();
@@ -688,6 +708,34 @@ public class Seetaface6QualityModel implements FaceQualityModel {
         } catch (IOException e) {
             throw new FaceException("错误的图像", e);
         }
+    }
+
+    public QualityOfBrightnessPool getQualityOfBrightnessPool() {
+        return qualityOfBrightnessPool;
+    }
+
+    public QualityOfClarityPool getQualityOfClarityPool() {
+        return qualityOfClarityPool;
+    }
+
+    public QualityOfLBNPool getQualityOfLBNPool() {
+        return qualityOfLBNPool;
+    }
+
+    public QualityOfIntegrityPool getQualityOfIntegrityPool() {
+        return qualityOfIntegrityPool;
+    }
+
+    public QualityOfPosePool getQualityOfPosePool() {
+        return qualityOfPosePool;
+    }
+
+    public QualityOfPoseExPool getQualityOfPoseExPool() {
+        return qualityOfPoseExPool;
+    }
+
+    public QualityOfResolutionPool getQualityOfResolutionPool() {
+        return qualityOfResolutionPool;
     }
 
     @Override

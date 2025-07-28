@@ -11,7 +11,6 @@ import cn.smartjavaai.ocr.entity.OcrInfo;
 import cn.smartjavaai.ocr.enums.CommonDetModelEnum;
 import cn.smartjavaai.ocr.factory.OcrModelFactory;
 import cn.smartjavaai.ocr.model.common.detect.OcrCommonDetModel;
-import cn.smartjavaai.ocr.opencv.OcrOpenCVUtils;
 import cn.smartjavaai.ocr.utils.OcrUtils;
 import com.alibaba.fastjson.JSONObject;
 import lombok.extern.slf4j.Slf4j;
@@ -60,7 +59,8 @@ public class OcrDetectionDemo {
      */
     @Test
     public void detect(){
-        try (OcrCommonDetModel model = getDetectionModel()){
+        try {
+            OcrCommonDetModel model = getDetectionModel();
             List<OcrBox> boxes = model.detect("src/main/resources/ocr_1.jpg");
             log.info("OCR检测结果：{}", JSONObject.toJSONString(boxes));
         } catch (Exception e) {
@@ -77,7 +77,8 @@ public class OcrDetectionDemo {
      */
     @Test
     public void detectAndDraw(){
-        try (OcrCommonDetModel model = getDetectionModel()){
+        try {
+            OcrCommonDetModel model = getDetectionModel();
             model.detectAndDraw("src/main/resources/ocr_1.jpg",  "output/ocr_1_detected.jpg");
         } catch (Exception e) {
             e.printStackTrace();
@@ -94,7 +95,8 @@ public class OcrDetectionDemo {
      */
     @Test
     public void batchDetect(){
-        try (OcrCommonDetModel model = getDetectionModel()){
+        try {
+            OcrCommonDetModel model = getDetectionModel();
             //批量检测要求图片宽高一致
             String folderPath = "/Users/xxx/Downloads/testing33";
             //读取文件夹中所有图片

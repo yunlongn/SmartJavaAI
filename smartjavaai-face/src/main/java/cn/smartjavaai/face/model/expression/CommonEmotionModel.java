@@ -2,6 +2,7 @@ package cn.smartjavaai.face.model.expression;
 
 import ai.djl.Device;
 import ai.djl.MalformedModelException;
+import ai.djl.engine.Engine;
 import ai.djl.inference.Predictor;
 import ai.djl.modality.Classifications;
 import ai.djl.modality.cv.Image;
@@ -32,6 +33,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.pool2.ObjectPool;
 import org.apache.commons.pool2.impl.GenericObjectPool;
+import org.opencv.core.Mat;
 import org.opencv.face.Face;
 
 import javax.imageio.ImageIO;
@@ -56,7 +58,7 @@ public class CommonEmotionModel implements ExpressionModel{
 
     private ZooModel<Image, Classifications> model;
 
-    private ObjectPool<Predictor<Image, Classifications>> predictorPool;
+    private GenericObjectPool<Predictor<Image, Classifications>> predictorPool;
 
     @Override
     public void loadModel(FaceExpressionConfig config) {
@@ -73,6 +75,14 @@ public class CommonEmotionModel implements ExpressionModel{
         try {
             model = criteria.loadModel();
             this.predictorPool = new GenericObjectPool<>(new PredictorFactory<>(model));
+            int predictorPoolSize = config.getPredictorPoolSize();
+            if(config.getPredictorPoolSize() <= 0){
+                predictorPoolSize = Runtime.getRuntime().availableProcessors(); // 默认等于CPU核心数
+            }
+            predictorPool.setMaxTotal(predictorPoolSize);
+            log.debug("当前设备: " + model.getNDManager().getDevice());
+            log.debug("当前引擎: " + Engine.getInstance().getEngineName());
+            log.debug("模型推理器线程池最大数量: " + predictorPoolSize);
         } catch (IOException | ModelNotFoundException | MalformedModelException e) {
             throw new FaceException("DenseNetEmotionModel模型加载失败", e);
         }
@@ -153,6 +163,7 @@ public class CommonEmotionModel implements ExpressionModel{
             result.setClassifications(classifications);
             faceInfo.setExpressionResult(result);
         }
+        ((Mat)djlImage.getWrappedImage()).release();
         return faceDetectionResponse;
     }
 
@@ -226,6 +237,7 @@ public class CommonEmotionModel implements ExpressionModel{
             result.setClassifications(classifications);
             expressionResults.add(result);
         }
+        ((Mat)djlImage.getWrappedImage()).release();
         return R.ok(expressionResults);
     }
 
@@ -276,6 +288,7 @@ public class CommonEmotionModel implements ExpressionModel{
         FacialExpression expression = FacialExpression.fromLabel(bestClass.getClassName());
         ExpressionResult result = new ExpressionResult(expression, (float)bestClass.getProbability());
         result.setClassifications(classifications);
+        ((Mat)djlImage.getWrappedImage()).release();
         return R.ok(result);
 
     }
@@ -342,7 +355,10 @@ public class CommonEmotionModel implements ExpressionModel{
         return detectTopFace(imageData);
     }
 
-
+    @Override
+    public GenericObjectPool<Predictor<Image, Classifications>> getPool() {
+        return predictorPool;
+    }
 
     @Override
     public void close() {

@@ -11,10 +11,13 @@ import ai.djl.ndarray.NDManager;
 import ai.djl.opencv.OpenCVImageFactory;
 import cn.smartjavaai.common.entity.*;
 import cn.smartjavaai.common.entity.Point;
+import cn.smartjavaai.common.utils.ImageUtils;
+import cn.smartjavaai.common.utils.OpenCVUtils;
+import cn.smartjavaai.common.utils.PointUtils;
 import cn.smartjavaai.ocr.entity.*;
 import cn.smartjavaai.ocr.enums.AngleEnum;
+import cn.smartjavaai.ocr.enums.PlateType;
 import cn.smartjavaai.ocr.opencv.OcrNDArrayUtils;
-import cn.smartjavaai.ocr.opencv.OcrOpenCVUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.opencv.core.Mat;
@@ -73,19 +76,6 @@ public class OcrUtils {
 
 
 
-    /**
-     * 欧式距离计算
-     *
-     * @param point1
-     * @param point2
-     * @return
-     */
-    public static float distance(float[] point1, float[] point2) {
-        float disX = point1[0] - point2[0];
-        float disY = point1[1] - point2[1];
-        float dis = (float) Math.sqrt(disX * disX + disY * disY);
-        return dis;
-    }
 
     /**
      * 图片旋转
@@ -204,9 +194,64 @@ public class OcrUtils {
     }
 
 
+    /**
+     * 透视变换 + 裁剪
+     * @param srcMat
+     * @param landMarks
+     * @return
+     */
+    public static Image transformAndCrop(Mat srcMat, List<ai.djl.modality.cv.output.Point> landMarks){
+        if (landMarks == null || landMarks.size() != 4) {
+            throw new IllegalArgumentException("必须提供4个关键点");
+        }
+
+        // 步骤 1：排序为 左上、右上、右下、左下
+        List<ai.djl.modality.cv.output.Point> ordered = PointUtils.orderPoints(landMarks);
+
+        ai.djl.modality.cv.output.Point lt = ordered.get(0);
+        ai.djl.modality.cv.output.Point rt = ordered.get(1);
+        ai.djl.modality.cv.output.Point rb = ordered.get(2);
+        ai.djl.modality.cv.output.Point lb = ordered.get(3);
+
+        // 步骤 2：计算目标图像尺寸（宽、高）
+        int img_crop_width = (int) Math.max(
+                PointUtils.distance(lt, rt),
+                PointUtils.distance(rb, lb)
+        );
+        int img_crop_height = (int) Math.max(
+                PointUtils.distance(lt, lb),
+                PointUtils.distance(rt, rb)
+        );
+
+        // 步骤 3：构造目标坐标点
+        List<ai.djl.modality.cv.output.Point> dstPoints = Arrays.asList(
+                new ai.djl.modality.cv.output.Point(0, 0),
+                new ai.djl.modality.cv.output.Point(img_crop_width, 0),
+                new ai.djl.modality.cv.output.Point(img_crop_width, img_crop_height),
+                new ai.djl.modality.cv.output.Point(0, img_crop_height)
+        );
+
+        // 步骤 4：透视变换
+        Mat srcPoint2f = OcrNDArrayUtils.toMat(ordered);
+        Mat dstPoint2f = OcrNDArrayUtils.toMat(dstPoints);
+        Mat cvMat = OpenCVUtils.perspectiveTransform(srcMat, srcPoint2f, dstPoint2f);
+
+        // 步骤 5：转为 DJL Image + 裁剪
+        Image subImg = OpenCVImageFactory.getInstance().fromImage(cvMat);
+        subImg = subImg.getSubImage(0, 0, img_crop_width, img_crop_height);
+
+        // 释放资源
+        cvMat.release();
+        srcPoint2f.release();
+        dstPoint2f.release();
+
+        return subImg;
+    }
+
+
 
     /**
-     * 放射变换+裁剪
+     * 透视变换+裁剪
      * @param srcMat
      * @param box
      * @return
@@ -217,8 +262,8 @@ public class OcrUtils {
         float[] rt = java.util.Arrays.copyOfRange(pointsArr, 2, 4);
         float[] rb = java.util.Arrays.copyOfRange(pointsArr, 4, 6);
         float[] lb = java.util.Arrays.copyOfRange(pointsArr, 6, 8);
-        int img_crop_width = (int) Math.max(OcrUtils.distance(lt, rt), OcrUtils.distance(rb, lb));
-        int img_crop_height = (int) Math.max(OcrUtils.distance(lt, lb), OcrUtils.distance(rt, rb));
+        int img_crop_width = (int) Math.max(PointUtils.distance(lt, rt), PointUtils.distance(rb, lb));
+        int img_crop_height = (int) Math.max(PointUtils.distance(lt, lb), PointUtils.distance(rt, rb));
         List<ai.djl.modality.cv.output.Point> srcPoints = new ArrayList<>();
         srcPoints.add(new ai.djl.modality.cv.output.Point(lt[0], lt[1]));
         srcPoints.add(new ai.djl.modality.cv.output.Point(rt[0], rt[1]));
@@ -232,7 +277,7 @@ public class OcrUtils {
         Mat srcPoint2f = OcrNDArrayUtils.toMat(srcPoints);
         Mat dstPoint2f = OcrNDArrayUtils.toMat(dstPoints);
         //透视变换
-        Mat cvMat = OcrOpenCVUtils.perspectiveTransform(srcMat, srcPoint2f, dstPoint2f);
+        Mat cvMat = OpenCVUtils.perspectiveTransform(srcMat, srcPoint2f, dstPoint2f);
         Image subImg = OpenCVImageFactory.getInstance().fromImage(cvMat);
         //ImageUtils.saveImage(subImg, i + ".png", "build/output");
         //变换后裁剪
@@ -317,6 +362,91 @@ public class OcrUtils {
             Imgproc.line(srcMat, ocrBox.getBottomLeft().toCvPoint(), ocrBox.getTopLeft().toCvPoint(), new Scalar(0, 255, 0), 1);
             // 中文乱码
             Imgproc.putText(srcMat, item.getAngle().getValue(), ocrBox.getTopLeft().toCvPoint(), Imgproc.FONT_HERSHEY_SCRIPT_SIMPLEX, 1.0, new Scalar(0, 255, 0), 1);
+        }
+    }
+
+    public static List<PlateInfo> convertToPlateInfo(DetectedObjects detectedObjects, Image image) {
+        List<PlateInfo> plateInfoList = new ArrayList<>();
+        Iterator iterator = detectedObjects.items().iterator();
+        int index = 0;
+        while(iterator.hasNext()) {
+            DetectedObjects.DetectedObject result = (DetectedObjects.DetectedObject)iterator.next();
+            BoundingBox box = result.getBoundingBox();
+            List<Point> keyPoints = new ArrayList<Point>();
+            box.getBounds().getPath().forEach(point -> {
+                keyPoints.add(new Point(point.getX(), point.getY()));
+            });
+            int x = (int)(box.getBounds().getX() * image.getWidth());
+            int y = (int)(box.getBounds().getY() * image.getHeight());
+            int width = (int)(box.getBounds().getWidth() * image.getWidth());
+            int height = (int)(box.getBounds().getHeight() * image.getHeight());
+            // 修正边界，防止越界
+            if (x < 0) x = 0;
+            if (y < 0) y = 0;
+            if (x + width > image.getWidth()) width = image.getWidth() - x;
+            if (y + height > image.getHeight()) height = image.getHeight() - y;
+
+            PlateInfo plateInfo = new PlateInfo();
+            plateInfo.setPlateType(PlateType.fromClassName(detectedObjects.getClassNames().get(index)));
+            plateInfo.setScore(detectedObjects.getProbabilities().get(index).floatValue());
+            plateInfo.setDetectionRectangle(new DetectionRectangle(x, y, width, height));
+            OcrBox ocrBox = new OcrBox(keyPoints.get(0), keyPoints.get(1), keyPoints.get(2), keyPoints.get(3));
+            plateInfo.setBox(ocrBox);
+            plateInfoList.add(plateInfo);
+            index++;
+        }
+        return plateInfoList;
+    }
+
+    /**
+     * 绘制车牌信息
+     * @param srcMat
+     * @param plateInfoList
+     */
+    public static void drawPlateInfo(Mat srcMat, List<PlateInfo> plateInfoList) {
+        for(PlateInfo plateInfo : plateInfoList){
+            OcrBox ocrBox = plateInfo.getBox();
+            Imgproc.line(srcMat, ocrBox.getTopLeft().toCvPoint(), ocrBox.getTopRight().toCvPoint(), new Scalar(0, 0, 255), 1);
+            Imgproc.line(srcMat, ocrBox.getTopRight().toCvPoint(), ocrBox.getBottomRight().toCvPoint(), new Scalar(0, 0, 255),1);
+            Imgproc.line(srcMat, ocrBox.getBottomRight().toCvPoint(), ocrBox.getBottomLeft().toCvPoint(), new Scalar(0, 0, 255),1);
+            Imgproc.line(srcMat, ocrBox.getBottomLeft().toCvPoint(), ocrBox.getTopLeft().toCvPoint(), new Scalar(0, 0, 255), 1);
+            // 中文乱码
+            ImageUtils.putTextWithBackground(srcMat, plateInfo.getPlateNumber() + " " + plateInfo.getPlateColor(), ocrBox.getTopLeft().toCvPoint(), new Scalar(255, 255, 255), new Scalar(0, 0, 0), 1);
+        }
+    }
+
+    /**
+     * 在图像上绘制带白色背景、黑色文字的文本
+     */
+    public static void drawPlateInfo(BufferedImage image, List<PlateInfo> plateInfoList) {
+        // 将绘制图像转换为Graphics2D
+        Graphics2D graphics = (Graphics2D) image.getGraphics();
+        try {
+            graphics.setColor(Color.RED);// 边框颜色
+            graphics.setStroke(new BasicStroke(2));   // 线宽2像素
+            graphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
+                    RenderingHints.VALUE_ANTIALIAS_ON); // 抗锯齿
+            int stroke = 2;
+            for(PlateInfo plateInfo : plateInfoList){
+                DetectionRectangle rectangle = plateInfo.getDetectionRectangle();
+                graphics.setColor(Color.RED);// 边框颜色
+                //绘制车牌框
+                graphics.drawRect(rectangle.getX(), rectangle.getY(), rectangle.getWidth(), rectangle.getHeight());
+                graphics.setColor(Color.BLACK);// 字体颜色
+                ImageUtils.drawText(graphics, plateInfo.getPlateNumber() + " " + plateInfo.getPlateColor(), rectangle.getX(), rectangle.getY(), stroke, 4);
+                OcrBox ocrBox = plateInfo.getBox();
+                //绘制关键点
+                graphics.setColor(Color.BLUE);
+                graphics.drawRect((int)ocrBox.getTopLeft().getX(), (int)ocrBox.getTopLeft().getY(), 2, 2);
+                graphics.setColor(Color.GREEN);
+                graphics.drawRect((int)ocrBox.getTopRight().getX(), (int)ocrBox.getTopRight().getY(), 2, 2);
+                graphics.setColor(Color.RED);
+                graphics.drawRect((int)ocrBox.getBottomLeft().getX(), (int)ocrBox.getBottomLeft().getY(), 2, 2);
+                graphics.setColor(Color.CYAN);
+                graphics.drawRect((int)ocrBox.getBottomRight().getX(), (int)ocrBox.getBottomRight().getY(), 2, 2);
+            }
+        } finally {
+            graphics.dispose();
         }
     }
 

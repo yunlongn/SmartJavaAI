@@ -55,7 +55,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class PPOCRMobileV2ClsModel implements OcrDirectionModel {
 
 
-    private ObjectPool<Predictor<Image, DirectionInfo>> predictorPool;
+    private GenericObjectPool<Predictor<Image, DirectionInfo>> predictorPool;
 
     private DirectionModelConfig config;
 
@@ -71,10 +71,6 @@ public class PPOCRMobileV2ClsModel implements OcrDirectionModel {
         }
         this.config = config;
         this.textDetModel = config.getTextDetModel();
-        Device device = null;
-        if(!Objects.isNull(config.getDevice())){
-            device = config.getDevice() == DeviceEnum.CPU ? Device.cpu() : Device.gpu();
-        }
         ConcurrentHashMap params = new ConcurrentHashMap<String, String>();
         if(StringUtils.isNotBlank(config.getBatchifier())){
             params.put("batchifier", config.getBatchifier());
@@ -84,8 +80,14 @@ public class PPOCRMobileV2ClsModel implements OcrDirectionModel {
             model = ModelZoo.loadModel(criteria);
             // 创建池子：每个线程独享 Predictor
             this.predictorPool = new GenericObjectPool<>(new PredictorFactory<>(model));
+            int predictorPoolSize = config.getPredictorPoolSize();
+            if(config.getPredictorPoolSize() <= 0){
+                predictorPoolSize = Runtime.getRuntime().availableProcessors(); // 默认等于CPU核心数
+            }
+            predictorPool.setMaxTotal(predictorPoolSize);
             log.debug("当前设备: " + model.getNDManager().getDevice());
             log.debug("当前引擎: " + Engine.getInstance().getEngineName());
+            log.debug("模型推理器线程池最大数量: " + predictorPoolSize);
         } catch (IOException | ModelNotFoundException | MalformedModelException e) {
             throw new OcrException("模型加载失败", e);
         }
@@ -367,6 +369,11 @@ public class PPOCRMobileV2ClsModel implements OcrDirectionModel {
     @Override
     public OcrCommonDetModel getTextDetModel() {
         return textDetModel;
+    }
+
+    @Override
+    public GenericObjectPool<Predictor<Image, DirectionInfo>> getPool() {
+        return predictorPool;
     }
 
     @Override
