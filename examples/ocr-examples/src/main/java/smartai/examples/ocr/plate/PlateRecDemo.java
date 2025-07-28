@@ -34,10 +34,7 @@ public class PlateRecDemo {
     public PlateDetModel getPlateDetModel() {
         PlateDetModelConfig config = new PlateDetModelConfig();
         config.setModelEnum(PlateDetModelEnum.YOLOV5);
-        config.setModelPath("/Users/wenjie/Downloads/modelscope-2b3747db53adb48370c6edaccac56eb1ca0da1b5/onnx_export/model.onnx");
-//        config.setModelPath("/Users/wenjie/Documents/develop/model/plate/yolov8s.onnx");
-        config.setModelPath("/Users/wenjie/Downloads/数据集/车牌/onnx/plate_detect.onnx");
-        config.setPredictorPoolSize(3);
+        config.setModelPath("/Users/xxx/Documents/develop/model/plate/yolov5_plate_detect.onnx");
         config.setDevice(device);
         return PlateModelFactory.getInstance().getDetModel(config);
     }
@@ -49,7 +46,7 @@ public class PlateRecDemo {
     public PlateRecModel getPlateRecModel() {
         PlateRecModelConfig recModelConfig = new PlateRecModelConfig();
         recModelConfig.setModelEnum(PlateRecModelEnum.PLATE_REC_CRNN);
-        recModelConfig.setModelPath("/Users/wenjie/Downloads/数据集/车牌/onnx/plate_rec_color.onnx");
+        recModelConfig.setModelPath("/Users/xxx/Documents/develop/model/plate/plate_rec_color.onnx");
         recModelConfig.setPlateDetModel(getPlateDetModel());
         return PlateModelFactory.getInstance().getRecModel(recModelConfig);
     }
