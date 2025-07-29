@@ -37,7 +37,7 @@
 
 ## 📚简介
 
-SmartJavaAI是专为JAVA 开发者打造的一个功能丰富、开箱即用的 JAVA  AI算法工具包，致力于帮助JAVA开发者零门槛使用各种AI算法模型，开发者无需深入了解底层实现，即可轻松在 Java 代码中调用人脸识别、目标检测、OCR 等功能。底层实现涵盖了 C++、Python 等语言的深度学习模型。后续将持续扩展更多算法，目标是构建一个“像 Hutool 一样简单易用”的 JAVA AI 通用工具箱
+SmartJavaAI是专为JAVA 开发者打造的一个功能丰富、开箱即用的 JAVA AI算法工具包，致力于帮助JAVA开发者零门槛使用各种AI算法模型，开发者无需深入了解底层实现，即可轻松在 Java 代码中调用人脸识别、目标检测、OCR 等功能。底层支持包括基于 DJL 封装的深度学习模型，以及通过 JNI 接入的 C++/Python 算法，兼容多种主流深度学习框架如 PyTorch、TensorFlow、ONNX、Paddle 等，屏蔽复杂的模型部署与调用细节，开发者无需了解 AI 底层实现即可直接在 Java 项目中集成使用，后续将持续扩展更多算法，目标是构建一个“像 Hutool 一样简单易用”的 JAVA AI 通用工具箱
 
 ## 🚀  能力展示
 
@@ -510,10 +510,11 @@ SmartJavaAI是专为JAVA 开发者打造的一个功能丰富、开箱即用的 
 
 **车牌检测模型(License Plate Detection)**
 
-| 模型名称   | 模型简介                 | 模型开源网站     |
-|--------|----------------------|------------|
-| YOLOV5 | 基于YOLOV5训练，支持12种中文车牌 | [Github](https://github.com/we0091234/Chinese_license_plate_detection_recognition) |
-| YOLOV7 | 基于YOLOV7训练，支持12种中文车牌 | [Github](https://github.com/we0091234/Chinese_license_plate_detection_recognition) |
+| 模型名称    | 模型简介                     | 模型开源网站     |
+|---------|--------------------------|------------|
+| YOLOV5  | 基于YOLOV5训练，支持12种中文车牌     | [Github](https://github.com/we0091234/Chinese_license_plate_detection_recognition) |
+| yolov7-lite-t | （超小型模型）YOLOv7-Lite 架构的轻量级车牌检测模型 | [Github](https://github.com/we0091234/Chinese_license_plate_detection_recognition) |
+| yolov7-lite-s  | YOLOv7-Lite 架构的轻量级车牌检测模型 | [Github](https://github.com/we0091234/Chinese_license_plate_detection_recognition) |
 
 
 **车牌识别模型(License Plate Recognition)**
