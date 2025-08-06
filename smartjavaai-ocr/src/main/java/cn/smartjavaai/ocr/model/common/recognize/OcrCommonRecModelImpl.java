@@ -286,18 +286,8 @@ public class OcrCommonRecModelImpl implements OcrCommonRecModel {
         if(Objects.isNull(ocrInfo) || Objects.isNull(ocrInfo.getLineList()) || ocrInfo.getLineList().isEmpty()){
             throw new OcrException("未检测到文字");
         }
-        try {
-            OcrUtils.drawRectWithText(sourceImage, ocrInfo, fontSize);
-            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-            // 调用 save 方法将 Image 写入字节流
-            img.save(outputStream, "png");
-            // 将字节流转换为 BufferedImage
-            byte[] imageBytes = outputStream.toByteArray();
-            ((Mat) img.getWrappedImage()).release();
-            return ImageIO.read(new ByteArrayInputStream(imageBytes));
-        } catch (IOException e) {
-            throw new OcrException("导出图片失败", e);
-        }
+        OcrUtils.drawRectWithText(sourceImage, ocrInfo, fontSize);
+        return sourceImage;
     }
 
     @Override

@@ -17,6 +17,7 @@ import cn.smartjavaai.common.utils.LetterBoxUtils;
 import cn.smartjavaai.common.utils.NMSUtils;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -92,6 +93,11 @@ public class Yolo5PlateDetectTranslator implements Translator<Image, DetectedObj
         // 联合过滤
         NDArray jointMask = jointScore.gt(confThreshold);
         detsFiltered = detsFiltered.get(jointMask);
+
+        if (detsFiltered.isEmpty()) {
+            return new DetectedObjects(Collections.emptyList(), Collections.emptyList(), Collections.emptyList());
+        }
+
         clsLogits = clsLogits.get(jointMask);
 
 
@@ -113,7 +119,10 @@ public class Yolo5PlateDetectTranslator implements Translator<Image, DetectedObj
         NDArray output = NDArrays.concat(new NDList(boxes, scores, keyPoints, indices), 1); // (N, 14)
 
         // NMS 过滤掉重叠框
-        int[] keepIndices = NMSUtils.nms(boxes, scores.squeeze(), iouThreshold); // scores.squeeze() ➝ (N,)
+        int[] keepIndices = NMSUtils.nms(boxes, scores.squeeze(), iouThreshold); // scores.squeeze() ➝ (N,)】
+        if (keepIndices.length == 0) {
+            return new DetectedObjects(Collections.emptyList(), Collections.emptyList(), Collections.emptyList());
+        }
         NDArray kept = output.get(manager.create(keepIndices));
         // 如果超过 topK，则截断
         if (keepIndices.length > topK) {

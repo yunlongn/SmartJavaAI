@@ -18,6 +18,7 @@
         <module>smartjavaai-all</module>
         <module>smartjavaai-ocr</module>
         <module>smartjavaai-bom</module>
+        <module>smartjavaai-speech</module>
     </modules>
 
     <properties>
@@ -25,7 +26,6 @@
         <maven.compiler.target>8</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <djl.version>0.32.0</djl.version>
-
     </properties>
 
     <dependencyManagement>

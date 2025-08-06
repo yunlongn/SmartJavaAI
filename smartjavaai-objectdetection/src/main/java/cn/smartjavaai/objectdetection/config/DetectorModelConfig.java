@@ -43,7 +43,7 @@ public class DetectorModelConfig extends ModelConfig {
     private int maxBox;
 
     /**
-     * 允许的类列表
+     * 允许的分类列表
      */
     private List<String> allowedClasses;
 

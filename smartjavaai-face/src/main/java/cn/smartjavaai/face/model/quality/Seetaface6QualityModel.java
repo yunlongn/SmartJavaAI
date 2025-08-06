@@ -87,7 +87,7 @@ public class Seetaface6QualityModel implements FaceQualityModel {
         //加载依赖库
         NativeLoader.loadNativeLibraries(device);
         this.config = config;
-        int predictorPoolSize = config.getPredictorPoolSize();
+        predictorPoolSize = config.getPredictorPoolSize();
         if(config.getPredictorPoolSize() <= 0){
             predictorPoolSize = Runtime.getRuntime().availableProcessors(); // 默认等于CPU核心数
         }

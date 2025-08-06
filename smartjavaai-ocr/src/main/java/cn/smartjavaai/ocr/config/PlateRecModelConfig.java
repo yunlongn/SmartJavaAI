@@ -28,20 +28,6 @@ public class PlateRecModelConfig extends ModelConfig {
      */
     private PlateDetModel plateDetModel;
 
-    /**
-     * 置信度阈值
-     */
-    private float confidenceThreshold;
-
-    /**
-     * iou阈值
-     */
-    private float iouThreshold;
-
-    /**
-     * 检测结果数量
-     */
-    private int topK;
 
 
 }
