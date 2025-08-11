@@ -1,5 +1,6 @@
 package smartai.examples.face.attribute;
 
+import cn.smartjavaai.common.config.Config;
 import cn.smartjavaai.common.entity.DetectionInfo;
 import cn.smartjavaai.common.entity.DetectionResponse;
 import cn.smartjavaai.common.entity.R;
@@ -16,6 +17,7 @@ import cn.smartjavaai.face.model.facedect.FaceDetModel;
 import cn.smartjavaai.face.utils.FaceUtils;
 import com.alibaba.fastjson.JSONObject;
 import lombok.extern.slf4j.Slf4j;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import javax.imageio.ImageIO;
@@ -32,6 +34,12 @@ import java.util.List;
  */
 @Slf4j
 public class FaceAttributeDetDemo {
+
+    @BeforeClass
+    public static void beforeAll() throws IOException {
+        //修改缓存路径
+//        Config.setCachePath("/Users/xxx/smartjavaai_cache");
+    }
 
 
     public FaceAttributeModel getFaceAttributeModel() {

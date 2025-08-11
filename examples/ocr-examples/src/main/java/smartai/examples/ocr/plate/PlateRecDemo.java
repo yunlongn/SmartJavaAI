@@ -1,6 +1,7 @@
 package smartai.examples.ocr.plate;
 
 import ai.djl.util.JsonUtils;
+import cn.smartjavaai.common.config.Config;
 import cn.smartjavaai.common.entity.R;
 import cn.smartjavaai.common.enums.DeviceEnum;
 import cn.smartjavaai.common.utils.ImageUtils;
@@ -13,9 +14,11 @@ import cn.smartjavaai.ocr.factory.PlateModelFactory;
 import cn.smartjavaai.ocr.model.plate.PlateDetModel;
 import cn.smartjavaai.ocr.model.plate.PlateRecModel;
 import lombok.extern.slf4j.Slf4j;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.List;
 
 /**
@@ -26,6 +29,12 @@ public class PlateRecDemo {
 
     //设备类型
     public static DeviceEnum device = DeviceEnum.CPU;
+
+    @BeforeClass
+    public static void beforeAll() throws IOException {
+        //修改缓存路径
+//        Config.setCachePath("/Users/xxx/smartjavaai_cache");
+    }
 
     /**
      * 获取车牌检测模型

@@ -205,7 +205,7 @@ SmartJavaAI是专为JAVA 开发者打造的一个功能丰富、开箱即用的 
         <img src="https://cdn.jsdelivr.net/gh/geekwenjie/SmartJavaAI-Site/images/ocr/plate_recognized.jpg" width = "500px"/>
         </div>
       </td>
-<td>
+      <td>
         <div align="center">
         <img src="https://cdn.jsdelivr.net/gh/geekwenjie/SmartJavaAI-Site/images/ocr/plate_recognized2.jpg" width = "500px"/>
         </div>
@@ -221,6 +221,19 @@ SmartJavaAI是专为JAVA 开发者打造的一个功能丰富、开箱即用的 
       <td>
         <div align="center">
         <img src="https://cdn.jsdelivr.net/gh/geekwenjie/SmartJavaAI-Site/images/translate/translate.png" width = "500px"/>
+        </div>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <div align="left">
+          <p>语音识别</p>
+          - 支持100种语言
+        </div>
+      </td>     
+      <td>
+        <div align="center">
+        <img src="https://cdn.jsdelivr.net/gh/geekwenjie/SmartJavaAI-Site/images/speech/asr.png" width = "500px"/>
         </div>
       </td>
     </tr>
@@ -273,6 +286,9 @@ SmartJavaAI是专为JAVA 开发者打造的一个功能丰富、开箱即用的 
   - 支持中文车牌识别：单层/双层检测，颜色识别，支持12种中文车牌
 - **机器翻译**
   - 集成NLLB-200模型：支持200+语言互相翻译
+- **语音识别**
+  - 集成openai的whisper模型：支持100种语言
+  - 集成vosk语音识别
 
 
 ## 🌟 AI集成方式对比
@@ -291,13 +307,15 @@ SmartJavaAI是专为JAVA 开发者打造的一个功能丰富、开箱即用的 
 
 ## 🛠️包含组件
 
-| 模块                          | 介绍                        |
-|-----------------------------|---------------------------|
-| smartjavaai-common          | 基础通用模块，封装了公共功能，供各算法模块共享使用 |
-| smartjavaai-face            | 人脸功能模块                    |
-| smartjavaai-objectdetection | 目标检测模块                    |
-| smartjavaai-ocr             | OCR文字识别模块                 |
-| smartjavaai-translate       | 机器翻译模块                    |
+| 模块                          | 介绍                           |
+|-----------------------------|------------------------------|
+| smartjavaai-common          | 基础通用模块，封装了公共功能，供各算法模块共享使用    |
+| smartjavaai-bom             | 依赖管理模块                       |
+| smartjavaai-face            | 人脸功能模块                       |
+| smartjavaai-objectdetection | 目标检测模块                       |
+| smartjavaai-ocr             | OCR文字识别模块                    |
+| smartjavaai-translate       | 机器翻译模块                       |
+| smartjavaai-speech          | 语音功能模块，包含 ASR 和 TTS |
 
 可以根据需求对每个模块单独引入，也可以通过引入`smartjavaai-all`方式引入所有模块。
 
@@ -325,7 +343,7 @@ SmartJavaAI是专为JAVA 开发者打造的一个功能丰富、开箱即用的 
 <dependency>
     <groupId>cn.smartjavaai</groupId>
     <artifactId>smartjavaai-all</artifactId>
-    <version>1.0.22</version>
+    <version>1.0.23</version>
 </dependency>
 ```
 ### 3、完整示例代码
@@ -542,6 +560,18 @@ SmartJavaAI是专为JAVA 开发者打造的一个功能丰富、开箱即用的 
 
 ---
 
+#### 语音识别模型
+
+这里仅介绍模型的开源项目，每个开源项目通常包含多个具体模型，本文不逐一列出。
+
+| 模型名称    | 模型简介                     | 模型官网                                          |
+|---------| ------------------------ |-----------------------------------------------|
+| Whisper | OpenAI 开源的通用语音识别（ASR）模型，支持多语言转写和翻译，具有较高的识别精度，尤其在嘈杂环境中表现良好，适合离线和批量音频处理。 | [Github](https://github.com/ggml-org/whisper.cpp) |
+| Vosk    | 一个轻量级离线语音识别工具包，支持多种语言和平台（包括移动端与嵌入式设备），可在低资源环境中运行，适合实时语音识别场景。 | [Github](https://github.com/alphacep/vosk-api) |
+
+
+---
+
 ## 🙏 鸣谢
 
 本项目在开发过程中借鉴或使用了以下优秀开源项目，特此致谢：
@@ -559,8 +589,23 @@ SmartJavaAI是专为JAVA 开发者打造的一个功能丰富、开箱即用的 
 
 🚀 **如果这个项目对你有帮助，别忘了点个 Star ⭐！你的支持是我持续优化升级的动力！** ❤️
 
+## 献代码的步骤
+
+1、在Gitee或者Github/Gitcode上fork项目到自己的repo
+2、把fork过去的项目也就是你的项目clone到你的本地
+3、修改代码（记得一定要修改dev分支）
+4、commit后push到自己的库（dev分支）
+5、登录Gitee或Github/Gitcode在你首页可以看到一个 pull request 按钮，点击它，填写一些说明信息，然后提交即可。
+6、等待维护者合并
 
 ## 近期更新日志
+
+## [v1.0.23] - 2025-08-09
+- 新增 语音识别模块，集成 OpenAI 开源的 Whisper 和 Vosk
+- 修复 质量评估模型的 Bug
+- 修复 OCR 模块 recognizeAndDraw 方法的 Bug
+- 修复 车牌识别在未检测到车牌时的报错问题
+- 优化 OCR 表格识别功能，新增导出方式
 
 ## [v1.0.22] - 2025-07-28
 - 新增 Milvus 身份验证支持
@@ -590,21 +635,4 @@ SmartJavaAI是专为JAVA 开发者打造的一个功能丰富、开箱即用的 
 - 人脸模块：修复人脸更新后的缓存异常问题
 - 其他：优化部分功能与细节体验
 
-## [v1.0.17] - 2025-06-18
-- 新增机器翻译模块：支持 200+ 种语言之间的相互翻译
-- 人脸识别模块：修复批量删除人脸数据时的异常问题
-- 人脸识别模块：修复人脸检索 Top大于 1 时报异常问题
-
-## [v1.0.16] - 2025-06-09
-- 人脸模块：人脸查询支持 Milvus 和 SQLite
-- 人脸模块：FaceNet人脸模型也支持人脸注册，查询等功能
-- 人脸模块：Seetaface6 自动下载人脸库
-- 人脸模块：Seetaface6解决依赖库重复下载问题
-- 人脸模块：支持手动加载人脸库
-- 人脸模块：人脸识别相关功能支持更多参数
-
-
-## [v1.0.15] - 2025-05-17
-- 新增OCR文字识别模块：支持最新 PP-OCRv5
-- OCR文本识别：支持文字方向检测与自动校正
 

@@ -11,6 +11,7 @@ import ai.djl.repository.zoo.ModelNotFoundException;
 import ai.djl.repository.zoo.ModelZoo;
 import ai.djl.repository.zoo.ZooModel;
 import ai.djl.training.util.ProgressBar;
+import cn.smartjavaai.common.config.Config;
 import cn.smartjavaai.common.entity.DetectionInfo;
 import cn.smartjavaai.common.entity.DetectionRectangle;
 import cn.smartjavaai.common.entity.DetectionResponse;
@@ -27,6 +28,7 @@ import com.alibaba.fastjson.JSONObject;
 import lombok.extern.slf4j.Slf4j;
 import nu.pattern.OpenCV;
 import org.junit.Assert;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.opencv.core.Mat;
 import org.opencv.core.Size;
@@ -47,6 +49,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.stream.Collectors;
 
 /**
  * 目标检测模型demo
@@ -60,6 +63,12 @@ public class ObjectDetection {
 
     //设备类型
     public static DeviceEnum device = DeviceEnum.CPU;
+
+    @BeforeClass
+    public static void beforeAll() throws IOException {
+        //修改缓存路径
+//        Config.setCachePath("/Users/xxx/smartjavaai_cache");
+    }
 
 
 
@@ -139,15 +148,30 @@ public class ObjectDetection {
     public void objectDetectionWithOfficialModel(){
         try {
             DetectorModelConfig config = new DetectorModelConfig();
-            config.setThreshold(0.3f);
+//            config.setThreshold(0.3f);
             //也支持YoloV8：YOLOV8_OFFICIAL 模型可以从文档中提供的地址下载
             config.setModelEnum(DetectorModelEnum.YOLOV12_OFFICIAL);//检测模型，目前支持19种模型
             // 指定模型路径，需要更改为自己的模型路径
-            config.setModelPath("/Users/xxx/Documents/yolov12n.onnx");
+            config.setModelPath("/Users/wenjie/Documents/develop/face_model/yolo11n.torchscript");
             config.setDevice(device);
+            config.putCustomParam("width", 640);//resize 宽
+            config.putCustomParam("height", 640);// resize 高
+            config.putCustomParam("resize", true);
+            config.putCustomParam("toTensor", true);
+            config.putCustomParam("applyRatio", true);
+            config.putCustomParam("threshold", 0.6f);
+                    // for performance optimization maxBox parameter can reduce number of
+                    // considered boxes from 8400
+            config.putCustomParam("maxBox", 8400);
+//            config.putCustomParam("pad", 114d);
+//            List<Float> mean = Arrays.asList(0.5f,0.5f,0.5f,0.5f,0.5f,0.5f);
+//            String normalize = mean.stream().map(Object::toString).collect(Collectors.joining(","));
+//            config.putCustomParam("normalize", normalize);
+//            config.putCustomParam("flag", Image.Flag.COLOR);
+//            config.putCustomParam("pad", 114);
             //一定要将yolo官方的类别文件：synset.txt（文档中下载）放在模型同目录下，否则报错
             DetectorModel detectorModel = ObjectDetectionModelFactory.getInstance().getModel(config);
-            DetectionResponse detect = detectorModel.detect("src/main/resources/dog_bike_car.jpg");
+            DetectionResponse detect = detectorModel.detect("src/main/resources/object_detection.jpg");
             log.info("目标检测结果：{}", JSONObject.toJSONString(detect));
         } catch (Exception e) {
             e.printStackTrace();

@@ -2,6 +2,7 @@ package smartai.examples.face.facedet;
 
 import ai.djl.modality.cv.Image;
 import ai.djl.modality.cv.ImageFactory;
+import cn.smartjavaai.common.config.Config;
 import cn.smartjavaai.common.entity.DetectionInfo;
 import cn.smartjavaai.common.entity.DetectionRectangle;
 import cn.smartjavaai.common.entity.DetectionResponse;
@@ -19,6 +20,7 @@ import cn.smartjavaai.face.model.liveness.LivenessDetModel;
 import com.alibaba.fastjson.JSONObject;
 import lombok.extern.slf4j.Slf4j;
 import nu.pattern.OpenCV;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.opencv.core.Mat;
 import org.opencv.core.Size;
@@ -32,6 +34,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.IOException;
 import java.nio.file.Paths;
 
 /**
@@ -47,6 +50,12 @@ public class FaceDetDemo {
 
     public static String imgPath = "src/main/resources/iu_1.jpg";
 
+    @BeforeClass
+    public static void beforeAll() throws IOException {
+        //修改缓存路径
+//        Config.setCachePath("/Users/xxx/smartjavaai_cache");
+    }
+
 
     /**
      * 获取人脸检测模型
@@ -55,7 +64,10 @@ public class FaceDetDemo {
      */
     public FaceDetModel getFaceDetModel(){
         FaceDetConfig config = new FaceDetConfig();
+        //高精度模型，速度慢
         config.setModelEnum(FaceDetModelEnum.RETINA_FACE);//人脸检测模型
+        //下载模型并替换本地路径，下载地址：https://pan.baidu.com/s/10l22x5fRz_gwLr8EAHa1Jg?pwd=1234 提取码: 1234
+        config.setModelPath("/Users/xxx/Documents/develop/model/retinaface.pt");
         config.setConfidenceThreshold(FaceDetectConstant.DEFAULT_CONFIDENCE_THRESHOLD);//只返回相似度大于该值的人脸
         config.setNmsThresh(FaceDetectConstant.NMS_THRESHOLD);//用于去除重复的人脸框，当两个框的重叠度超过该值时，只保留一个
         return FaceDetModelFactory.getInstance().getModel(config);
@@ -70,7 +82,7 @@ public class FaceDetDemo {
         FaceDetConfig config = new FaceDetConfig();
         //指定模型
         config.setModelEnum(FaceDetModelEnum.SEETA_FACE6_MODEL);
-        //指定模型路径：请根据实际情况替换为本地模型文件的绝对路径（模型下载地址请查看文档）
+        //指定模型路径：请根据实际情况替换为本地模型文件的绝对路径（下载地址：https://pan.baidu.com/s/10l22x5fRz_gwLr8EAHa1Jg?pwd=1234 提取码: 1234）
         config.setModelPath("C:/Users/Administrator/Downloads/sf3.0_models/sf3.0_models");
         return FaceDetModelFactory.getInstance().getModel(config);
     }
@@ -154,35 +166,16 @@ public class FaceDetDemo {
     }
 
     /**
-     * 人脸检测（离线模型）
-     */
-    @Test
-    public void testDetectFaceOffine(){
-        try {
-            FaceDetConfig config = new FaceDetConfig();
-            config.setModelEnum(FaceDetModelEnum.RETINA_FACE);//人脸模型
-            //模型路径,不同模型下载路径请参看文档
-            config.setModelPath("/Users/xxx/Documents/develop/face_model/retinaface.pt");
-            FaceDetModel faceModel = FaceDetModelFactory.getInstance().getModel(config);
-            R<DetectionResponse> detectedResult = faceModel.detect(imgPath);
-            if(detectedResult.isSuccess()){
-                log.info("人脸检测结果：{}", JSONObject.toJSONString(detectedResult.getData()));
-            }else{
-                log.info("人脸检测失败：{}", detectedResult.getMessage());
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    /**
      * 人脸检测（GPU模式）
      */
     @Test
     public void testDetectFaceGPU(){
         try {
             FaceDetConfig config = new FaceDetConfig();
-            config.setModelEnum(FaceDetModelEnum.RETINA_FACE);//人脸模型
+            //高精度模型，速度慢
+            config.setModelEnum(FaceDetModelEnum.RETINA_FACE);//人脸检测模型
+            //下载模型并替换本地路径，下载地址：https://pan.baidu.com/s/10l22x5fRz_gwLr8EAHa1Jg?pwd=1234 提取码: 1234
+            config.setModelPath("/Users/xxx/Documents/develop/model/retinaface.pt");
             config.setDevice(DeviceEnum.GPU);
             FaceDetModel faceModel = FaceDetModelFactory.getInstance().getModel(config);
             R<DetectionResponse> detectedResult = faceModel.detect(imgPath);
@@ -223,7 +216,7 @@ public class FaceDetDemo {
     @Test
     public void testDetectCamera(){
         try {
-            FaceDetModel faceModel = getFaceDetModel();
+            FaceDetModel faceModel = getSeetaface6DetModel();
             OpenCV.loadShared();
             VideoCapture capture = new VideoCapture(0);
             if (!capture.isOpened()) {

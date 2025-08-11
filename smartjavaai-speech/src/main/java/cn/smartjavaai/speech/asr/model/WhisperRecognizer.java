@@ -51,6 +51,10 @@ public class WhisperRecognizer implements SpeechRecognizer{
             throw new AsrException("Missing model file: " + testModelPath.toAbsolutePath());
         }
         try {
+            //加载自定义依赖库
+            if(Objects.nonNull(config.getLibPath())){
+                System.setProperty("io.github.givimad.whisperjni.libdir",config.getLibPath().toAbsolutePath().toString());
+            }
             WhisperJNI.loadLibrary();
             WhisperJNI.setLibraryLogger(null);
             whisper = new WhisperJNI();
@@ -116,6 +120,9 @@ public class WhisperRecognizer implements SpeechRecognizer{
         StringBuilder text = new StringBuilder();
         try {
             WhisperParams whisperParams = (WhisperParams) params;
+            if(Objects.isNull(whisperParams.getParams().language)){
+                return R.fail(1003, "请指定语言");
+            }
             //不是英语，需要检查是否是多语言模型
             if(!Language.EN.getCode().equals(whisperParams.getParams().language)){
                 if(!whisper.isMultilingual(ctx)){
@@ -190,7 +197,7 @@ public class WhisperRecognizer implements SpeechRecognizer{
      * 获取一个WhisperState对象
      * @return
      */
-    private WhisperState getWhisperState(){
+    public WhisperState getWhisperState(){
         try {
             return statePool.borrowObject();
         } catch (Exception e) {

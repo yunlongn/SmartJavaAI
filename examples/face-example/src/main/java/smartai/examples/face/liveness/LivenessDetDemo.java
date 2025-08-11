@@ -3,6 +3,7 @@ package smartai.examples.face.liveness;
 import ai.djl.modality.cv.Image;
 import ai.djl.modality.cv.ImageFactory;
 import cn.hutool.core.lang.UUID;
+import cn.smartjavaai.common.config.Config;
 import cn.smartjavaai.common.entity.DetectionInfo;
 import cn.smartjavaai.common.entity.DetectionRectangle;
 import cn.smartjavaai.common.entity.DetectionResponse;
@@ -32,6 +33,7 @@ import nu.pattern.OpenCV;
 import org.bytedeco.javacv.FFmpegFrameGrabber;
 import org.bytedeco.javacv.Frame;
 import org.bytedeco.javacv.Java2DFrameUtils;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.opencv.core.Mat;
 import org.opencv.core.Size;
@@ -60,6 +62,12 @@ public class LivenessDetDemo {
 
     //设备类型
     public static DeviceEnum device = DeviceEnum.CPU;
+
+    @BeforeClass
+    public static void beforeAll() throws IOException {
+        //修改缓存路径
+//        Config.setCachePath("/Users/xxx/smartjavaai_cache");
+    }
 
 
 

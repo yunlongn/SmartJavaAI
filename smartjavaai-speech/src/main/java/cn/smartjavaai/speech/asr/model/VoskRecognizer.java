@@ -13,9 +13,6 @@ import cn.smartjavaai.speech.asr.pool.WhisperStatePool;
 import cn.smartjavaai.speech.utils.AudioUtils;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
-import io.github.givimad.whisperjni.WhisperContext;
-import io.github.givimad.whisperjni.WhisperJNI;
-import io.github.givimad.whisperjni.WhisperState;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.vosk.LibVosk;
@@ -39,6 +36,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 import static ai.djl.util.JsonUtils.GSON;
 
@@ -61,6 +60,10 @@ public class VoskRecognizer implements SpeechRecognizer{
             throw new AsrException("Missing model file: " + testModelPath.toAbsolutePath());
         }
         try {
+            //加载自定义依赖库
+            if(Objects.nonNull(config.getLibPath())){
+                System.load(config.getLibPath().toAbsolutePath().toString());
+            }
             model = new Model(config.getModelPath());
             LibVosk.setLogLevel(LogLevel.DEBUG);
             log.debug("Vosk init success");
@@ -86,7 +89,7 @@ public class VoskRecognizer implements SpeechRecognizer{
         return recognize(audioStream, new VoskParams());
     }
 
-    private R<AsrResult> recognizeAudioStream(AudioInputStream ais,RecParams params) {
+    private R<AsrResult> recognizeAudioStream(AudioInputStream ais, RecParams params) {
         try (Recognizer recognizer = buildRecognizer(params, ais.getFormat().getSampleRate())){
             AudioFormat audioFormat = ais.getFormat();
             log.debug("sampleRate:{}", audioFormat.getSampleRate());
@@ -95,14 +98,49 @@ public class VoskRecognizer implements SpeechRecognizer{
             byte[] b = new byte[4096];
             List<AsrSegment> segments = new ArrayList<AsrSegment>();
             StringBuilder text = new StringBuilder();
+            String temp = "";
             while ((nbytes = ais.read(b)) >= 0) {
                 if (recognizer.acceptWaveForm(b, nbytes)) {
                     String result = recognizer.getResult();
-                    AsrSegment segment = parseSegment(result);
-                    segments.add(segment);
+//                    log.info("result:{}", result);
+                    AsrSegment segment = parseSegment(result, params);
+                    if(segment != null){
+                        segments.add(segment);
+                        text.append(segment.getText());
+                    }
+                }else{
+                    temp = recognizer.getPartialResult();
+//                    log.info("temp:{}", temp);
                 }
             }
-            return R.ok(new AsrResult(text.toString(), segments));
+            if(StringUtils.isNotBlank(temp)){
+                AsrSegment segment = parsePartialSegment(temp, params);
+                if(segment != null){
+                    segments.add(segment);
+                    text.append(segment.getText());
+                }
+            }
+            //补全结果
+            String finalText = recognizer.getFinalResult();
+            if(StringUtils.isNotBlank(text.toString()) && StringUtils.isNotBlank(finalText)){
+                AsrSegment finalSegment = parseSegment(finalText, params);
+                if(finalSegment != null){
+                    //需要补全
+                    if(!text.toString().endsWith(finalSegment.getText())){
+                        AsrSegment alignSegment = VoskRecognizer.alignSegment(segments.get(segments.size() - 1), finalSegment);
+                        //如果匹配失败，则直接使用最终片段
+                        if(alignSegment != null){
+                            segments.set(segments.size() - 1,alignSegment);
+                        }else{
+                            segments.set(segments.size() - 1,finalSegment);
+                        }
+                    }
+                }
+            }
+            String result = segments.stream()
+                    .map(AsrSegment::getText)
+                    .collect(Collectors.joining("\n"));
+            return R.ok(new AsrResult(result, segments));
         } catch (IOException e) {
             throw new AsrException(e);
         }
@@ -113,17 +151,64 @@ public class VoskRecognizer implements SpeechRecognizer{
      * @param segment
      * @return
      */
-    private AsrSegment parseSegment(String segment) {
+    private AsrSegment parseSegment(String segment, RecParams params) {
         JsonObject json = GSON.fromJson(segment, JsonObject.class);
         JsonArray resultArray = json.getAsJsonArray("result");
+        if(Objects.isNull(resultArray) || resultArray.size() == 0){
+            return null;
+        }
         double segmentStart = resultArray.get(0).getAsJsonObject().get("start").getAsDouble();
         double segmentEnd = resultArray.get(resultArray.size() - 1).getAsJsonObject().get("end").getAsDouble();
         long startMs = Math.round(segmentStart * 1000);
         long endMs = Math.round(segmentEnd * 1000);
         String text = json.get("text").getAsString();
-        String noSpaces = text.replace(" ", "");
-        return new AsrSegment(noSpaces, startMs, endMs);
+        if(Objects.nonNull(params.getLanguage()) && params.getLanguage() == Language.ZH){
+            text = text.replace(" ", "");
+        }
+        return new AsrSegment(text, startMs, endMs);
     }
+
+    /**
+     * 解析结果
+     * @param segment
+     * @return
+     */
+    private AsrSegment parsePartialSegment(String segment, RecParams params) {
+        JsonObject json = GSON.fromJson(segment, JsonObject.class);
+        JsonArray resultArray = json.getAsJsonArray("partial_result");
+        if(Objects.isNull(resultArray) || resultArray.size() == 0){
+            return null;
+        }
+        double segmentStart = resultArray.get(0).getAsJsonObject().get("start").getAsDouble();
+        double segmentEnd = resultArray.get(resultArray.size() - 1).getAsJsonObject().get("end").getAsDouble();
+        long startMs = Math.round(segmentStart * 1000);
+        long endMs = Math.round(segmentEnd * 1000);
+        String text = json.get("partial").getAsString();
+        if(Objects.nonNull(params.getLanguage()) && params.getLanguage() == Language.ZH){
+            text = text.replace(" ", "");
+        }
+        return new AsrSegment(text, startMs, endMs);
+    }
+
+    /**
+     * 补全
+     * @param shortSeg
+     * @param longSeg
+     * @return
+     */
+    public static AsrSegment alignSegment(AsrSegment shortSeg, AsrSegment longSeg) {
+        String shortText = shortSeg.getText();
+        String longText = longSeg.getText();
+
+        int index = longText.indexOf(shortText);
+        if (index == -1) {
+//            log.debug("短文本不在长文本中");
+            return null;
+        }
+        String resultText = longText.substring(index);
+        return new AsrSegment(resultText, shortSeg.getStartTime(), longSeg.getEndTime());
+    }
+
 
     /**
      * 创建识别器
@@ -146,8 +231,8 @@ public class VoskRecognizer implements SpeechRecognizer{
 //        }
         //暂时只支持返回一个结果
 //        recognizer.setMaxAlternatives(1);
-        recognizer.setWords(voskParams.isWords());
-        //recognizer.setPartialWords(true);
+        recognizer.setWords(true);
+        recognizer.setPartialWords(true);
         return recognizer;
     }
 
@@ -187,6 +272,7 @@ public class VoskRecognizer implements SpeechRecognizer{
             tryStream = new BufferedInputStream(new ByteArrayInputStream(allBytes));
             conversionStream = new BufferedInputStream(new ByteArrayInputStream(allBytes));
             ais = AudioSystem.getAudioInputStream(tryStream);
+            return recognizeAudioStream(ais, params);
         } catch (UnsupportedAudioFileException e) {
             log.debug("Unsupported Audio file, Conversion to WAV is required");
             needConversion = true;
@@ -207,6 +293,7 @@ public class VoskRecognizer implements SpeechRecognizer{
         if(needConversion){
             try {
                 tempFile = AudioUtils.audioFormatConversion(conversionStream, "wav");
+//                log.info("tempFile:{}", tempFile.getAbsolutePath());
             } catch (EncoderException | IOException e) {
                 throw new AsrException(e);
             }
@@ -228,7 +315,7 @@ public class VoskRecognizer implements SpeechRecognizer{
                 }
             }
         }
-        return recognizeAudioStream(ais, params);
+        return R.fail(R.Status.Unknown);
     }
 
     @Override

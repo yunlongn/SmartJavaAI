@@ -12,19 +12,9 @@ import lombok.Data;
 public class VoskParams extends RecParams{
 
     /**
-     * 最大候选结果数
-     */
-    private int maxAlternatives;
-
-    /**
-     * 限定词汇表 例：["yes", "no", "hello"]
+     * 限定词汇表
      */
     private String grammar;
-
-    /**
-     * 是否返回词级别的识别结果（包含每个词的开始/结束时间和置信度）。
-     */
-    private boolean words = true;
 
 
 }

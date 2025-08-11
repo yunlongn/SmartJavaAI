@@ -2,6 +2,7 @@ package smartai.examples.face.expression;
 
 import ai.djl.modality.cv.Image;
 import ai.djl.modality.cv.ImageFactory;
+import cn.smartjavaai.common.config.Config;
 import cn.smartjavaai.common.entity.DetectionInfo;
 import cn.smartjavaai.common.entity.DetectionRectangle;
 import cn.smartjavaai.common.entity.DetectionResponse;
@@ -26,6 +27,7 @@ import cn.smartjavaai.face.model.liveness.LivenessDetModel;
 import com.alibaba.fastjson.JSONObject;
 import lombok.extern.slf4j.Slf4j;
 import nu.pattern.OpenCV;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.opencv.core.Mat;
 import org.opencv.core.Size;
@@ -53,6 +55,12 @@ public class ExpressionRecDemo {
 
     //设备类型
     public static DeviceEnum device = DeviceEnum.CPU;
+
+    @BeforeClass
+    public static void beforeAll() throws IOException {
+        //修改缓存路径
+//        Config.setCachePath("/Users/xxx/smartjavaai_cache");
+    }
 
     /**
      * 获取人脸检测模型

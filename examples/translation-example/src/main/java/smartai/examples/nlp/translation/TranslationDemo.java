@@ -1,6 +1,7 @@
 package smartai.examples.nlp.translation;
 
 import ai.djl.util.JsonUtils;
+import cn.smartjavaai.common.config.Config;
 import cn.smartjavaai.common.entity.R;
 import cn.smartjavaai.common.enums.DeviceEnum;
 import cn.smartjavaai.translation.config.TranslationModelConfig;
@@ -11,7 +12,10 @@ import cn.smartjavaai.translation.factory.TranslationModelFactory;
 import cn.smartjavaai.translation.model.TranslationModel;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
+import org.junit.BeforeClass;
 import org.junit.Test;
+
+import java.io.IOException;
 
 /**
  * 翻译Demo
@@ -22,6 +26,12 @@ import org.junit.Test;
  */
 @Slf4j
 public class TranslationDemo {
+
+    @BeforeClass
+    public static void beforeAll() throws IOException {
+        //修改缓存路径
+//        Config.setCachePath("/Users/xxx/smartjavaai_cache");
+    }
 
 
     /**

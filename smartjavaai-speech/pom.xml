@@ -6,7 +6,7 @@
     <parent>
         <groupId>cn.smartjavaai</groupId>
         <artifactId>smartjavaai-parent</artifactId>
-        <version>1.0.22</version>
+        <version>1.0.23</version>
     </parent>
 
     <artifactId>smartjavaai-speech</artifactId>
@@ -48,16 +48,10 @@
             <artifactId>jave-core</artifactId>
             <version>3.5.0</version>
         </dependency>
-
-        <dependency>
-            <groupId>ws.schild</groupId>
-            <artifactId>jave-nativebin-osxm1</artifactId>
-            <version>3.5.0</version>
-        </dependency>
     </dependencies>
 
 
-    <version>1.0.22</version>
+    <version>1.0.23</version>
     <name>smartjavaai-speech</name>
     <description>SmartJavaAI</description>
     <url>https://github.com/geekwenjie/SmartJavaAI</url>
@@ -70,6 +64,15 @@
 
     <build>
         <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.10.1</version>
+                <configuration>
+                    <source>${maven.compiler.source}</source>
+                    <target>${maven.compiler.target}</target>
+                </configuration>
+            </plugin>
             <plugin>
                 <groupId>org.sonatype.central</groupId>
                 <artifactId>central-publishing-maven-plugin</artifactId>
@@ -126,6 +129,25 @@
                         <goals>
                             <goal>sign</goal>
                         </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-toolchains-plugin</artifactId>
+                <version>3.2.0</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>toolchain</goal>
+                        </goals>
+                        <configuration>
+                            <toolchains>
+                                <jdk>
+                                    <version>11</version>
+                                </jdk>
+                            </toolchains>
+                        </configuration>
                     </execution>
                 </executions>
             </plugin>

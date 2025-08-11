@@ -1,5 +1,6 @@
 package smartai.examples.face.quality;
 
+import cn.smartjavaai.common.config.Config;
 import cn.smartjavaai.common.entity.DetectionInfo;
 import cn.smartjavaai.common.entity.DetectionResponse;
 import cn.smartjavaai.common.entity.R;
@@ -23,11 +24,13 @@ import cn.smartjavaai.face.model.quality.FaceQualityModel;
 import cn.smartjavaai.face.utils.FaceUtils;
 import com.alibaba.fastjson.JSONObject;
 import lombok.extern.slf4j.Slf4j;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.IOException;
 import java.nio.file.Paths;
 
 /**
@@ -40,6 +43,12 @@ public class FaceQualityDetDemo {
 
     //设备类型
     public static DeviceEnum device = DeviceEnum.CPU;
+
+    @BeforeClass
+    public static void beforeAll() throws IOException {
+        //修改缓存路径
+//        Config.setCachePath("/Users/xxx/smartjavaai_cache");
+    }
 
 
 

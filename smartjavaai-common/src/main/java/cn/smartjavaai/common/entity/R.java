@@ -53,7 +53,7 @@ public class R<T> {
     public enum Status {
         SUCCESS(0, "成功"),
         INVALID_IMAGE(1, "图像无效"),
-        FILE_NOT_FOUND(2, "图像文件不存在"),
+        FILE_NOT_FOUND(2, "文件不存在"),
         NO_FACE_DETECTED(3, "未检测到人脸"),
         PARAM_ERROR(4, "参数错误"),
         INVALID_VIDEO(5, "视频无效"),

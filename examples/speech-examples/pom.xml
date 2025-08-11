@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>cn.smartjavaai</groupId>
-    <artifactId>examples</artifactId>
+    <artifactId>examples-speech</artifactId>
     <version>1.0.0-SNAPSHOT</version>
 
     <properties>
@@ -14,20 +14,8 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <smartjavaai.version>1.0.23</smartjavaai.version>
         <!--如果打包运行，需要替换成你的main-->
-        <exec.mainClass>smartai.examples.nlp.translation.TranslationDemo</exec.mainClass>
+        <exec.mainClass>smartai.examples.speech.asr.common.OcrRecognizeDemo</exec.mainClass>
 
-        <javacv.version>1.5.10</javacv.version>
-
-        <javacv.platform.macosx-arm64>macosx-arm64</javacv.platform.macosx-arm64>
-        <javacv.platform.linux-x86_64>linux-x86_64</javacv.platform.linux-x86_64>
-        <javacv.platform.linux-arm64>linux-arm64</javacv.platform.linux-arm64>
-        <javacv.platform.windows-x86_64>windows-x86_64</javacv.platform.windows-x86_64>
-
-
-        <djl.platform.windows-x86_64>win-x86_64</djl.platform.windows-x86_64>
-        <djl.platform.linux-x86_64>linux-x86_64</djl.platform.linux-x86_64>
-        <djl.platform.linux-aarch64>linux-aarch64</djl.platform.linux-aarch64>
-        <djl.platform.osx-aarch64>osx-aarch64</djl.platform.osx-aarch64>
     </properties>
 
     <dependencyManagement>
@@ -91,63 +79,88 @@
             <version>4.13.2</version>
         </dependency>
 
-        <!--翻译模块-->
+
+
+        <!--语音识别模块-->
         <dependency>
             <groupId>cn.smartjavaai</groupId>
-            <artifactId>smartjavaai-translate</artifactId>
+            <artifactId>smartjavaai-speech</artifactId>
+            <exclusions>
+                <exclusion>
+                    <groupId>com.microsoft.onnxruntime</groupId>
+                    <artifactId>onnxruntime</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.openpnp</groupId>
+                    <artifactId>opencv</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>ai.djl.huggingface</groupId>
+                    <artifactId>tokenizers</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>ai.djl.ml.xgboost</groupId>
+                    <artifactId>xgboost</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
-
+        <!--ffmpeg库 引用所有平台库-->
         <dependency>
-            <groupId>ai.djl.pytorch</groupId>
-            <artifactId>pytorch-jni</artifactId>
-            <version>2.5.1-0.32.0</version>
-            <scope>runtime</scope>
+            <groupId>ws.schild</groupId>
+            <artifactId>jave-all-deps</artifactId>
+            <version>3.5.0</version>
         </dependency>
 
 
         <!-- windows平台 (保留对应平台的配置，可以减小包大小)-->
-
-        <dependency>
-            <groupId>ai.djl.pytorch</groupId>
-            <artifactId>pytorch-native-cpu</artifactId>
-            <classifier>${djl.platform.windows-x86_64}</classifier>
-            <version>2.5.1</version>
-            <scope>runtime</scope>
-        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>ws.schild</groupId>-->
+<!--            <artifactId>jave-nativebin-win64</artifactId>-->
+<!--            <version>3.5.0</version>-->
+<!--        </dependency>-->
 
 
 
         <!-- linux x86 平台 (保留对应平台的配置，可以减小包大小)-->
+<!--        <dependency>-->
+<!--            <groupId>ws.schild</groupId>-->
+<!--            <artifactId>jave-nativebin-linux64</artifactId>-->
+<!--            <version>3.5.0</version>-->
+<!--        </dependency>-->
 
-        <dependency>
-            <groupId>ai.djl.pytorch</groupId>
-            <artifactId>pytorch-native-cpu</artifactId>
-            <classifier>${djl.platform.linux-x86_64}</classifier>
-            <version>2.5.1</version>
-            <scope>runtime</scope>
-        </dependency>
+        <!-- linux arm64 平台 (保留对应平台的配置，可以减小包大小)-->
+<!--        <dependency>-->
+<!--            <groupId>ws.schild</groupId>-->
+<!--            <artifactId>jave-nativebin-linux-arm64</artifactId>-->
+<!--            <version>3.5.0</version>-->
+<!--        </dependency>-->
 
+        <!-- linux arm32 平台 (保留对应平台的配置，可以减小包大小)-->
+<!--        <dependency>-->
+<!--            <groupId>ws.schild</groupId>-->
+<!--            <artifactId>jave-nativebin-linux-arm32</artifactId>-->
+<!--            <version>3.5.0</version>-->
+<!--        </dependency>-->
+
+
+        <!-- macOS osx64 平台  (保留对应平台的配置，可以减小包大小)-->
+<!--        <dependency>-->
+<!--            <groupId>ws.schild</groupId>-->
+<!--            <artifactId>jave-nativebin-osx64</artifactId>-->
+<!--            <version>3.5.0</version>-->
+<!--        </dependency>-->
 
         <!-- macOS M系列 平台  (保留对应平台的配置，可以减小包大小)-->
-        <dependency>
-            <groupId>ai.djl.pytorch</groupId>
-            <artifactId>pytorch-native-cpu</artifactId>
-            <classifier>${djl.platform.osx-aarch64}</classifier>
-            <version>2.5.1</version>
-            <scope>runtime</scope>
-        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>ws.schild</groupId>-->
+<!--            <artifactId>jave-nativebin-osxm1</artifactId>-->
+<!--            <version>3.5.0</version>-->
+<!--        </dependency>-->
 
 
-        <!-- linux aarch64 平台 (保留对应平台的配置，可以减小包大小)-->
 
-        <dependency>
-            <groupId>ai.djl.pytorch</groupId>
-            <artifactId>pytorch-native-cpu-precxx11</artifactId>
-            <classifier>${djl.platform.linux-aarch64}</classifier>
-            <version>2.5.1</version>
-            <scope>runtime</scope>
-        </dependency>
+
 
 
 

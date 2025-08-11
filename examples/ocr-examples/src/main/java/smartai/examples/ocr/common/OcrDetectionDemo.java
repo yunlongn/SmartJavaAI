@@ -1,6 +1,7 @@
 package smartai.examples.ocr.common;
 
 import ai.djl.modality.cv.Image;
+import cn.smartjavaai.common.config.Config;
 import cn.smartjavaai.common.entity.DetectionResponse;
 import cn.smartjavaai.common.enums.DeviceEnum;
 import cn.smartjavaai.common.utils.ImageUtils;
@@ -14,12 +15,14 @@ import cn.smartjavaai.ocr.model.common.detect.OcrCommonDetModel;
 import cn.smartjavaai.ocr.utils.OcrUtils;
 import com.alibaba.fastjson.JSONObject;
 import lombok.extern.slf4j.Slf4j;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.opencv.core.Mat;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.List;
 
@@ -32,8 +35,16 @@ import java.util.List;
 public class OcrDetectionDemo {
 
 
+
+
     //设备类型
     public static DeviceEnum device = DeviceEnum.CPU;
+
+    @BeforeClass
+    public static void beforeAll() throws IOException {
+        //修改缓存路径
+//        Config.setCachePath("/Users/xxx/smartjavaai_cache");
+    }
 
     /**
      * 获取文本检测模型
