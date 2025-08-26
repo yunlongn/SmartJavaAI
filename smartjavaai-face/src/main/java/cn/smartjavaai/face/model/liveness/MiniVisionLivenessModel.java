@@ -2,6 +2,7 @@ package cn.smartjavaai.face.model.liveness;
 
 import ai.djl.Device;
 import ai.djl.MalformedModelException;
+import ai.djl.engine.Engine;
 import ai.djl.inference.Predictor;
 import ai.djl.modality.cv.Image;
 import ai.djl.modality.cv.ImageFactory;
@@ -33,6 +34,7 @@ import org.apache.commons.pool2.impl.GenericObjectPool;
 import org.bytedeco.javacv.FFmpegFrameGrabber;
 import org.bytedeco.javacv.Frame;
 import org.bytedeco.javacv.Java2DFrameUtils;
+import org.opencv.core.Mat;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
@@ -58,9 +60,9 @@ public class MiniVisionLivenessModel extends CommonLivenessModel{
      */
     private static final String SE_MODEL_PATH_KEY = "seModelPath";
 
-    private ObjectPool<Predictor<Image, float[]>> predictorPool;
+    private GenericObjectPool<Predictor<Image, float[]>> predictorPool;
 
-    private ObjectPool<Predictor<Image, float[]>> sePredictorPool;
+    private GenericObjectPool<Predictor<Image, float[]>> sePredictorPool;
 
 
     /**
@@ -87,7 +89,7 @@ public class MiniVisionLivenessModel extends CommonLivenessModel{
         this.config.setRealityThreshold(realityThreshold);
         Device device = null;
         if(!Objects.isNull(config.getDevice())){
-            device = config.getDevice() == DeviceEnum.CPU ? Device.cpu() : Device.gpu();
+            device = config.getDevice() == DeviceEnum.CPU ? Device.cpu() : Device.gpu(config.getGpuId());
         }
         if(StringUtils.isNotBlank(config.getModelPath()) && StringUtils.isBlank(seModelPath)){
             //2.7_80x80_MiniFASNetV2
@@ -109,6 +111,7 @@ public class MiniVisionLivenessModel extends CommonLivenessModel{
                             .optModelPath(Paths.get(config.getModelPath()))
                             .optTranslator(new MiniVisionTranslator())
                             .optProgress(new ProgressBar())
+                            .optDevice(device)
                             .build();
             try {
                 model = criteria.loadModel();
@@ -128,6 +131,7 @@ public class MiniVisionLivenessModel extends CommonLivenessModel{
                             .optModelPath(Paths.get(seModelPath))
                             .optTranslator(new MiniVisionTranslator())
                             .optProgress(new ProgressBar())
+                            .optDevice(device)
                             .build();
             try {
                 seModel = seCriteria.loadModel();
@@ -136,6 +140,16 @@ public class MiniVisionLivenessModel extends CommonLivenessModel{
                 throw new FaceException("MiniFASNetV1SE模型加载失败", e);
             }
         }
+
+        int predictorPoolSize = config.getPredictorPoolSize();
+        if(config.getPredictorPoolSize() <= 0){
+            predictorPoolSize = Runtime.getRuntime().availableProcessors(); // 默认等于CPU核心数
+        }
+        predictorPool.setMaxTotal(predictorPoolSize);
+        sePredictorPool.setMaxTotal(predictorPoolSize);
+        log.debug("当前设备: " + model.getNDManager().getDevice());
+        log.debug("当前引擎: " + Engine.getInstance().getEngineName());
+        log.debug("模型推理器线程池最大数量: " + predictorPoolSize);
     }
 
 
@@ -160,6 +174,8 @@ public class MiniVisionLivenessModel extends CommonLivenessModel{
                 predictor = predictorPool.borrowObject();
                 Image djlImage = ImageFactory.getInstance().fromImage(OpenCVUtils.image2Mat(processedImage));
                 result = predictor.predict(djlImage);
+                ((Mat)djlImage.getWrappedImage()).release();
+
             }
             if(Objects.nonNull(sePredictorPool)){
                 //预处理图片
@@ -172,6 +188,7 @@ public class MiniVisionLivenessModel extends CommonLivenessModel{
                 Image djlImage = ImageFactory.getInstance().fromImage(OpenCVUtils.image2Mat(processedImage));
                 sePredictor = sePredictorPool.borrowObject();
                 seResult = sePredictor.predict(djlImage);
+                ((Mat)djlImage.getWrappedImage()).release();
             }
             if(Objects.isNull(result) && Objects.isNull(seResult)){
                 throw new FaceException("活体检测错误");
@@ -219,6 +236,14 @@ public class MiniVisionLivenessModel extends CommonLivenessModel{
                 }
             }
         }
+    }
+
+    public GenericObjectPool<Predictor<Image, float[]>> getPredictorPool() {
+        return predictorPool;
+    }
+
+    public GenericObjectPool<Predictor<Image, float[]>> getSePredictorPool() {
+        return sePredictorPool;
     }
 
     @Override

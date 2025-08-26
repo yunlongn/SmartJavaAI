@@ -11,15 +11,14 @@ import ai.djl.repository.zoo.ModelNotFoundException;
 import ai.djl.repository.zoo.ModelZoo;
 import ai.djl.repository.zoo.ZooModel;
 import ai.djl.training.util.ProgressBar;
+import cn.smartjavaai.common.config.Config;
 import cn.smartjavaai.common.entity.DetectionInfo;
 import cn.smartjavaai.common.entity.DetectionRectangle;
 import cn.smartjavaai.common.entity.DetectionResponse;
 import cn.smartjavaai.common.entity.R;
 import cn.smartjavaai.common.enums.DeviceEnum;
-import cn.smartjavaai.common.enums.face.LivenessStatus;
 import cn.smartjavaai.common.utils.ImageUtils;
 import cn.smartjavaai.common.utils.OpenCVUtils;
-import cn.smartjavaai.face.model.liveness.LivenessDetModel;
 import cn.smartjavaai.objectdetection.config.DetectorModelConfig;
 import cn.smartjavaai.objectdetection.enums.DetectorModelEnum;
 import cn.smartjavaai.objectdetection.exception.DetectionException;
@@ -29,6 +28,7 @@ import com.alibaba.fastjson.JSONObject;
 import lombok.extern.slf4j.Slf4j;
 import nu.pattern.OpenCV;
 import org.junit.Assert;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.opencv.core.Mat;
 import org.opencv.core.Size;
@@ -43,14 +43,13 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Iterator;
+import java.util.*;
 import java.util.List;
-import java.util.Objects;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.stream.Collectors;
 
 /**
  * 目标检测模型demo
@@ -65,6 +64,12 @@ public class ObjectDetection {
     //设备类型
     public static DeviceEnum device = DeviceEnum.CPU;
 
+    @BeforeClass
+    public static void beforeAll() throws IOException {
+        //修改缓存路径
+//        Config.setCachePath("/Users/xxx/smartjavaai_cache");
+    }
+
 
 
     /**
@@ -73,7 +78,8 @@ public class ObjectDetection {
     @Test
     public void objectDetection(){
         //默认cpu
-        try (DetectorModel detectorModel = ObjectDetectionModelFactory.getInstance().getModel()){
+        try {
+            DetectorModel detectorModel = ObjectDetectionModelFactory.getInstance().getModel();
             DetectionResponse detectionResponse = detectorModel.detect("src/main/resources/object_detection.jpg");
             log.info("目标检测结果：{}", JSONObject.toJSONString(detectionResponse));
         } catch (Exception e) {
@@ -86,10 +92,15 @@ public class ObjectDetection {
      */
     @Test
     public void objectDetection2(){
-        DetectorModelConfig config = new DetectorModelConfig();
-        config.setModelEnum(DetectorModelEnum.SSD_300_RESNET50);//检测模型，目前支持19种预置模型
-        config.setDevice(device);
-        try (DetectorModel detectorModel = ObjectDetectionModelFactory.getInstance().getModel(config)){
+        try {
+            DetectorModelConfig config = new DetectorModelConfig();
+            config.setModelEnum(DetectorModelEnum.SSD_300_RESNET50);//检测模型，目前支持19种预置模型
+            // 指定允许的类别
+//            config.setAllowedClasses(Arrays.asList("person"));
+            //指定返回检测数量
+            config.setTopK(100);
+            config.setDevice(device);
+            DetectorModel detectorModel = ObjectDetectionModelFactory.getInstance().getModel(config);
             DetectionResponse detectionResponse = detectorModel.detect("src/main/resources/dog_bike_car.jpg");
             log.info("目标检测结果：{}", JSONObject.toJSONString(detectionResponse));
         } catch (Exception e) {
@@ -102,7 +113,8 @@ public class ObjectDetection {
      */
     @Test
     public void objectDetectionAndDraw(){
-        try (DetectorModel detectorModel = ObjectDetectionModelFactory.getInstance().getModel()){
+        try {
+            DetectorModel detectorModel = ObjectDetectionModelFactory.getInstance().getModel();
             detectorModel.detectAndDraw("src/main/resources/object_detection.jpg","output/object_detection_detected.png");
         } catch (Exception e) {
             e.printStackTrace();
@@ -114,7 +126,8 @@ public class ObjectDetection {
      */
     @Test
     public void objectDetectionAndDraw2(){
-        try (DetectorModel detectorModel = ObjectDetectionModelFactory.getInstance().getModel()){
+        try {
+            DetectorModel detectorModel = ObjectDetectionModelFactory.getInstance().getModel();
             String imagePath = "src/main/resources/object_detection.jpg";
             BufferedImage image = ImageIO.read(new File(Paths.get(imagePath).toAbsolutePath().toString()));
             //可以根据后续业务场景使用detectedImage
@@ -133,16 +146,32 @@ public class ObjectDetection {
      */
     @Test
     public void objectDetectionWithOfficialModel(){
-        DetectorModelConfig config = new DetectorModelConfig();
-        config.setThreshold(0.3f);
-        //也支持YoloV8：YOLOV8_OFFICIAL 模型可以从文档中提供的地址下载
-        config.setModelEnum(DetectorModelEnum.YOLOV12_OFFICIAL);//检测模型，目前支持19种模型
-        // 指定模型路径，需要更改为自己的模型路径
-        config.setModelPath("/Users/xxx/Documents/yolov12n.onnx");
-        config.setDevice(device);
-        //一定要将yolo官方的类别文件：synset.txt（文档中下载）放在模型同目录下，否则报错
-        try (DetectorModel detectorModel = ObjectDetectionModelFactory.getInstance().getModel(config)){
-            DetectionResponse detect = detectorModel.detect("src/main/resources/dog_bike_car.jpg");
+        try {
+            DetectorModelConfig config = new DetectorModelConfig();
+//            config.setThreshold(0.3f);
+            //也支持YoloV8：YOLOV8_OFFICIAL 模型可以从文档中提供的地址下载
+            config.setModelEnum(DetectorModelEnum.YOLOV12_OFFICIAL);//检测模型，目前支持19种模型
+            // 指定模型路径，需要更改为自己的模型路径
+            config.setModelPath("/Users/wenjie/Documents/develop/face_model/yolo11n.torchscript");
+            config.setDevice(device);
+            config.putCustomParam("width", 640);//resize 宽
+            config.putCustomParam("height", 640);// resize 高
+            config.putCustomParam("resize", true);
+            config.putCustomParam("toTensor", true);
+            config.putCustomParam("applyRatio", true);
+            config.putCustomParam("threshold", 0.6f);
+                    // for performance optimization maxBox parameter can reduce number of
+                    // considered boxes from 8400
+            config.putCustomParam("maxBox", 8400);
+//            config.putCustomParam("pad", 114d);
+//            List<Float> mean = Arrays.asList(0.5f,0.5f,0.5f,0.5f,0.5f,0.5f);
+//            String normalize = mean.stream().map(Object::toString).collect(Collectors.joining(","));
+//            config.putCustomParam("normalize", normalize);
+//            config.putCustomParam("flag", Image.Flag.COLOR);
+//            config.putCustomParam("pad", 114);
+            //一定要将yolo官方的类别文件：synset.txt（文档中下载）放在模型同目录下，否则报错
+            DetectorModel detectorModel = ObjectDetectionModelFactory.getInstance().getModel(config);
+            DetectionResponse detect = detectorModel.detect("src/main/resources/object_detection.jpg");
             log.info("目标检测结果：{}", JSONObject.toJSONString(detect));
         } catch (Exception e) {
             e.printStackTrace();
@@ -154,16 +183,21 @@ public class ObjectDetection {
      */
     @Test
     public void objectDetectionWithCustomModel(){
-        DetectorModelConfig config = new DetectorModelConfig();
-        //也支持YoloV8：YOLOV8_CUSTOM 模型需要自己训练，训练教程可以查看文档
-        config.setModelEnum(DetectorModelEnum.YOLOV12_CUSTOM);//自定义YOLOV12模型
-        // 指定模型路径，需要更改为自己的模型路径
-        config.setModelPath("/Users/xxx/Documents/develop/fire_model/best.onnx");
-        config.putCustomParam("width", 640);//resize 宽
-        config.putCustomParam("height", 640);// resize 高
-        config.putCustomParam("nmsThreshold", 0.5f);
-        config.setDevice(device);
-        try (DetectorModel detectorModel = ObjectDetectionModelFactory.getInstance().getModel(config)){
+        try {
+            DetectorModelConfig config = new DetectorModelConfig();
+            //也支持YoloV8：YOLOV8_CUSTOM 模型需要自己训练，训练教程可以查看文档
+            config.setModelEnum(DetectorModelEnum.YOLOV12_CUSTOM);//自定义YOLOV12模型
+            // 指定模型路径，需要更改为自己的模型路径
+            config.setModelPath("/Users/xxx/Documents/develop/fire_model/best.onnx");
+            config.putCustomParam("width", 640);//resize 宽
+            config.putCustomParam("height", 640);// resize 高
+            config.putCustomParam("nmsThreshold", 0.5f);
+            // 指定允许的类别
+//            config.setAllowedClasses(Arrays.asList("person"));
+            //指定返回检测数量
+            config.setTopK(100);
+            config.setDevice(device);
+            DetectorModel detectorModel = ObjectDetectionModelFactory.getInstance().getModel(config);
             DetectionResponse detect = detectorModel.detect("src/main/resources/dog_bike_car.jpg");
             log.info("目标检测结果：{}", JSONObject.toJSONString(detect));
         } catch (Exception e) {
@@ -178,7 +212,8 @@ public class ObjectDetection {
      */
     @Test
     public void testDetectCamera(){
-        try (DetectorModel detectorModel = ObjectDetectionModelFactory.getInstance().getModel()){
+        try {
+            DetectorModel detectorModel = ObjectDetectionModelFactory.getInstance().getModel();
             OpenCV.loadShared();
             VideoCapture capture = new VideoCapture(0);
             if (!capture.isOpened()) {

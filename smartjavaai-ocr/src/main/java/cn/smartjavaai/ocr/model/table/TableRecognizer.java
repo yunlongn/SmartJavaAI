@@ -36,6 +36,7 @@ import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.nio.file.Paths;
 import java.util.*;
 import java.util.List;
@@ -180,6 +181,25 @@ public class TableRecognizer {
         ImageUtils.saveImage(image, savePath);
     }
 
+
+    /**
+     * 绘制表格
+     * @param tableStructureResult
+     * @param image
+     * @return
+     */
+    public BufferedImage drawTable(TableStructureResult tableStructureResult, BufferedImage image){
+        if(Objects.isNull(tableStructureResult) || CollectionUtils.isEmpty(tableStructureResult.getTableTagList())){
+            throw new OcrException("表格结构为空");
+        }
+        for (int i = 0; i < tableStructureResult.getOcrItemList().size(); i++){
+            OcrItem item = tableStructureResult.getOcrItemList().get(i);
+            DetectionRectangle detectionRectangle = item.getOcrBox().toDetectionRectangle();
+            ImageUtils.drawImageRectWithText(image, detectionRectangle, i + "", Color.RED);
+        }
+        return image;
+    }
+
     /**
      * 删除 HTML 中第一个 <style> ... </style> 段落
      * @param html 原始 HTML
@@ -200,17 +220,34 @@ public class TableRecognizer {
         return html.substring(0, styleStart) + html.substring(styleEnd);
     }
 
+
+    /**
+     * 导出 Excel
+     * @param html
+     * @param out
+     */
+    public void exportExcel(String html, OutputStream out){
+        String content = removeStyleBlock(html);
+        content = content.replace("<html><body>", "");
+        content = content.replace("</body></html>", "");
+        try (HSSFWorkbook workbook = ConvertHtml2Excel.table2Excel(content)){
+            workbook.write(out);
+            out.flush();
+        } catch (Exception e) {
+            throw new OcrException("导出excel失败，请检查表结构是否识别正确");
+        }
+    }
+
     /**
      * 导出 Excel
      * @param html
      * @param savePath
      */
     public void exportExcel(String html, String savePath){
-        try {
-            String content = removeStyleBlock(html);
-            content = content.replace("<html><body>", "");
-            content = content.replace("</body></html>", "");
-            HSSFWorkbook workbook = ConvertHtml2Excel.table2Excel(content);
+        String content = removeStyleBlock(html);
+        content = content.replace("<html><body>", "");
+        content = content.replace("</body></html>", "");
+        try (HSSFWorkbook workbook = ConvertHtml2Excel.table2Excel(content)){
             workbook.write(new File(savePath));
         } catch (Exception e) {
             throw new OcrException("导出excel失败，请检查表结构是否识别正确");

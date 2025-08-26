@@ -1,11 +1,13 @@
 package cn.smartjavaai.objectdetection.config;
 
+import cn.smartjavaai.common.config.ModelConfig;
 import cn.smartjavaai.common.enums.DeviceEnum;
 import cn.smartjavaai.objectdetection.constant.DetectorConstant;
 import cn.smartjavaai.objectdetection.enums.DetectorModelEnum;
 import lombok.Data;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -15,7 +17,7 @@ import java.util.Map;
  * @date 2025/4/4
  */
 @Data
-public class DetectorModelConfig {
+public class DetectorModelConfig extends ModelConfig {
 
     /**
      * 模型
@@ -27,10 +29,6 @@ public class DetectorModelConfig {
      */
     private float threshold = DetectorConstant.DEFAULT_THRESHOLD;
 
-    /**
-     * 设备类型
-     */
-    private DeviceEnum device;
 
     /**
      * 模型路径
@@ -45,35 +43,27 @@ public class DetectorModelConfig {
     private int maxBox;
 
     /**
-     * 个性化配置
+     * 允许的分类列表
      */
-    private Map<String, Object> customParams = new HashMap<>();
+    private List<String> allowedClasses;
+
+    /**
+     * 检测结果数量
+     */
+    private int topK;
+
 
     public DetectorModelConfig() {
     }
 
     public DetectorModelConfig(DetectorModelEnum modelEnum, DeviceEnum device) {
         this.modelEnum = modelEnum;
-        this.device = device;
+        setDevice(device);
     }
 
     public DetectorModelConfig(DetectorModelEnum modelEnum) {
         this.modelEnum = modelEnum;
     }
 
-    public <T> T getCustomParam(String key, Class<T> clazz) {
-        Object value = customParams.get(key);
-        if (value == null) return null;
-        return clazz.cast(value);
-    }
 
-    /**
-     * 添加个性化配置项
-     */
-    public void putCustomParam(String key, Object value) {
-        if (customParams == null) {
-            customParams = new HashMap<>();
-        }
-        customParams.put(key, value);
-    }
 }

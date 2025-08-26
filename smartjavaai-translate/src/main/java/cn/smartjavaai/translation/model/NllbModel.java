@@ -48,11 +48,11 @@ import java.util.Objects;
 @Slf4j
 public class NllbModel implements TranslationModel{
 
-    private ObjectPool<Predictor<?, ?>> encodePredictorPool;
+    private GenericObjectPool<Predictor<?, ?>> encodePredictorPool;
 
-    private ObjectPool<Predictor<?, ?>> decodePredictorPool;
+    private GenericObjectPool<Predictor<?, ?>> decodePredictorPool;
 
-    private ObjectPool<Predictor<?, ?>> decode2PredictorPool;
+    private GenericObjectPool<Predictor<?, ?>> decode2PredictorPool;
 
     private ZooModel<NDList, NDList> nllbModel;
     private HuggingFaceTokenizer tokenizer;
@@ -69,7 +69,7 @@ public class NllbModel implements TranslationModel{
         }
         Device device = null;
         if (!Objects.isNull(config.getDevice())) {
-            device = config.getDevice() == DeviceEnum.CPU ? Device.cpu() : Device.gpu();
+            device = config.getDevice() == DeviceEnum.CPU ? Device.cpu() : Device.gpu(config.getGpuId());
         }
         this.config = config;
         Path modelPath = Paths.get(config.getModelPath());
@@ -91,8 +91,16 @@ public class NllbModel implements TranslationModel{
             tokenizer = HuggingFaceTokenizer.newInstance(tokenizerPath);
             //初始化searchConfig
             this.searchConfig = new NllbSearchConfig();
+            int predictorPoolSize = config.getPredictorPoolSize();
+            if(config.getPredictorPoolSize() <= 0){
+                predictorPoolSize = Runtime.getRuntime().availableProcessors(); // 默认等于CPU核心数
+            }
+            encodePredictorPool.setMaxTotal(predictorPoolSize);
+            decodePredictorPool.setMaxTotal(predictorPoolSize);
+            decode2PredictorPool.setMaxTotal(predictorPoolSize);
             log.debug("当前设备: " + nllbModel.getNDManager().getDevice());
             log.debug("当前引擎: " + Engine.getInstance().getEngineName());
+            log.debug("模型推理器线程池最大数量: " + predictorPoolSize);
         } catch (IOException | ModelNotFoundException | MalformedModelException e) {
             throw new TranslationException("模型加载失败", e);
         }
@@ -252,4 +260,54 @@ public class NllbModel implements TranslationModel{
         return next_tokens.expandDims(0);
     }
 
+    public GenericObjectPool<Predictor<?, ?>> getEncodePredictorPool() {
+        return encodePredictorPool;
+    }
+
+    public GenericObjectPool<Predictor<?, ?>> getDecodePredictorPool() {
+        return decodePredictorPool;
+    }
+
+    public GenericObjectPool<Predictor<?, ?>> getDecode2PredictorPool() {
+        return decode2PredictorPool;
+    }
+
+    @Override
+    public void close() throws Exception {
+        try {
+            if (nllbModel != null) {
+                nllbModel.close();
+            }
+        } catch (Exception e) {
+            log.warn("关闭 model 失败", e);
+        }
+        try {
+            if (tokenizer != null) {
+                tokenizer.close();
+            }
+        } catch (Exception e) {
+            log.warn("关闭 tokenizer 失败", e);
+        }
+        try {
+            if (encodePredictorPool != null) {
+                encodePredictorPool.close();
+            }
+        } catch (Exception e) {
+            log.warn("关闭 encodePredictorPool 失败", e);
+        }
+        try {
+            if (decodePredictorPool != null) {
+                decodePredictorPool.close();
+            }
+        } catch (Exception e) {
+            log.warn("关闭 decodePredictorPool 失败", e);
+        }
+        try {
+            if (decode2PredictorPool != null) {
+                decode2PredictorPool.close();
+            }
+        } catch (Exception e) {
+            log.warn("关闭 decode2PredictorPool 失败", e);
+        }
+    }
 }

@@ -47,7 +47,7 @@ public class CommonTableStructureModel implements TableStructureModel{
 
     private ZooModel<Image, TableStructureResult> model;
 
-    private ObjectPool<Predictor<Image, TableStructureResult>> predictorPool;
+    private GenericObjectPool<Predictor<Image, TableStructureResult>> predictorPool;
 
     @Override
     public void loadModel(TableStructureConfig config) {
@@ -59,8 +59,14 @@ public class CommonTableStructureModel implements TableStructureModel{
             model = ModelZoo.loadModel(criteria);
             // 创建池子：每个线程独享 Predictor
             this.predictorPool = new GenericObjectPool<>(new PredictorFactory<>(model));
+            int predictorPoolSize = config.getPredictorPoolSize();
+            if(config.getPredictorPoolSize() <= 0){
+                predictorPoolSize = Runtime.getRuntime().availableProcessors(); // 默认等于CPU核心数
+            }
+            predictorPool.setMaxTotal(predictorPoolSize);
             log.debug("当前设备: " + model.getNDManager().getDevice());
             log.debug("当前引擎: " + Engine.getInstance().getEngineName());
+            log.debug("模型推理器线程池最大数量: " + predictorPoolSize);
         } catch (IOException | ModelNotFoundException | MalformedModelException e) {
             throw new OcrException("表格结构识别模型加载失败", e);
         }
@@ -138,6 +144,11 @@ public class CommonTableStructureModel implements TableStructureModel{
                 }
             }
         }
+    }
+
+    @Override
+    public GenericObjectPool<Predictor<Image, TableStructureResult>> getPool() {
+        return predictorPool;
     }
 
     @Override

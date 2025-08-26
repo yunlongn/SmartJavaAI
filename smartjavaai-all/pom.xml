@@ -6,11 +6,11 @@
     <parent>
         <groupId>cn.smartjavaai</groupId>
         <artifactId>smartjavaai-parent</artifactId>
-        <version>1.0.20</version>
+        <version>1.0.23</version>
     </parent>
 
     <artifactId>smartjavaai-all</artifactId>
-    <version>1.0.20</version>
+    <version>1.0.23</version>
     <name>${project.artifactId}</name>
     <description>SmartJavaAI</description>
     <url>https://github.com/geekwenjie/SmartJavaAI</url>
@@ -52,6 +52,12 @@
         <dependency>
             <groupId>cn.smartjavaai</groupId>
             <artifactId>smartjavaai-translate</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>cn.smartjavaai</groupId>
+            <artifactId>smartjavaai-speech</artifactId>
             <version>${project.version}</version>
         </dependency>
 

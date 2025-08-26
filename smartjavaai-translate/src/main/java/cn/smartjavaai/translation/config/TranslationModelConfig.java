@@ -1,5 +1,6 @@
 package cn.smartjavaai.translation.config;
 
+import cn.smartjavaai.common.config.ModelConfig;
 import cn.smartjavaai.common.enums.DeviceEnum;
 
 import cn.smartjavaai.translation.enums.TranslationModeEnum;
@@ -11,16 +12,11 @@ import lombok.Data;
  * @date 2025/6/05
  */
 @Data
-public class TranslationModelConfig {
+public class TranslationModelConfig extends ModelConfig {
     /**
      * 翻译模型
      */
     private TranslationModeEnum modelEnum;
-
-    /**
-     * 设备类型
-     */
-    private DeviceEnum device;
 
     /**
      * 翻译模型路径

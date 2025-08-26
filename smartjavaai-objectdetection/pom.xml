@@ -6,11 +6,11 @@
     <parent>
         <groupId>cn.smartjavaai</groupId>
         <artifactId>smartjavaai-parent</artifactId>
-        <version>1.0.20</version>
+        <version>1.0.23</version>
     </parent>
 
     <artifactId>smartjavaai-objectdetection</artifactId>
-    <version>1.0.20</version>
+    <version>1.0.23</version>
     <name>smartjavaai-objectdetection</name>
     <description>SmartJavaAI</description>
     <url>https://github.com/geekwenjie/SmartJavaAI</url>

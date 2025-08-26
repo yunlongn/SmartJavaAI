@@ -1,5 +1,6 @@
 package smartai.examples.ocr.common;
 
+import cn.smartjavaai.common.config.Config;
 import cn.smartjavaai.common.enums.DeviceEnum;
 import cn.smartjavaai.ocr.config.DirectionModelConfig;
 import cn.smartjavaai.ocr.config.OcrDetModelConfig;
@@ -12,8 +13,10 @@ import cn.smartjavaai.ocr.model.common.detect.OcrCommonDetModel;
 import cn.smartjavaai.ocr.model.common.direction.OcrDirectionModel;
 import com.alibaba.fastjson.JSONObject;
 import lombok.extern.slf4j.Slf4j;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
+import java.io.IOException;
 import java.util.List;
 
 /**
@@ -27,6 +30,12 @@ public class OcrDirectionDetDemo {
 
     //设备类型
     public static DeviceEnum device = DeviceEnum.CPU;
+
+    @BeforeClass
+    public static void beforeAll() throws IOException {
+        //修改缓存路径
+//        Config.setCachePath("/Users/xxx/smartjavaai_cache");
+    }
 
     /**
      * 获取方向检测模型
@@ -67,7 +76,8 @@ public class OcrDirectionDetDemo {
      */
     @Test
     public void detect(){
-        try (OcrDirectionModel directionModel = getDirectionModel()){
+        try {
+            OcrDirectionModel directionModel = getDirectionModel();
             List<OcrItem> itemList = directionModel.detect("src/main/resources/ocr_1.jpg");
             log.info("OCR方向检测结果1：{}", JSONObject.toJSONString(itemList));
         } catch (Exception e) {
@@ -84,7 +94,8 @@ public class OcrDirectionDetDemo {
      */
     @Test
     public void detectAndDraw(){
-        try (OcrDirectionModel directionModel = getDirectionModel()){
+        try {
+            OcrDirectionModel directionModel = getDirectionModel();
             directionModel.detectAndDraw("src/main/resources/ocr_3.jpg",  "output/ocr_3_detected.png");
         } catch (Exception e) {
             e.printStackTrace();

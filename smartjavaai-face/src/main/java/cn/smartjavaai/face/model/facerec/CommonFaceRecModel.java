@@ -9,6 +9,7 @@ import ai.djl.ndarray.NDManager;
 import ai.djl.repository.zoo.Criteria;
 import ai.djl.repository.zoo.ModelNotFoundException;
 import ai.djl.repository.zoo.ZooModel;
+import cn.hutool.core.lang.UUID;
 import cn.smartjavaai.common.entity.*;
 import cn.smartjavaai.common.entity.face.FaceInfo;
 import cn.smartjavaai.common.entity.face.FaceSearchResult;
@@ -41,6 +42,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.pool2.ObjectPool;
 import org.apache.commons.pool2.impl.GenericObjectPool;
+import org.opencv.core.Mat;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
@@ -68,7 +70,7 @@ public class CommonFaceRecModel implements FaceRecModel{
     private static volatile boolean isLoadCompleted = false;
 
 
-    private ObjectPool<Predictor<Image, float[]>> predictorPool;
+    private GenericObjectPool<Predictor<Image, float[]>> predictorPool;
 
 
     private ZooModel<Image, float[]> model;
@@ -101,8 +103,14 @@ public class CommonFaceRecModel implements FaceRecModel{
             model = faceFeatureCriteria.loadModel();
             // 创建池子：每个线程独享 Predictor
             this.predictorPool = new GenericObjectPool<>(new PredictorFactory<>(model));
+            int predictorPoolSize = config.getPredictorPoolSize();
+            if(config.getPredictorPoolSize() <= 0){
+                predictorPoolSize = Runtime.getRuntime().availableProcessors(); // 默认等于CPU核心数
+            }
+            predictorPool.setMaxTotal(predictorPoolSize);
             log.debug("当前设备: " + model.getNDManager().getDevice());
             log.debug("当前引擎: " + Engine.getInstance().getEngineName());
+            log.debug("模型推理器线程池最大数量: " + predictorPoolSize);
         } catch (IOException | ModelNotFoundException | MalformedModelException e) {
             throw new FaceException("模型加载失败", e);
         }
@@ -286,6 +294,7 @@ public class CommonFaceRecModel implements FaceRecModel{
                 faceInfo.setFeature(features);
             }
         }
+        ((Mat)djlImage.getWrappedImage()).release();
         return detectedResult;
     }
 
@@ -350,6 +359,7 @@ public class CommonFaceRecModel implements FaceRecModel{
             }
             features = featureExtraction(subImage);
         }
+        ((Mat)djlImage.getWrappedImage()).release();
         return Objects.isNull(features) ? R.fail(R.Status.Unknown) : R.ok(features);
     }
 
@@ -703,5 +713,8 @@ public class CommonFaceRecModel implements FaceRecModel{
     }
 
 
-
+    @Override
+    public GenericObjectPool<Predictor<Image, float[]>> getPool() {
+        return predictorPool;
+    }
 }

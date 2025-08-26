@@ -1,5 +1,6 @@
 package smartai.examples.face.facerec;
 
+import cn.smartjavaai.common.config.Config;
 import cn.smartjavaai.common.entity.DetectionResponse;
 import cn.smartjavaai.common.entity.R;
 import cn.smartjavaai.common.entity.face.FaceSearchResult;
@@ -23,8 +24,10 @@ import cn.smartjavaai.face.vector.entity.FaceVector;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import lombok.extern.slf4j.Slf4j;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
+import java.io.IOException;
 import java.util.List;
 
 /**
@@ -41,14 +44,25 @@ public class FaceRecDemo {
     //设备类型
     public static DeviceEnum device = DeviceEnum.CPU;
 
+    @BeforeClass
+    public static void beforeAll() throws IOException {
+        //修改缓存路径
+//        Config.setCachePath("/Users/xxx/smartjavaai_cache");
+    }
+
 
     /**
-     * 获取人脸检测模型
+     * 获取人脸检测模型（高精度，速度慢）
+     * 追求准确度可以使用
+     * 也可以使用其他模型，具体其他模型参数可以查看文档：http://doc.smartjavaai.cn/face.html
      * @return
      */
-    public FaceDetModel getFaceDetModel(){
+    public FaceDetModel getHighAccuracyDetModel(){
         FaceDetConfig config = new FaceDetConfig();
+        //高精度模型，速度慢
         config.setModelEnum(FaceDetModelEnum.RETINA_FACE);//人脸检测模型
+        //下载模型并替换本地路径，下载地址：https://pan.baidu.com/s/10l22x5fRz_gwLr8EAHa1Jg?pwd=1234 提取码: 1234
+        config.setModelPath("/Users/xxx/Documents/develop/model/retinaface.pt");
         config.setConfidenceThreshold(FaceDetectConstant.DEFAULT_CONFIDENCE_THRESHOLD);//只返回相似度大于该值的人脸
         config.setNmsThresh(FaceDetectConstant.NMS_THRESHOLD);//用于去除重复的人脸框，当两个框的重叠度超过该值时，只保留一个
         config.setDevice(device);
@@ -56,21 +70,62 @@ public class FaceRecDemo {
     }
 
     /**
-     * 获取人脸识别模型
+     * 获取人脸检测模型（高速模型，精度一般）
+     * 追求速度可以使用
+     * 也可以使用其他模型，具体其他模型参数可以查看文档：http://doc.smartjavaai.cn/face.html
      * @return
      */
-    public FaceRecModel getFaceRecModel(){
+    public FaceDetModel getHighSpeedDetModel(){
+        FaceDetConfig config = new FaceDetConfig();
+        //高速模型，速度快，精度一般
+        config.setModelEnum(FaceDetModelEnum.SEETA_FACE6_MODEL);
+        //下载模型并替换本地路径，下载地址：https://pan.baidu.com/s/10l22x5fRz_gwLr8EAHa1Jg?pwd=1234 提取码: 1234
+        config.setModelPath("/Users/xxx/Documents/develop/model/sf3.0_models");
+        config.setDevice(device);
+        return FaceDetModelFactory.getInstance().getModel(config);
+    }
+
+    /**
+     * 获取人脸识别模型（高精度，速度慢）
+     * 追求准确度可以使用
+     * 也可以使用其他模型，具体其他模型参数可以查看文档：http://doc.smartjavaai.cn/face.html
+     * @return
+     */
+    public FaceRecModel getHighAccuracyFaceRecModel(){
         FaceRecConfig config = new FaceRecConfig();
-        config.setModelEnum(FaceRecModelEnum.FACENET_MODEL);
-//        config.setModelPath("/Users/xxx/Documents/develop/model/elasticface.pt");
-//        config.setModelPath("/Users/xxx/Documents/develop/model/InsightFace/model_mobilefacenet.pt");
+        //高精度模型，速度慢
+        config.setModelEnum(FaceRecModelEnum.ELASTIC_FACE_MODEL);
+        //模型路径，请下载模型并替换为本地路径：https://pan.baidu.com/s/10l22x5fRz_gwLr8EAHa1Jg?pwd=1234 提取码: 1234
+        config.setModelPath("/Users/xxx/Documents/develop/model/elasticface.pt");
         //裁剪人脸：如果图片已经是裁剪过的，则请将此参数设置为false
         config.setCropFace(true);
         //开启人脸对齐：适用于人脸不正的场景，开启将提升人脸特征准确度，关闭可以提升性能
         config.setAlign(true);
         config.setDevice(device);
         //指定人脸检测模型
-        config.setDetectModel(getFaceDetModel());
+        config.setDetectModel(getHighAccuracyDetModel());
+        return FaceRecModelFactory.getInstance().getModel(config);
+    }
+
+    /**
+     * 获取人脸识别模型（高速模型，精度一般）
+     * 追求速度可以使用
+     * 也可以使用其他模型，具体其他模型参数可以查看文档：http://doc.smartjavaai.cn/face.html
+     * @return
+     */
+    public FaceRecModel getHighSpeedFaceRecModel(){
+        FaceRecConfig config = new FaceRecConfig();
+        //高精度模型，速度慢
+        config.setModelEnum(FaceRecModelEnum.SEETA_FACE6_MODEL);
+        //模型路径，请下载模型并替换为本地路径：https://pan.baidu.com/s/10l22x5fRz_gwLr8EAHa1Jg?pwd=1234 提取码: 1234
+        config.setModelPath("/Users/xxx/Documents/develop/model/sf3.0_models");
+        //裁剪人脸：如果图片已经是裁剪过的，则请将此参数设置为false
+        config.setCropFace(true);
+        //开启人脸对齐：适用于人脸不正的场景，开启将提升人脸特征准确度，关闭可以提升性能
+        config.setAlign(false);
+        config.setDevice(device);
+        //指定人脸检测模型
+        config.setDetectModel(getHighSpeedDetModel());
         return FaceRecModelFactory.getInstance().getModel(config);
     }
 
@@ -80,20 +135,23 @@ public class FaceRecDemo {
      */
     public FaceRecModel getFaceRecModelWithDbConfig(){
         FaceRecConfig config = new FaceRecConfig();
+        //高精度模型，速度慢,追求速度请更换高速模型，具体其他模型参数可以查看文档：http://doc.smartjavaai.cn/face.html
         config.setModelEnum(FaceRecModelEnum.ELASTIC_FACE_MODEL);//人脸检测模型
         config.setModelPath("/Users/xxx/Documents/develop/model/elasticface.pt");
         //裁剪人脸：如果图片已经是裁剪过的，则请将此参数设置为false
         config.setCropFace(true);
         //开启人脸对齐：适用于人脸不正的场景，开启将提升人脸特征准确度，关闭可以提升性能
         config.setAlign(true);
-        //指定人脸检测模型
-        config.setDetectModel(getFaceDetModel());
+        //指定人脸检测模型，高精度模型，速度慢,追求速度请更换高速模型getHighSpeedDetModel
+        config.setDetectModel(getHighAccuracyDetModel());
         config.setDevice(device);
 
         //初始化向量数据库：Milvus数据库配置
         MilvusConfig vectorDBConfig = new MilvusConfig();
         vectorDBConfig.setHost("127.0.0.1");
         vectorDBConfig.setPort(19530);
+        //vectorDBConfig.setUsername("root");
+        //vectorDBConfig.setPassword("Milvus");
         //vectorDBConfig.setCollectionName("face5");
         //ID策略：自动生成
         vectorDBConfig.setIdStrategy(IdStrategy.AUTO);
@@ -109,13 +167,15 @@ public class FaceRecDemo {
      */
     public FaceRecModel getFaceRecModelWithSQLiteConfig(){
         FaceRecConfig config = new FaceRecConfig();
-        config.setModelEnum(FaceRecModelEnum.FACENET_MODEL);//人脸检测模型
+        //高精度模型，速度慢, 追求速度请更换高速模型，具体其他模型参数可以查看文档：http://doc.smartjavaai.cn/face.html
+        config.setModelEnum(FaceRecModelEnum.ELASTIC_FACE_MODEL);//人脸检测模型
+        config.setModelPath("/Users/xxx/Documents/develop/model/elasticface.pt");
         //裁剪人脸：如果图片已经是裁剪过的，则请将此参数设置为false
         config.setCropFace(true);
         //开启人脸对齐：适用于人脸不正的场景，开启将提升人脸特征准确度，关闭可以提升性能
         config.setAlign(true);
-        //指定人脸检测模型
-        config.setDetectModel(getFaceDetModel());
+        //指定人脸检测模型，高精度模型，速度慢,追求速度请更换高速模型getHighSpeedDetModel
+        config.setDetectModel(getHighAccuracyDetModel());
         config.setDevice(device);
 
         //初始化SQLite数据库
@@ -157,7 +217,9 @@ public class FaceRecDemo {
      */
     @Test
     public void testExtractFeatures(){
-        try (FaceRecModel faceRecModel = getFaceRecModel()){
+        try {
+            //高精度模型，速度慢, 追求速度请更换高速模型: getHighSpeedFaceRecModel
+            FaceRecModel faceRecModel = getHighAccuracyFaceRecModel();
             //提取图片中所有人脸特征
             R<DetectionResponse> faceResult  = faceRecModel.extractFeatures("src/main/resources/iu_1.jpg");
             if(faceResult.isSuccess()){
@@ -180,7 +242,9 @@ public class FaceRecDemo {
      */
     @Test
     public void featureComparison(){
-        try (FaceRecModel faceRecModel = getFaceRecModel()){
+        try {
+            //高精度模型，速度慢, 追求速度请更换高速模型: getHighSpeedFaceRecModel
+            FaceRecModel faceRecModel = getHighAccuracyFaceRecModel();
             //基于图像直接比对人脸特征
             R<Float> similarResult = faceRecModel.featureComparison("src/main/resources/iu_1.jpg","src/main/resources/iu_2.jpg");
             if(similarResult.isSuccess()){
@@ -205,7 +269,9 @@ public class FaceRecDemo {
      */
     @Test
     public void featureComparison2(){
-        try (FaceRecModel faceRecModel = getFaceRecModel()){
+        try {
+            //高精度模型，速度慢, 追求速度请更换高速模型: getHighSpeedFaceRecModel
+            FaceRecModel faceRecModel = getHighAccuracyFaceRecModel();
             //特征提取（提取分数最高人脸特征）,适用于单人脸场景
             R<float[]> featureResult1 = faceRecModel.extractTopFaceFeature("src/main/resources/iu_1.jpg");
             if(featureResult1.isSuccess()){
@@ -242,7 +308,9 @@ public class FaceRecDemo {
      */
     @Test
     public void searchFace(){
-        try (FaceRecModel faceRecModel = getFaceRecModelWithDbConfig()){
+        try {
+            //高精度模型，速度慢, 追求速度请更换高速模型
+            FaceRecModel faceRecModel = getFaceRecModelWithDbConfig();
             //等待加载人脸库结束
             while (!faceRecModel.isLoadFaceCompleted()){
                 Thread.sleep(100);
@@ -318,7 +386,9 @@ public class FaceRecDemo {
      */
     @Test
     public void searchFace2(){
-        try (FaceRecModel faceRecModel = getFaceRecModelWithSQLiteConfig()){
+        try {
+            //高精度模型，速度慢, 追求速度请更换高速模型
+            FaceRecModel faceRecModel = getFaceRecModelWithSQLiteConfig();
             //等待加载人脸库结束
             while (!faceRecModel.isLoadFaceCompleted()){
                 Thread.sleep(100);
@@ -433,7 +503,8 @@ public class FaceRecDemo {
     @Test
     public void getFaceInfo(){
         //使用ID获取人脸信息
-        try (FaceRecModel faceRecModel = getFaceRecModelWithSQLiteConfig()){
+        try {
+            FaceRecModel faceRecModel = getFaceRecModelWithSQLiteConfig();
             //等待加载人脸库结束
             while (!faceRecModel.isLoadFaceCompleted()){
                 Thread.sleep(100);
@@ -456,7 +527,8 @@ public class FaceRecDemo {
     @Test
     public void listFaces(){
         //使用ID获取人脸信息
-        try (FaceRecModel faceRecModel = getFaceRecModelWithDbConfig()){
+        try {
+            FaceRecModel faceRecModel = getFaceRecModelWithDbConfig();
             //等待加载人脸库结束
             while (!faceRecModel.isLoadFaceCompleted()){
                 Thread.sleep(100);
@@ -472,6 +544,9 @@ public class FaceRecDemo {
             e.printStackTrace();
         }
     }
+
+
+
 
 
 

@@ -26,7 +26,7 @@ public class EmotionCriteriaFactory {
     public static Criteria<Image, Classifications> createCriteria(FaceExpressionConfig config) {
         Device device = null;
         if(!Objects.isNull(config.getDevice())){
-            device = config.getDevice() == DeviceEnum.CPU ? Device.cpu() : Device.gpu();
+            device = config.getDevice() == DeviceEnum.CPU ? Device.cpu() : Device.gpu(config.getGpuId());
         }
         Criteria<Image, Classifications> criteria = null;
         if(config.getModelEnum() == ExpressionModelEnum.DensNet121){
@@ -50,6 +50,7 @@ public class EmotionCriteriaFactory {
                             .optModelPath(Paths.get(config.getModelPath()))
                             .optTranslator(new FrEmotionTranslator(224))
                             .optProgress(new ProgressBar())
+                            .optDevice(device)
                             .build();
         }
         return criteria;

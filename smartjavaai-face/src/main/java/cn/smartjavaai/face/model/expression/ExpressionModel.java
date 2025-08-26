@@ -1,11 +1,16 @@
 package cn.smartjavaai.face.model.expression;
 
+import ai.djl.inference.Predictor;
+import ai.djl.modality.Classifications;
+import ai.djl.modality.cv.Image;
+import ai.djl.modality.cv.output.DetectedObjects;
 import cn.smartjavaai.common.entity.DetectionRectangle;
 import cn.smartjavaai.common.entity.DetectionResponse;
 import cn.smartjavaai.common.entity.Point;
 import cn.smartjavaai.common.entity.R;
 import cn.smartjavaai.common.entity.face.ExpressionResult;
 import cn.smartjavaai.face.config.FaceExpressionConfig;
+import org.apache.commons.pool2.impl.GenericObjectPool;
 
 import java.awt.image.BufferedImage;
 import java.util.List;
@@ -190,6 +195,9 @@ public interface ExpressionModel extends AutoCloseable{
 
 
 
+    default GenericObjectPool<Predictor<Image, Classifications>> getPool(){
+        throw new UnsupportedOperationException("默认不支持该功能");
+    }
 
 
 }

@@ -1,5 +1,6 @@
 package cn.smartjavaai.face.model.facedect;
 
+import ai.djl.engine.Engine;
 import cn.smartjavaai.common.entity.DetectionResponse;
 import cn.smartjavaai.common.entity.R;
 import cn.smartjavaai.common.enums.DeviceEnum;
@@ -48,13 +49,9 @@ public class SeetaFace6FaceDetModel implements FaceDetModel{
         String[] faceDetectorModelPath = {config.getModelPath() + File.separator + "face_detector.csta"};
         String[] faceLandmarkerModelPath = {config.getModelPath() + File.separator + "face_landmarker_pts5.csta"};
         SeetaDevice device = SeetaDevice.SEETA_DEVICE_AUTO;
-        int gpuId = 0;
+        int gpuId = config.getGpuId();
         if(Objects.nonNull(config.getDevice())){
             device = config.getDevice() == DeviceEnum.CPU ? SeetaDevice.SEETA_DEVICE_CPU : SeetaDevice.SEETA_DEVICE_GPU;
-            Integer gpuIdValue = config.getCustomParam("gpuId", Integer.class);
-            if(Objects.nonNull(gpuIdValue) && device == SeetaDevice.SEETA_DEVICE_GPU){
-                gpuId = gpuIdValue;
-            }
         }
         try {
             SeetaModelSetting faceDetectorPoolSetting = new SeetaModelSetting(gpuId, faceDetectorModelPath, device);
@@ -65,6 +62,14 @@ public class SeetaFace6FaceDetModel implements FaceDetModel{
 
             this.faceDetectorPool = new FaceDetectorPool(faceDetectorPoolConfSetting);
             this.faceLandmarkerPool = new FaceLandmarkerPool(faceLandmarkerPoolConfSetting);
+
+            int predictorPoolSize = config.getPredictorPoolSize();
+            if(config.getPredictorPoolSize() <= 0){
+                predictorPoolSize = Runtime.getRuntime().availableProcessors(); // 默认等于CPU核心数
+            }
+            faceDetectorPool.setMaxTotal(predictorPoolSize);
+            faceLandmarkerPool.setMaxTotal(predictorPoolSize);
+            log.debug("模型推理器线程池最大数量: " + predictorPoolSize);
         } catch (FileNotFoundException e) {
             throw new FaceException(e);
         }
@@ -212,8 +217,13 @@ public class SeetaFace6FaceDetModel implements FaceDetModel{
     }
 
 
+    public FaceDetectorPool getFaceDetectorPool() {
+        return faceDetectorPool;
+    }
 
-
+    public FaceLandmarkerPool getFaceLandmarkerPool() {
+        return faceLandmarkerPool;
+    }
 
     @Override
     public void close() throws Exception {

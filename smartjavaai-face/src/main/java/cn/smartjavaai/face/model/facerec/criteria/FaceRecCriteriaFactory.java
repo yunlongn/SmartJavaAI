@@ -27,7 +27,7 @@ public class FaceRecCriteriaFactory {
     public static Criteria<Image, float[]> createCriteria(FaceRecConfig config) {
         Device device = null;
         if(!Objects.isNull(config.getDevice())){
-            device = config.getDevice() == DeviceEnum.CPU ? Device.cpu() : Device.gpu();
+            device = config.getDevice() == DeviceEnum.CPU ? Device.cpu() : Device.gpu(config.getGpuId());
         }
         Criteria<Image, float[]> criteria = null;
         if(config.getModelEnum() == FaceRecModelEnum.FACENET_MODEL){
@@ -58,6 +58,7 @@ public class FaceRecCriteriaFactory {
                     .optTranslator(new FaceFeatureTranslator())
                     .optEngine("PyTorch") // Use PyTorch engine
                     .optProgress(new ProgressBar())
+                    .optDevice(device)
                     .build();
         }else if (config.getModelEnum() == FaceRecModelEnum.INSIGHT_FACE_IRSE50_MODEL){
             if(StringUtils.isBlank(config.getModelPath())){
@@ -73,6 +74,7 @@ public class FaceRecCriteriaFactory {
 //                    .optArgument("resize", "112,112")
                     .optTranslator(new FaceFeatureTranslator())
                     .optEngine("PyTorch") // Use PyTorch engine
+                    .optDevice(device)
                     .optProgress(new ProgressBar())
                     .build();
         }else if (config.getModelEnum() == FaceRecModelEnum.ELASTIC_FACE_MODEL){
@@ -89,6 +91,7 @@ public class FaceRecCriteriaFactory {
 //                    .optArgument("resize", "112,112")
                     .optTranslator(new FaceFeatureTranslator())
                     .optEngine("PyTorch") // Use PyTorch engine
+                    .optDevice(device)
                     .optProgress(new ProgressBar())
                     .build();
         }

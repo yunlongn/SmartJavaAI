@@ -24,7 +24,7 @@ public class OcrCommonRecCriterialFactory {
     public static Criteria<Image, String> createCriteria(OcrRecModelConfig config) {
         Device device = null;
         if(!Objects.isNull(config.getDevice())){
-            device = config.getDevice() == DeviceEnum.CPU ? Device.cpu() : Device.gpu();
+            device = config.getDevice() == DeviceEnum.CPU ? Device.cpu() : Device.gpu(config.getGpuId());
         }
         Criteria<Image, String> criteria = null;
         ConcurrentHashMap params = new ConcurrentHashMap<String, String>();

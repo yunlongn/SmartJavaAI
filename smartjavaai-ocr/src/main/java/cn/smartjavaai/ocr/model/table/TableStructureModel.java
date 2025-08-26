@@ -1,5 +1,6 @@
 package cn.smartjavaai.ocr.model.table;
 
+import ai.djl.inference.Predictor;
 import ai.djl.modality.cv.Image;
 import cn.smartjavaai.common.entity.R;
 import cn.smartjavaai.ocr.config.OcrDetModelConfig;
@@ -7,6 +8,7 @@ import cn.smartjavaai.ocr.config.TableStructureConfig;
 import cn.smartjavaai.ocr.entity.OcrBox;
 import cn.smartjavaai.ocr.entity.OcrItem;
 import cn.smartjavaai.ocr.entity.TableStructureResult;
+import org.apache.commons.pool2.impl.GenericObjectPool;
 
 import java.awt.image.BufferedImage;
 import java.util.List;
@@ -58,6 +60,10 @@ public interface TableStructureModel extends AutoCloseable{
      * @return
      */
     default R<TableStructureResult> detect(Image image){
+        throw new UnsupportedOperationException("默认不支持该功能");
+    }
+
+    default GenericObjectPool<Predictor<Image, TableStructureResult>> getPool() {
         throw new UnsupportedOperationException("默认不支持该功能");
     }
 }

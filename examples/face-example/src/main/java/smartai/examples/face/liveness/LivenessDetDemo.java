@@ -3,6 +3,7 @@ package smartai.examples.face.liveness;
 import ai.djl.modality.cv.Image;
 import ai.djl.modality.cv.ImageFactory;
 import cn.hutool.core.lang.UUID;
+import cn.smartjavaai.common.config.Config;
 import cn.smartjavaai.common.entity.DetectionInfo;
 import cn.smartjavaai.common.entity.DetectionRectangle;
 import cn.smartjavaai.common.entity.DetectionResponse;
@@ -32,6 +33,7 @@ import nu.pattern.OpenCV;
 import org.bytedeco.javacv.FFmpegFrameGrabber;
 import org.bytedeco.javacv.Frame;
 import org.bytedeco.javacv.Java2DFrameUtils;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.opencv.core.Mat;
 import org.opencv.core.Size;
@@ -60,6 +62,12 @@ public class LivenessDetDemo {
 
     //设备类型
     public static DeviceEnum device = DeviceEnum.CPU;
+
+    @BeforeClass
+    public static void beforeAll() throws IOException {
+        //修改缓存路径
+//        Config.setCachePath("/Users/xxx/smartjavaai_cache");
+    }
 
 
 
@@ -133,7 +141,8 @@ public class LivenessDetDemo {
      */
     @Test
     public void testLivenessDetect(){
-        try (LivenessDetModel livenessDetModel = getLivenessDetModel()){
+        try {
+            LivenessDetModel livenessDetModel = getLivenessDetModel();
             R<DetectionResponse> response = livenessDetModel.detect("src/main/resources/liveness/1.jpg");
             if(response.isSuccess()){
                 for (DetectionInfo detectionInfo : response.getData().getDetectionInfoList()){
@@ -152,7 +161,8 @@ public class LivenessDetDemo {
      */
     @Test
     public void testLivenessDetectAndDraw(){
-        try (LivenessDetModel livenessDetModel = getLivenessDetModel()){
+        try {
+            LivenessDetModel livenessDetModel = getLivenessDetModel();
             BufferedImage image = ImageIO.read(new File(Paths.get("src/main/resources/liveness/1.jpg").toAbsolutePath().toString()));
             R<DetectionResponse> response = livenessDetModel.detect(image);
             if(response.isSuccess()){
@@ -175,7 +185,8 @@ public class LivenessDetDemo {
      */
     @Test
     public void testLivenessDetect2(){
-        try (LivenessDetModel livenessDetModel = getLivenessDetModel()){
+        try {
+            LivenessDetModel livenessDetModel = getLivenessDetModel();
             //指定文件夹路径
             File dir = new File("face-example/src/main/resources/liveness");
             File[] files = dir.listFiles();
@@ -198,8 +209,9 @@ public class LivenessDetDemo {
      */
     @Test
     public void testLivenessDetect3(){
-        try (FaceDetModel faceDetectModel = getFaceDetModel();
-             LivenessDetModel livenessDetModel = getLivenessDetModel()){
+        try {
+            FaceDetModel faceDetectModel = getFaceDetModel();
+            LivenessDetModel livenessDetModel = getLivenessDetModel();
             // 将图片路径转换为 BufferedImage
             BufferedImage image = ImageIO.read(new File(Paths.get("src/main/resources/liveness/1.jpg").toAbsolutePath().toString()));
             //人脸检测
@@ -230,8 +242,9 @@ public class LivenessDetDemo {
      */
     @Test
     public void testLivenessDetect4(){
-        try (FaceDetModel faceDetModel = getFaceDetModel();
-             LivenessDetModel livenessDetModel = getMiniVisionLivenessDetModel()){
+        try {
+            FaceDetModel faceDetModel = getFaceDetModel();
+            LivenessDetModel livenessDetModel = getMiniVisionLivenessDetModel();
             // 将图片路径转换为 BufferedImage
             BufferedImage image = ImageIO.read(new File(Paths.get("src/main/resources/liveness/1.jpg").toAbsolutePath().toString()));
             R<DetectionResponse> detResult = faceDetModel.detect(image);
@@ -259,7 +272,8 @@ public class LivenessDetDemo {
      */
     @Test
     public void testLivenessDetectVideo(){
-        try (LivenessDetModel livenessDetModel = getLivenessDetModel()){
+        try {
+            LivenessDetModel livenessDetModel = getLivenessDetModel();
             //视频路径
             R<LivenessResult> livenessStatus = livenessDetModel.detectVideo("video.mp4");
             if (livenessStatus.isSuccess()){
@@ -278,7 +292,8 @@ public class LivenessDetDemo {
      */
     @Test
     public void testLivenessDetectCamera(){
-        try (LivenessDetModel livenessDetModel = getLivenessDetModel()){
+        try {
+            LivenessDetModel livenessDetModel = getLivenessDetModel();
             OpenCV.loadShared();
             VideoCapture capture = new VideoCapture(0);
             if (!capture.isOpened()) {

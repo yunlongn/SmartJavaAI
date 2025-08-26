@@ -8,6 +8,9 @@ import ai.djl.ndarray.NDArray;
 import cn.smartjavaai.common.entity.DetectionRectangle;
 import cn.smartjavaai.common.entity.DetectionResponse;
 import org.opencv.core.Mat;
+import org.opencv.core.Scalar;
+import org.opencv.core.Size;
+import org.opencv.imgproc.Imgproc;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
@@ -364,6 +367,7 @@ public class ImageUtils {
         int width = metrics.stringWidth(text) + padding * 2 - stroke / 2;
         int height = metrics.getHeight() + metrics.getDescent();
         int ascent = metrics.getAscent();
+        y = Math.max(0, y - height);
         java.awt.Rectangle background = new java.awt.Rectangle(x, y, width, height);
         g.fill(background);
         g.setPaint(Color.WHITE);
@@ -466,6 +470,33 @@ public class ImageUtils {
             }
         }
         return true;
+    }
+
+    /**
+     * 在图像上绘制带白色背景、黑色文字的文本
+     */
+    public static void putTextWithBackground(Mat image, String text, org.opencv.core.Point origin, Scalar textColor, Scalar backgroundColor, int padding) {
+        // 默认字体
+        int font = Imgproc.FONT_HERSHEY_SCRIPT_SIMPLEX;
+        // 默认字体缩放大小
+        double fontScale = 1.0;
+        //线条粗细
+        int thickness = 2;
+        //获取文字大小
+        int[] baseLine = new int[1];
+        Size textSize = Imgproc.getTextSize(text, font, fontScale, thickness, baseLine);
+        int textWidth = (int) textSize.width;
+        int textHeight = (int) textSize.height;
+
+        //计算带padding的背景框
+        org.opencv.core.Point bgTopLeft = new org.opencv.core.Point(origin.x - padding, origin.y - textHeight - padding);
+        org.opencv.core.Point bgBottomRight = new org.opencv.core.Point(origin.x + textWidth + padding, origin.y + baseLine[0] + padding);
+
+        //绘制背景矩形
+        Imgproc.rectangle(image, bgTopLeft, bgBottomRight, backgroundColor, Imgproc.FILLED);
+
+        //绘制文字（黑色）
+        Imgproc.putText(image, text, origin, font, fontScale, textColor, thickness);
     }
 
 

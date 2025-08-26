@@ -9,7 +9,7 @@ import cn.smartjavaai.translation.entity.TranslateParam;
  * @author lwx
  * @date 2025/6/05
  */
-public interface TranslationModel {
+public interface TranslationModel extends AutoCloseable{
 
     /**
      * 加载模型

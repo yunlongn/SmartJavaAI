@@ -2,6 +2,7 @@ package smartai.examples.face.expression;
 
 import ai.djl.modality.cv.Image;
 import ai.djl.modality.cv.ImageFactory;
+import cn.smartjavaai.common.config.Config;
 import cn.smartjavaai.common.entity.DetectionInfo;
 import cn.smartjavaai.common.entity.DetectionRectangle;
 import cn.smartjavaai.common.entity.DetectionResponse;
@@ -26,6 +27,7 @@ import cn.smartjavaai.face.model.liveness.LivenessDetModel;
 import com.alibaba.fastjson.JSONObject;
 import lombok.extern.slf4j.Slf4j;
 import nu.pattern.OpenCV;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.opencv.core.Mat;
 import org.opencv.core.Size;
@@ -53,6 +55,12 @@ public class ExpressionRecDemo {
 
     //设备类型
     public static DeviceEnum device = DeviceEnum.CPU;
+
+    @BeforeClass
+    public static void beforeAll() throws IOException {
+        //修改缓存路径
+//        Config.setCachePath("/Users/xxx/smartjavaai_cache");
+    }
 
     /**
      * 获取人脸检测模型
@@ -88,7 +96,8 @@ public class ExpressionRecDemo {
      */
     @Test
     public void testExpressionDetect() {
-        try (ExpressionModel model = getExpressionModel()){
+        try {
+            ExpressionModel model = getExpressionModel();
             R<ExpressionResult> result = model.detectTopFace("src/main/resources/emotion/happy.png");
             if(result.isSuccess()){
                 log.info("识别结果：{}", JSONObject.toJSONString(result.getData().getExpression().getDescription()));
@@ -106,7 +115,8 @@ public class ExpressionRecDemo {
      */
     @Test
     public void testExpressionDetect2() {
-        try (ExpressionModel model = getExpressionModel()){
+        try {
+            ExpressionModel model = getExpressionModel();
             R<DetectionResponse> result = model.detect("src/main/resources/emotion/happy.png");
             if(result.isSuccess()){
                 //log.info("识别结果：{}", JSONObject.toJSONString(result.getData()));
@@ -128,8 +138,9 @@ public class ExpressionRecDemo {
      */
     @Test
     public void testExpressionDetect3() {
-        try (FaceDetModel faceDetModel = getFaceDetModel();
-                ExpressionModel model = getExpressionModel()){
+        try {
+            FaceDetModel faceDetModel = getFaceDetModel();
+            ExpressionModel model = getExpressionModel();
             BufferedImage image = ImageIO.read(new File(Paths.get("src/main/resources/emotion/happy.png").toAbsolutePath().toString()));
             R<DetectionResponse> detResult = faceDetModel.detect(image);
             if(detResult.isSuccess()){
@@ -156,8 +167,9 @@ public class ExpressionRecDemo {
      */
     @Test
     public void testExpressionDetect4() {
-        try (FaceDetModel faceDetModel = getFaceDetModel();
-             ExpressionModel model = getExpressionModel()){
+        try {
+            FaceDetModel faceDetModel = getFaceDetModel();
+            ExpressionModel model = getExpressionModel();
             BufferedImage image = ImageIO.read(new File(Paths.get("src/main/resources/emotion/happy.png").toAbsolutePath().toString()));
             R<DetectionResponse> detResult = faceDetModel.detect(image);
             if(detResult.isSuccess()){
@@ -182,7 +194,8 @@ public class ExpressionRecDemo {
      */
     @Test
     public void testExpressionDetectAndDraw(){
-        try (ExpressionModel model = getExpressionModel()){
+        try {
+            ExpressionModel model = getExpressionModel();
             BufferedImage image = ImageIO.read(new File(Paths.get("src/main/resources/emotion/surprise.png").toAbsolutePath().toString()));
             R<DetectionResponse> result = model.detect(image);
             if(result.isSuccess()){
@@ -206,7 +219,8 @@ public class ExpressionRecDemo {
      */
     @Test
     public void testExpressionDetectCamera(){
-        try (ExpressionModel expressionModel = getExpressionModel()){
+        try {
+            ExpressionModel expressionModel = getExpressionModel();
             OpenCV.loadShared();
             VideoCapture capture = new VideoCapture(0);
             if (!capture.isOpened()) {

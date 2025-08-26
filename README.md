@@ -37,7 +37,7 @@
 
 ## 📚简介
 
-SmartJavaAI是专为JAVA 开发者打造的一个功能丰富、开箱即用的 JAVA  AI算法工具包，致力于帮助JAVA开发者零门槛使用各种AI算法模型，开发者无需深入了解底层实现，即可轻松在 Java 代码中调用人脸识别、目标检测、OCR 等功能。底层实现涵盖了 C++、Python 等语言的深度学习模型。后续将持续扩展更多算法，目标是构建一个“像 Hutool 一样简单易用”的 JAVA AI 通用工具箱
+SmartJavaAI是专为JAVA 开发者打造的一个功能丰富、开箱即用的 JAVA AI算法工具包，致力于帮助JAVA开发者零门槛使用各种AI算法模型，开发者无需深入了解底层实现，即可轻松在 Java 代码中调用人脸识别、目标检测、OCR 等功能。底层支持包括基于 DJL (Deep Java Library) 封装的深度学习模型，以及通过 JNI 接入的 C++/Python 算法，兼容多种主流深度学习框架如 PyTorch、TensorFlow、ONNX、Paddle 等，屏蔽复杂的模型部署与调用细节，开发者无需了解 AI 底层实现即可直接在 Java 项目中集成使用，后续将持续扩展更多算法，目标是构建一个“像 Hutool 一样简单易用”的 JAVA AI 通用工具箱
 
 ## 🚀  能力展示
 
@@ -148,7 +148,19 @@ SmartJavaAI是专为JAVA 开发者打造的一个功能丰富、开箱即用的 
       </td>     
       <td>
         <div align="center">
-        <img src="https://cdn.jsdelivr.net/gh/geekwenjie/SmartJavaAI-Site/images/object_detection_detected.png" width = "500px"/>
+        <img src="https://cdn.jsdelivr.net/gh/geekwenjie/SmartJavaAI-Site/images/objectdect/object_detect_1.jpeg" width = "500px"/>
+        </div>
+      </td>
+    </tr>
+  <tr>
+      <td>
+        <div align="left">
+          <p>自定义目标训练+检测</p>
+        </div>
+      </td>     
+      <td>
+        <div align="center">
+        <img src="https://cdn.jsdelivr.net/gh/geekwenjie/SmartJavaAI-Site/images/objectdect_train/result.jpg" height = "300px"/>
         </div>
       </td>
     </tr>
@@ -183,6 +195,25 @@ SmartJavaAI是专为JAVA 开发者打造的一个功能丰富、开箱即用的 
     <tr>
       <td>
         <div align="left">
+          <p>车牌识别</p>
+          - 单层/双层检测 <br>
+          - 车牌颜色识别 <br>
+        </div>
+      </td>     
+      <td>
+        <div align="center">
+        <img src="https://cdn.jsdelivr.net/gh/geekwenjie/SmartJavaAI-Site/images/ocr/plate_recognized.jpg" width = "500px"/>
+        </div>
+      </td>
+      <td>
+        <div align="center">
+        <img src="https://cdn.jsdelivr.net/gh/geekwenjie/SmartJavaAI-Site/images/ocr/plate_recognized2.jpg" width = "500px"/>
+        </div>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <div align="left">
           <p>机器翻译</p>
           - 200多种语言互相翻译
         </div>
@@ -190,6 +221,19 @@ SmartJavaAI是专为JAVA 开发者打造的一个功能丰富、开箱即用的 
       <td>
         <div align="center">
         <img src="https://cdn.jsdelivr.net/gh/geekwenjie/SmartJavaAI-Site/images/translate/translate.png" width = "500px"/>
+        </div>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <div align="left">
+          <p>语音识别</p>
+          - 支持100种语言
+        </div>
+      </td>     
+      <td>
+        <div align="center">
+        <img src="https://cdn.jsdelivr.net/gh/geekwenjie/SmartJavaAI-Site/images/speech/asr.png" width = "500px"/>
         </div>
       </td>
     </tr>
@@ -239,39 +283,50 @@ SmartJavaAI是专为JAVA 开发者打造的一个功能丰富、开箱即用的 
   - 支持任意角度识别，方向校准
   - 支持通用文字识别，通用手写字识别
   - 支持表格识别
+  - 支持中文车牌识别：单层/双层检测，颜色识别，支持12种中文车牌
 - **机器翻译**
   - 集成NLLB-200模型：支持200+语言互相翻译
+- **语音识别**
+  - 集成openai的whisper模型：支持100种语言
+  - 集成vosk语音识别
 
 
 ## 🌟 AI集成方式对比
 
-| 方案                | 技术特点                                                                 | 优点                                                                | 缺点                                                                |
-|---------------------|--------------------------------------------------------------------------|---------------------------------------------------------------------|---------------------------------------------------------------------|
-| **OpenCV**         | 传统图像处理方案                                                        | ✅ 提供java接口<br>✅ 轻量级部署<br>✅ 社区资源丰富                  | ❌ 基于传统算法精度低(60%-75%)<br>❌ 需本地安装环境 |
-| &zwnj;**商业闭源SDK（如虹软等）**&zwnj;       | 商业级闭源解决方案                                                      | ✅ 开箱即用<br>✅ 提供完整文档和SDK<br>✅ 支持离线活体检测      | ❌ 免费版需年度授权更新<br>❌ 商业授权费用高<br>❌ 代码不可控 |
-| &zwnj;**云API(阿里云)**&zwnj;   | SaaS化云端服务                                                          | ✅ 零部署成本<br>✅ 支持高并发<br>✅ 自带模型迭代        | ❌ 网络延迟风险(200-800ms)<br>❌ 按调用量计费<br>❌ 有数据安全风险 |
+| 方案                | 技术特点                                                                 | 优点                                                                | 缺点                                            |
+|---------------------|--------------------------------------------------------------------------|---------------------------------------------------------------------|-----------------------------------------------|
+| **OpenCV**         | 传统图像处理方案                                                        | ✅ 提供java接口<br>✅ 轻量级部署<br>✅ 社区资源丰富                  | ❌ 基于传统算法精度低(60%-75%)<br>❌ 需本地安装环境             |
+| &zwnj;**商业闭源SDK（如虹软等）**&zwnj;       | 商业级闭源解决方案                                                      | ✅ 开箱即用<br>✅ 提供完整文档和SDK<br>✅ 支持离线活体检测      | ❌ 免费版需年度授权更新<br>❌ 商业授权费用高<br>❌ 代码不可控          |
+| &zwnj;**云API(阿里云)**&zwnj;   | SaaS化云端服务                                                          | ✅ 零部署成本<br>✅ 支持高并发<br>✅ 自带模型迭代        | ❌ 网络延迟风险(200-800ms)<br>❌ 按调用量计费<br>❌ 有数据安全风险  |
 | &zwnj;**Python混合调用**&zwnj;  | 跨语言调用方案                                                          | ✅ 可集成PyTorch/TF等框架<br>✅ 支持自定义算法<br>✅ 识别精度高  | ❌ 需维护双语言环境<br>❌ 进程通信性能损耗(30%+)<br>❌ 异常处理复杂度翻倍 |
-| &zwnj;**JNI/JNA**&zwnj;         | 跨语言底层调用方案      | ✅ 直接调用 C/C++ 高性能算法库✅ 支持调用各种原生成熟库✅ 可封装成通用工具Jar   |❌ 开发成本高，JNI更复杂❌ 跨平台兼容性差       |
-| &zwnj;**DJL框架**&zwnj;         | 深度学习框架                                                            | ✅ 纯Java实现<br>✅ 支持主流深度学习框架<br>✅ 可加载预训练模型(99%+)   | ❌ 需掌握DL知识<br>❌ 需处理模型加载、预处理、后处理等复杂技术细节      |
-| &zwnj;**SmartJavaAI**&zwnj;       | java深度学习工具包                                                            | ✅ 支持主流深度学习框架<br>✅ 提供丰富、开箱即用API<br>  ✅ 上手简单，单一Jar包集成 |   ❌要求JDK版本11及以上  |
+| &zwnj;**JNI/JNA**&zwnj;         | 跨语言底层调用方案      | ✅ 直接调用 C/C++ 高性能算法库✅ 支持调用各种原生成熟库✅ 可封装成通用工具Jar   | ❌ 开发成本高，JNI更复杂❌ 跨平台兼容性差                       |
+| &zwnj;**DJL框架**&zwnj;         | 深度学习框架                                                            | ✅ 纯Java实现<br>✅ 支持主流深度学习框架<br>✅ 可加载预训练模型(99%+)   | ❌ 需掌握DL知识<br>❌ 需处理模型加载、预处理、后处理等复杂技术细节         |
+| &zwnj;**SmartJavaAI**&zwnj;       | java深度学习工具包                                                            | ✅ 支持主流深度学习框架<br>✅ 提供丰富、开箱即用API<br>  ✅ 上手简单，单一Jar包集成 | 无                                             |
 
 
 
 ## 🛠️包含组件
 
-| 模块                          | 介绍                        |
-|-----------------------------|---------------------------|
-| smartjavaai-common          | 基础通用模块，封装了公共功能，供各算法模块共享使用 |
-| smartjavaai-face            | 人脸功能模块                    |
-| smartjavaai-objectdetection | 目标检测模块                    |
-| smartjavaai-ocr             | OCR文字识别模块                 |
-| smartjavaai-translate       | 机器翻译模块                    |
+| 模块                          | 介绍                           |
+|-----------------------------|------------------------------|
+| smartjavaai-common          | 基础通用模块，封装了公共功能，供各算法模块共享使用    |
+| smartjavaai-bom             | 依赖管理模块                       |
+| smartjavaai-face            | 人脸功能模块                       |
+| smartjavaai-objectdetection | 目标检测模块                       |
+| smartjavaai-ocr             | OCR文字识别模块                    |
+| smartjavaai-translate       | 机器翻译模块                       |
+| smartjavaai-speech          | 语音功能模块，包含 ASR 和 TTS |
 
 可以根据需求对每个模块单独引入，也可以通过引入`smartjavaai-all`方式引入所有模块。
 
 -------------------------------------------------------------------------------
 
 
+## SmartJavaAI 架构图
+
+ <img src="https://cdn.jsdelivr.net/gh/geekwenjie/SmartJavaAI-Site/images/jgt.png" width = "600px"/>
+
+-------------------------------------------------------------------------------
 
 ## 📦 安装
 
@@ -288,7 +343,7 @@ SmartJavaAI是专为JAVA 开发者打造的一个功能丰富、开箱即用的 
 <dependency>
     <groupId>cn.smartjavaai</groupId>
     <artifactId>smartjavaai-all</artifactId>
-    <version>1.0.20</version>
+    <version>1.0.23</version>
 </dependency>
 ```
 ### 3、完整示例代码
@@ -394,16 +449,6 @@ SmartJavaAI是专为JAVA 开发者打造的一个功能丰富、开箱即用的 
 - 自训练模型推理
 - yolov3~yolov12 系列
 
-**SSD 系列**
-
-| 模型名称 | 引擎               | 骨干网络 | 输入尺寸 | <div style="width: 60pt">训练数据集</div> | 精度（mAP） | <div style="width: 50pt">推理速度</div> | <div style="width: 150pt">适用场景</div>|
-| :-------- |------------------| ------------- | ----------- |--------------------------------------| -------------|-------------------------------------| -------------|
-|SSD_300_RESNET5| PyTorch          | ResNet‑50 | 300×300 | COCO                                 | 中等 | 快                                   | 精度需求一般|
-|SSD_512_RESNET50_V1_VOC| PyTorch | ResNet‑50 | 512×512 | Pascal VOC                           | 稍高 | 中等                                  | 精度优先、可接受略低速度的场景|
-|SSD_512_VGG16_ATROUS_COCO| MXNet | VGG‑16 | 512×512 | COCO                                 | 较高 | 中等                                  | 通用场景；对小目标有一定提升|
-|SSD_300_VGG16_ATROUS_VOC| MXNet | VGG‑16 | 300×300 | Pascal VOC                           | 中等偏上 | 快                                   | VOC 数据集同类任务；资源受限时使用|
-|SSD_512_MOBILENET1_VOC| MXNet | MobileNet‑1.0 | 512×512 | Pascal VOC                           | 中等 | 快                                   | 嵌入式/移动端设备；算力和内存都很有限|
-
 **YOLO 系列**
 
 |模型名称 | 引擎          | 版本 | 大小（Backbone） | <div style="width: 60pt">数据集</div> | <div style="width: 50pt">精度</div> | <div style="width: 50pt">速度</div> | <div style="width: 150pt">适用场景</div> |
@@ -414,6 +459,18 @@ SmartJavaAI是专为JAVA 开发者打造的一个功能丰富、开箱即用的 
 |YOLOV5S | PyTorch     | v5  | 小型 | COCO                                   | 较高                                | 非常快 | 常见通用场景，算力资源有限时优选                     |
 |YOLOV5S_ONNXRUNTIME| OnnxRuntime     | v5  | 小型 | COCO                                   | 较高                                | 加速（需 ONNX 支持） | Windows/Linux 通用加速部署                 |
 |YOLO (MXNet / 通用模型) | MXNet     | v3  | DarkNet‑53 | COCO                                   | 较高                                | 快 | 需要 MXNet 生态或复现老项目时使用                 |
+
+
+**SSD 系列**
+
+| 模型名称 | 引擎               | 骨干网络 | 输入尺寸 | <div style="width: 60pt">训练数据集</div> | 精度（mAP） | <div style="width: 50pt">推理速度</div> | <div style="width: 150pt">适用场景</div>|
+| :-------- |------------------| ------------- | ----------- |--------------------------------------| -------------|-------------------------------------| -------------|
+|SSD_300_RESNET5| PyTorch          | ResNet‑50 | 300×300 | COCO                                 | 中等 | 快                                   | 精度需求一般|
+|SSD_512_RESNET50_V1_VOC| PyTorch | ResNet‑50 | 512×512 | Pascal VOC                           | 稍高 | 中等                                  | 精度优先、可接受略低速度的场景|
+|SSD_512_VGG16_ATROUS_COCO| MXNet | VGG‑16 | 512×512 | COCO                                 | 较高 | 中等                                  | 通用场景；对小目标有一定提升|
+|SSD_300_VGG16_ATROUS_VOC| MXNet | VGG‑16 | 300×300 | Pascal VOC                           | 中等偏上 | 快                                   | VOC 数据集同类任务；资源受限时使用|
+|SSD_512_MOBILENET1_VOC| MXNet | MobileNet‑1.0 | 512×512 | Pascal VOC                           | 中等 | 快                                   | 嵌入式/移动端设备；算力和内存都很有限|
+
 
 **YOLOv3 变体系列**
 
@@ -474,6 +531,22 @@ SmartJavaAI是专为JAVA 开发者打造的一个功能丰富、开箱即用的 
 | SLANet_plus   | （增强版）该模型通过轻量级骨干 PP-LCNet、CSP-PAN 融合与 SLA Head 解码，有效提升表格结构识别的精度与速度。 | [Github](https://paddlepaddle.github.io/PaddleOCR/v3.1.0/version3.x/module_usage/table_structure_recognition.html#_3) |
 
 
+**车牌检测模型(License Plate Detection)**
+
+| 模型名称    | 模型简介                     | 模型开源网站     |
+|---------|--------------------------|------------|
+| YOLOV5  | 基于YOLOV5训练，支持12种中文车牌     | [Github](https://github.com/we0091234/Chinese_license_plate_detection_recognition) |
+| yolov7-lite-t | （超小型模型）YOLOv7-Lite 架构的轻量级车牌检测模型 | [Github](https://github.com/we0091234/Chinese_license_plate_detection_recognition) |
+| yolov7-lite-s  | YOLOv7-Lite 架构的轻量级车牌检测模型 | [Github](https://github.com/we0091234/Chinese_license_plate_detection_recognition) |
+
+
+**车牌识别模型(License Plate Recognition)**
+
+| 模型名称   | 模型简介       | 模型开源网站     |
+|--------|------------|------------|
+| PLATE_REC_CRNN | CRNN中文字符识别 | [Github](https://github.com/Sierkinhane/CRNN_Chinese_Characters_Rec) |
+
+
 ---
 
 #### 机器翻译模型
@@ -484,6 +557,18 @@ SmartJavaAI是专为JAVA 开发者打造的一个功能丰富、开箱即用的 
 | 模型名称                           | 模型简介                     | 模型官网                                          |
 | ------------------------------ | ------------------------ |-----------------------------------------------|
 | NLLB-200                       | Meta AI 开发的一个先进的单一多语言机器翻译模型 | [Github](https://github.com/facebookresearch/fairseq/tree/nllb) |
+
+---
+
+#### 语音识别模型
+
+这里仅介绍模型的开源项目，每个开源项目通常包含多个具体模型，本文不逐一列出。
+
+| 模型名称    | 模型简介                     | 模型官网                                          |
+|---------| ------------------------ |-----------------------------------------------|
+| Whisper | OpenAI 开源的通用语音识别（ASR）模型，支持多语言转写和翻译，具有较高的识别精度，尤其在嘈杂环境中表现良好，适合离线和批量音频处理。 | [Github](https://github.com/ggml-org/whisper.cpp) |
+| Vosk    | 一个轻量级离线语音识别工具包，支持多种语言和平台（包括移动端与嵌入式设备），可在低资源环境中运行，适合实时语音识别场景。 | [Github](https://github.com/alphacep/vosk-api) |
+
 
 ---
 
@@ -504,10 +589,40 @@ SmartJavaAI是专为JAVA 开发者打造的一个功能丰富、开箱即用的 
 
 🚀 **如果这个项目对你有帮助，别忘了点个 Star ⭐！你的支持是我持续优化升级的动力！** ❤️
 
+## 献代码的步骤
+
+1、在Gitee或者Github/Gitcode上fork项目到自己的repo
+2、把fork过去的项目也就是你的项目clone到你的本地
+3、修改代码（记得一定要修改dev分支）
+4、commit后push到自己的库（dev分支）
+5、登录Gitee或Github/Gitcode在你首页可以看到一个 pull request 按钮，点击它，填写一些说明信息，然后提交即可。
+6、等待维护者合并
 
 ## 近期更新日志
 
-## [v1.0.20] - 2025-07-06
+## [v1.0.23] - 2025-08-09
+- 新增 语音识别模块，集成 OpenAI 开源的 Whisper 和 Vosk
+- 修复 质量评估模型的 Bug
+- 修复 OCR 模块 recognizeAndDraw 方法的 Bug
+- 修复 车牌识别在未检测到车牌时的报错问题
+- 优化 OCR 表格识别功能，新增导出方式
+
+## [v1.0.22] - 2025-07-28
+- 新增 Milvus 身份验证支持
+- 集成车牌识别模型，支持车牌检测与识别
+- 目标检测功能升级：可指定类别及topk
+- 支持自定义线程池线程数量
+
+
+## [v1.0.20] - 2025-07-18
+- OCR：新增表格识别模型
+- OCR：新增9个通用模型
+- OCR：支持批量检测识别
+- OCR：新增更多参数，使用更加灵活
+- 人脸识别：支持ID查询及分页获取人脸信息
+- 活体检测：视频检测支持设置最大帧数
+
+## [v1.0.19] - 2025-07-06
 - 人脸模块：新增小视科技（MiniVision）活体检测模型
 - 人脸模块：新增阿里通义工作室活体检测模型
 - 人脸模块：新增 2 个表情识别模型
@@ -520,21 +635,4 @@ SmartJavaAI是专为JAVA 开发者打造的一个功能丰富、开箱即用的 
 - 人脸模块：修复人脸更新后的缓存异常问题
 - 其他：优化部分功能与细节体验
 
-## [v1.0.17] - 2025-06-18
-- 新增机器翻译模块：支持 200+ 种语言之间的相互翻译
-- 人脸识别模块：修复批量删除人脸数据时的异常问题
-- 人脸识别模块：修复人脸检索 Top大于 1 时报异常问题
-
-## [v1.0.16] - 2025-06-09
-- 人脸模块：人脸查询支持 Milvus 和 SQLite
-- 人脸模块：FaceNet人脸模型也支持人脸注册，查询等功能
-- 人脸模块：Seetaface6 自动下载人脸库
-- 人脸模块：Seetaface6解决依赖库重复下载问题
-- 人脸模块：支持手动加载人脸库
-- 人脸模块：人脸识别相关功能支持更多参数
-
-
-## [v1.0.15] - 2025-05-17
-- 新增OCR文字识别模块：支持最新 PP-OCRv5
-- OCR文本识别：支持文字方向检测与自动校正
 

@@ -2,6 +2,7 @@ package cn.smartjavaai.face.model.liveness;
 
 import ai.djl.Device;
 import ai.djl.MalformedModelException;
+import ai.djl.engine.Engine;
 import ai.djl.inference.Predictor;
 import ai.djl.modality.cv.Image;
 import ai.djl.modality.cv.ImageFactory;
@@ -35,6 +36,7 @@ import org.apache.commons.pool2.impl.GenericObjectPool;
 import org.bytedeco.javacv.FFmpegFrameGrabber;
 import org.bytedeco.javacv.Frame;
 import org.bytedeco.javacv.Java2DFrameUtils;
+import org.opencv.core.Mat;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
@@ -54,7 +56,7 @@ import java.util.*;
 @Slf4j
 public class CommonLivenessModel implements LivenessDetModel{
 
-    protected ObjectPool<Predictor<Image, Float>> predictorPool;
+    protected GenericObjectPool<Predictor<Image, Float>> predictorPool;
 
     protected LivenessConfig config;
 
@@ -78,6 +80,15 @@ public class CommonLivenessModel implements LivenessDetModel{
         } catch (IOException | ModelNotFoundException | MalformedModelException e) {
             throw new FaceException("阿里通义实验室活体检测模型加载失败", e);
         }
+
+        int predictorPoolSize = config.getPredictorPoolSize();
+        if(config.getPredictorPoolSize() <= 0){
+            predictorPoolSize = Runtime.getRuntime().availableProcessors(); // 默认等于CPU核心数
+        }
+        predictorPool.setMaxTotal(predictorPoolSize);
+        log.debug("当前设备: " + model.getNDManager().getDevice());
+        log.debug("当前引擎: " + Engine.getInstance().getEngineName());
+        log.debug("模型推理器线程池最大数量: " + predictorPoolSize);
     }
 
 
@@ -87,6 +98,7 @@ public class CommonLivenessModel implements LivenessDetModel{
             throw new FaceException("图像无效");
         }
         Predictor<Image, Float> predictor = null;
+        Image djlImage = null;
         try {
             predictor = predictorPool.borrowObject();
             //预处理图片
@@ -101,7 +113,7 @@ public class CommonLivenessModel implements LivenessDetModel{
                         .setCenterCropSize(112)
                         .process();
             }
-            Image djlImage = ImageFactory.getInstance().fromImage(OpenCVUtils.image2Mat(processedImage));
+            djlImage = ImageFactory.getInstance().fromImage(OpenCVUtils.image2Mat(processedImage));
             Float result = predictor.predict(djlImage);
             if(result >= config.getRealityThreshold()){
                 return R.ok(new LivenessResult(LivenessStatus.LIVE, result));
@@ -124,6 +136,10 @@ public class CommonLivenessModel implements LivenessDetModel{
                     }
                 }
             }
+            if (djlImage != null){
+                ((Mat)djlImage.getWrappedImage()).release();
+            }
+
         }
     }
 
@@ -401,6 +417,12 @@ public class CommonLivenessModel implements LivenessDetModel{
             throw new FaceException(e);
         }
         return R.fail(R.Status.Unknown);
+    }
+
+
+    @Override
+    public GenericObjectPool<Predictor<Image, Float>> getPool() {
+        return predictorPool;
     }
 
     @Override

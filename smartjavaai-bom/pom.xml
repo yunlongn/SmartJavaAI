@@ -6,10 +6,10 @@
     <parent>
         <groupId>cn.smartjavaai</groupId>
         <artifactId>smartjavaai-parent</artifactId>
-        <version>1.0.20</version>
+        <version>1.0.23</version>
     </parent>
 
-    <version>1.0.20</version>
+    <version>1.0.23</version>
     <artifactId>smartjavaai-bom</artifactId>
     <name>smartjavaai-bom</name>
     <description>统一版本管理的 BOM 包，同时支持 import 和全量依赖</description>
@@ -41,6 +41,11 @@
             <dependency>
                 <groupId>cn.smartjavaai</groupId>
                 <artifactId>smartjavaai-translate</artifactId>
+                <version>${project.parent.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>cn.smartjavaai</groupId>
+                <artifactId>smartjavaai-speech</artifactId>
                 <version>${project.parent.version}</version>
             </dependency>
         </dependencies>

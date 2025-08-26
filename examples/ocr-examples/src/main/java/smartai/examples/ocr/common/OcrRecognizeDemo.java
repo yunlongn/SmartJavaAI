@@ -1,6 +1,10 @@
 package smartai.examples.ocr.common;
 
 import ai.djl.modality.cv.Image;
+import ai.djl.util.JsonUtils;
+import cn.hutool.core.img.ImgUtil;
+import cn.hutool.core.io.FileUtil;
+import cn.smartjavaai.common.config.Config;
 import cn.smartjavaai.common.enums.DeviceEnum;
 import cn.smartjavaai.common.utils.ImageUtils;
 import cn.smartjavaai.ocr.config.DirectionModelConfig;
@@ -18,9 +22,15 @@ import cn.smartjavaai.ocr.model.common.direction.OcrDirectionModel;
 import cn.smartjavaai.ocr.model.common.recognize.OcrCommonRecModel;
 import com.alibaba.fastjson.JSONObject;
 import lombok.extern.slf4j.Slf4j;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 
 /**
@@ -35,6 +45,13 @@ public class OcrRecognizeDemo {
     //设备类型
     public static DeviceEnum device = DeviceEnum.CPU;
 
+
+    @BeforeClass
+    public static void beforeAll() throws IOException {
+        //修改缓存路径
+        //Config.setCachePath("/Users/xxx/smartjavaai_cache");
+    }
+
     /**
      * 获取通用识别模型（不带方向矫正）
      * @return
@@ -44,7 +61,7 @@ public class OcrRecognizeDemo {
         //指定文本识别模型
         recModelConfig.setRecModelEnum(CommonRecModelEnum.PP_OCR_V5_MOBILE_REC_MODEL);
         //指定识别模型位置，需要更改为自己的模型路径（下载地址请查看文档）
-        recModelConfig.setRecModelPath("/Users/xxx/Documents/develop/model/ocr/PP-OCRv5_mobile_rec_infer/PP-OCRv5_mobile_rec_infer.onnx");
+        recModelConfig.setRecModelPath("/Users/wenjie/Documents/develop/model/ocr/PP-OCRv5_mobile_rec_infer/PP-OCRv5_mobile_rec_infer.onnx");
         recModelConfig.setDevice(device);
         recModelConfig.setTextDetModel(getDetectionModel());
         return OcrModelFactory.getInstance().getRecModel(recModelConfig);
@@ -59,7 +76,7 @@ public class OcrRecognizeDemo {
         //指定检测模型
         config.setModelEnum(CommonDetModelEnum.PP_OCR_V5_MOBILE_DET_MODEL);
         //指定模型位置，需要更改为自己的模型路径（下载地址请查看文档）
-        config.setDetModelPath("/Users/xxx/Documents/develop/model/ocr/PP-OCRv5_mobile_det_infer/PP-OCRv5_mobile_det_infer.onnx");
+        config.setDetModelPath("/Users/wenjie/Documents/develop/model/ocr/PP-OCRv5_mobile_det_infer/PP-OCRv5_mobile_det_infer.onnx");
         config.setDevice(device);
         return OcrModelFactory.getInstance().getDetModel(config);
     }
@@ -106,7 +123,8 @@ public class OcrRecognizeDemo {
      */
     @Test
     public void recognize(){
-        try (OcrCommonRecModel recModel = getRecModel()){
+        try {
+            OcrCommonRecModel recModel = getRecModel();
             //不带方向矫正，分行返回文本
             OcrRecOptions options = new OcrRecOptions(false, true);
             OcrInfo ocrInfo = recModel.recognize("src/main/resources/ocr_2.jpg",options);
@@ -127,7 +145,8 @@ public class OcrRecognizeDemo {
      */
     @Test
     public void recognizeHandWriting(){
-        try (OcrCommonRecModel recModel = getRecModel()){
+        try {
+            OcrCommonRecModel recModel = getRecModel();
             OcrInfo ocrInfo = recModel.recognize("src/main/resources/handwriting_1.jpg",new OcrRecOptions());
             log.info("OCR识别结果：{}", JSONObject.toJSONString(ocrInfo));
         } catch (Exception e) {
@@ -146,7 +165,8 @@ public class OcrRecognizeDemo {
      */
     @Test
     public void recognize2(){
-        try (OcrCommonRecModel recModel = getRecModelWithDirection()){
+        try {
+            OcrCommonRecModel recModel = getRecModelWithDirection();
             //带方向矫正，分行返回文本
             OcrRecOptions options = new OcrRecOptions(true, true);
             OcrInfo ocrInfo = recModel.recognize("src/main/resources/ocr_3.jpg",options);
@@ -168,9 +188,63 @@ public class OcrRecognizeDemo {
      */
     @Test
     public void recognizeAndDraw(){
-        try (OcrCommonRecModel recModel = getRecModelWithDirection()){
+        try {
+            OcrCommonRecModel recModel = getRecModelWithDirection();
             int fontSize = 18;
             recModel.recognizeAndDraw("src/main/resources/general_ocr_002.png", "output/ocr_4_recognized.jpg", fontSize, new OcrRecOptions());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Test
+    public void recognizeAndDraw2(){
+        try {
+            OcrCommonRecModel recModel = getRecModel();
+            int fontSize = 18;
+            //创建保存路径
+            Path inputImagePath = Paths.get("src/main/resources/general_ocr_002.png");
+            Path imageOutputPath = Paths.get("output/ocr_4_recognized.jpg");
+            BufferedImage image = null;
+            image = ImageIO.read(new File(inputImagePath.toAbsolutePath().toString()));
+            BufferedImage resultImage = recModel.recognizeAndDraw(image, fontSize, new OcrRecOptions());
+            ImageUtils.saveImage(resultImage, imageOutputPath.toAbsolutePath().toString());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * 文本识别并绘制结果（返回base64）
+     */
+    @Test
+    public void recognizeAndDrawToBase64(){
+        try {
+            OcrCommonRecModel recModel = getRecModel();
+            int fontSize = 18;
+            //创建保存路径
+            Path inputImagePath = Paths.get("src/main/resources/general_ocr_002.png");
+            byte[] imageBytes = FileUtil.readBytes(inputImagePath);
+            String base64 = recModel.recognizeAndDrawToBase64(imageBytes, fontSize, new OcrRecOptions());
+            log.info("base64:{}", base64);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * 文本识别并绘制结果（返回OcrInfo,OcrInfo中包含base64）
+     */
+    @Test
+    public void recognizeAndDraw3(){
+        try {
+            OcrCommonRecModel recModel = getRecModel();
+            int fontSize = 18;
+            //创建保存路径
+            Path inputImagePath = Paths.get("src/main/resources/general_ocr_002.png");
+            byte[] imageBytes = FileUtil.readBytes(inputImagePath);
+            OcrInfo ocrInfo = recModel.recognizeAndDraw(imageBytes, fontSize, new OcrRecOptions());
+            log.info("ocrInfo:{}", JsonUtils.toJson(ocrInfo));
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -184,7 +258,8 @@ public class OcrRecognizeDemo {
      */
     @Test
     public void batchRecognize(){
-        try (OcrCommonRecModel recModel = getRecModelWithDirection()){
+        try {
+            OcrCommonRecModel recModel = getRecModelWithDirection();
             //批量检测要求图片宽高一致
             String folderPath = "/Users/xxx/Downloads/testing33";
             //读取文件夹中所有图片

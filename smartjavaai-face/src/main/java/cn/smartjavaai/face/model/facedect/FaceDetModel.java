@@ -1,8 +1,13 @@
 package cn.smartjavaai.face.model.facedect;
 
+import ai.djl.inference.Predictor;
+import ai.djl.modality.Classifications;
+import ai.djl.modality.cv.Image;
+import ai.djl.modality.cv.output.DetectedObjects;
 import cn.smartjavaai.common.entity.DetectionResponse;
 import cn.smartjavaai.common.entity.R;
 import cn.smartjavaai.face.config.FaceDetConfig;
+import org.apache.commons.pool2.impl.GenericObjectPool;
 
 import java.awt.image.BufferedImage;
 import java.io.InputStream;
@@ -80,6 +85,10 @@ public interface FaceDetModel extends AutoCloseable{
      * @return
      */
     default R<BufferedImage> detectAndDraw(BufferedImage sourceImage){
+        throw new UnsupportedOperationException("默认不支持该功能");
+    }
+
+    default GenericObjectPool<Predictor<Image, DetectedObjects>> getPool(){
         throw new UnsupportedOperationException("默认不支持该功能");
     }
 

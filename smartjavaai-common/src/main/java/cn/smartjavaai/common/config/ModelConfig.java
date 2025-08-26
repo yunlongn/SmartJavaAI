@@ -30,6 +30,11 @@ public class ModelConfig {
     private String batchifier;
 
     /**
+     * 模型预测器池大小(默认为cpu核心数)
+     */
+    private int predictorPoolSize;
+
+    /**
      * 个性化配置（按模型类型动态解析）
      */
     private ConcurrentHashMap<String, Object> customParams = new ConcurrentHashMap<>();

@@ -24,6 +24,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.pool2.ObjectPool;
 import org.apache.commons.pool2.impl.GenericObjectPool;
+import org.opencv.core.Mat;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
@@ -43,7 +44,7 @@ import java.util.Objects;
 @Slf4j
 public class CommonFaceDetModel implements FaceDetModel{
 
-    private ObjectPool<Predictor<Image, DetectedObjects>> predictorPool;
+    private GenericObjectPool<Predictor<Image, DetectedObjects>> predictorPool;
 
     private ZooModel<Image, DetectedObjects> model;
 
@@ -58,8 +59,14 @@ public class CommonFaceDetModel implements FaceDetModel{
         try {
             model = criteria.loadModel();
             this.predictorPool = new GenericObjectPool<>(new PredictorFactory<>(model));
+            int predictorPoolSize = config.getPredictorPoolSize();
+            if(config.getPredictorPoolSize() <= 0){
+                predictorPoolSize = Runtime.getRuntime().availableProcessors(); // 默认等于CPU核心数
+            }
+            predictorPool.setMaxTotal(predictorPoolSize);
             log.debug("当前设备: " + model.getNDManager().getDevice());
             log.debug("当前引擎: " + Engine.getInstance().getEngineName());
+            log.debug("模型推理器线程池最大数量: " + predictorPoolSize);
         } catch (IOException | ModelNotFoundException | MalformedModelException e) {
             throw new FaceException("人脸检测模型加载失败", e);
         }
@@ -81,11 +88,16 @@ public class CommonFaceDetModel implements FaceDetModel{
         Image img = null;
         try {
             img = ImageFactory.getInstance().fromFile(Paths.get(imagePath));
+            DetectedObjects detection = detect(img);
+            return R.ok(FaceUtils.convertToDetectionResponse(detection,img));
         } catch (IOException e) {
             throw new FaceException("无效的图片", e);
+        } finally {
+            if (img != null) {
+                ((Mat)img.getWrappedImage()).release();
+            }
         }
-        DetectedObjects detection = detect(img);
-        return R.ok(FaceUtils.convertToDetectionResponse(detection,img));
+
     }
 
     /**
@@ -99,12 +111,17 @@ public class CommonFaceDetModel implements FaceDetModel{
         if(Objects.isNull(imageInputStream)){
             return R.fail(R.Status.INVALID_IMAGE);
         }
+        Image img = null;
         try {
-            Image img = ImageFactory.getInstance().fromInputStream(imageInputStream);
+            img = ImageFactory.getInstance().fromInputStream(imageInputStream);
             DetectedObjects detection = detect(img);
             return R.ok(FaceUtils.convertToDetectionResponse(detection,img));
         } catch (IOException e) {
             throw new FaceException("无效图片输入流", e);
+        } finally {
+            if (img != null) {
+                ((Mat)img.getWrappedImage()).release();
+            }
         }
 
     }
@@ -114,9 +131,19 @@ public class CommonFaceDetModel implements FaceDetModel{
         if(!ImageUtils.isImageValid(image)){
             return R.fail(R.Status.INVALID_IMAGE);
         }
-        Image img = ImageFactory.getInstance().fromImage(OpenCVUtils.image2Mat(image));
-        DetectedObjects detection = detect(img);
-        return R.ok(FaceUtils.convertToDetectionResponse(detection,img));
+        Image img = null;
+        try {
+            img = ImageFactory.getInstance().fromImage(OpenCVUtils.image2Mat(image));
+            DetectedObjects detection = detect(img);
+            return R.ok(FaceUtils.convertToDetectionResponse(detection,img));
+        } catch (Exception e) {
+            throw new FaceException(e);
+        } finally {
+            if (img != null) {
+                ((Mat)img.getWrappedImage()).release();
+            }
+        }
+
     }
 
     @Override
@@ -124,11 +151,7 @@ public class CommonFaceDetModel implements FaceDetModel{
         if(Objects.isNull(imageData)){
             return R.fail(R.Status.INVALID_IMAGE);
         }
-        try {
-            return detect(ImageIO.read(new ByteArrayInputStream(imageData)));
-        } catch (IOException e) {
-            throw new FaceException("错误的图像", e);
-        }
+        return detect(new ByteArrayInputStream(imageData));
     }
 
     @Override
@@ -145,8 +168,9 @@ public class CommonFaceDetModel implements FaceDetModel{
         if(!FileUtils.isFileExists(imagePath)){
             return R.fail(R.Status.FILE_NOT_FOUND);
         }
+        Image img = null;
         try {
-            Image img = ImageFactory.getInstance().fromFile(Paths.get(imagePath));
+            img = ImageFactory.getInstance().fromFile(Paths.get(imagePath));
             DetectedObjects detectedObjects = detect(img);
             if(Objects.isNull(detectedObjects) || detectedObjects.getNumberOfObjects() == 0){
                 return R.fail(R.Status.NO_FACE_DETECTED);
@@ -158,6 +182,10 @@ public class CommonFaceDetModel implements FaceDetModel{
             return R.ok();
         } catch (IOException e) {
             throw new FaceException(e);
+        } finally {
+            if (img != null){
+                ((Mat)img.getWrappedImage()).release();
+            }
         }
     }
 
@@ -181,6 +209,10 @@ public class CommonFaceDetModel implements FaceDetModel{
             return R.ok(ImageIO.read(new ByteArrayInputStream(imageBytes)));
         } catch (IOException e) {
             throw new FaceException("导出图片失败", e);
+        } finally {
+            if (img != null){
+                ((Mat)img.getWrappedImage()).release();
+            }
         }
     }
 
@@ -212,6 +244,11 @@ public class CommonFaceDetModel implements FaceDetModel{
         }
     }
 
+
+    @Override
+    public GenericObjectPool<Predictor<Image, DetectedObjects>> getPool() {
+        return predictorPool;
+    }
 
     @Override
     public void close() {

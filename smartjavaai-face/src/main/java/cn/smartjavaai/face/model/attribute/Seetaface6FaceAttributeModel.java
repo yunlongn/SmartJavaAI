@@ -1,5 +1,6 @@
 package cn.smartjavaai.face.model.attribute;
 
+import ai.djl.engine.Engine;
 import cn.smartjavaai.common.entity.*;
 import cn.smartjavaai.common.entity.face.FaceAttribute;
 import cn.smartjavaai.common.entity.face.FaceInfo;
@@ -102,6 +103,19 @@ public class Seetaface6FaceAttributeModel implements FaceAttributeModel {
             this.eyeStateDetectorPool = new EyeStateDetectorPool(eyeStateDetectorPoolConfSetting);
             this.maskDetectorPool = new MaskDetectorPool(maskDetectorPoolConfSetting);
             this.poseEstimatorPool = new PoseEstimatorPool(poseEstimatorPoolConfSetting);
+
+            int predictorPoolSize = config.getPredictorPoolSize();
+            if(config.getPredictorPoolSize() <= 0){
+                predictorPoolSize = Runtime.getRuntime().availableProcessors(); // 默认等于CPU核心数
+            }
+            faceDetectorPool.setMaxTotal(predictorPoolSize);
+            faceLandmarkerPool.setMaxTotal(predictorPoolSize);
+            genderPredictorPool.setMaxTotal(predictorPoolSize);
+            agePredictorPool.setMaxTotal(predictorPoolSize);
+            eyeStateDetectorPool.setMaxTotal(predictorPoolSize);
+            maskDetectorPool.setMaxTotal(predictorPoolSize);
+            poseEstimatorPool.setMaxTotal(predictorPoolSize);
+            log.debug("模型推理器线程池最大数量: " + predictorPoolSize);
         } catch (FileNotFoundException e) {
             throw new FaceException(e);
         }
@@ -469,6 +483,35 @@ public class Seetaface6FaceAttributeModel implements FaceAttributeModel {
             PoolUtils.returnToPool(eyeStateDetectorPool, predictorContext.eyeStateDetector);
             PoolUtils.returnToPool(poseEstimatorPool, predictorContext.poseEstimator);
         }
+    }
+
+
+    public FaceDetectorPool getFaceDetectorPool() {
+        return faceDetectorPool;
+    }
+
+    public GenderPredictorPool getGenderPredictorPool() {
+        return genderPredictorPool;
+    }
+
+    public FaceLandmarkerPool getFaceLandmarkerPool() {
+        return faceLandmarkerPool;
+    }
+
+    public AgePredictorPool getAgePredictorPool() {
+        return agePredictorPool;
+    }
+
+    public EyeStateDetectorPool getEyeStateDetectorPool() {
+        return eyeStateDetectorPool;
+    }
+
+    public MaskDetectorPool getMaskDetectorPool() {
+        return maskDetectorPool;
+    }
+
+    public PoseEstimatorPool getPoseEstimatorPool() {
+        return poseEstimatorPool;
     }
 
     @Override

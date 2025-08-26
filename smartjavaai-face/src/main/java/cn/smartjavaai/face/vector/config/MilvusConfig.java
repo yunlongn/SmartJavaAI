@@ -63,6 +63,16 @@ public class MilvusConfig extends VectorDBConfig {
     private boolean useMemoryCache = true;
 
     /**
+     * 用户名
+     */
+    private String username;
+
+    /**
+     * 密码
+     */
+    private String password;
+
+    /**
      * 构造函数
      */
     public MilvusConfig() {

@@ -31,7 +31,7 @@ public class FaceDetCriteriaFactory {
     public static Criteria<Image, DetectedObjects> createCriteria(FaceDetConfig config) {
         Device device = null;
         if(!Objects.isNull(config.getDevice())){
-            device = config.getDevice() == DeviceEnum.CPU ? Device.cpu() : Device.gpu();
+            device = config.getDevice() == DeviceEnum.CPU ? Device.cpu() : Device.gpu(config.getGpuId());
         }
         Criteria<Image, DetectedObjects> criteria = null;
         if(config.getModelEnum() == FaceDetModelEnum.RETINA_FACE){

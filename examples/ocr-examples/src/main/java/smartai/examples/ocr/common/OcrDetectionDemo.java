@@ -1,6 +1,7 @@
 package smartai.examples.ocr.common;
 
 import ai.djl.modality.cv.Image;
+import cn.smartjavaai.common.config.Config;
 import cn.smartjavaai.common.entity.DetectionResponse;
 import cn.smartjavaai.common.enums.DeviceEnum;
 import cn.smartjavaai.common.utils.ImageUtils;
@@ -11,16 +12,17 @@ import cn.smartjavaai.ocr.entity.OcrInfo;
 import cn.smartjavaai.ocr.enums.CommonDetModelEnum;
 import cn.smartjavaai.ocr.factory.OcrModelFactory;
 import cn.smartjavaai.ocr.model.common.detect.OcrCommonDetModel;
-import cn.smartjavaai.ocr.opencv.OcrOpenCVUtils;
 import cn.smartjavaai.ocr.utils.OcrUtils;
 import com.alibaba.fastjson.JSONObject;
 import lombok.extern.slf4j.Slf4j;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.opencv.core.Mat;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.List;
 
@@ -33,8 +35,16 @@ import java.util.List;
 public class OcrDetectionDemo {
 
 
+
+
     //设备类型
     public static DeviceEnum device = DeviceEnum.CPU;
+
+    @BeforeClass
+    public static void beforeAll() throws IOException {
+        //修改缓存路径
+//        Config.setCachePath("/Users/xxx/smartjavaai_cache");
+    }
 
     /**
      * 获取文本检测模型
@@ -60,7 +70,8 @@ public class OcrDetectionDemo {
      */
     @Test
     public void detect(){
-        try (OcrCommonDetModel model = getDetectionModel()){
+        try {
+            OcrCommonDetModel model = getDetectionModel();
             List<OcrBox> boxes = model.detect("src/main/resources/ocr_1.jpg");
             log.info("OCR检测结果：{}", JSONObject.toJSONString(boxes));
         } catch (Exception e) {
@@ -77,7 +88,8 @@ public class OcrDetectionDemo {
      */
     @Test
     public void detectAndDraw(){
-        try (OcrCommonDetModel model = getDetectionModel()){
+        try {
+            OcrCommonDetModel model = getDetectionModel();
             model.detectAndDraw("src/main/resources/ocr_1.jpg",  "output/ocr_1_detected.jpg");
         } catch (Exception e) {
             e.printStackTrace();
@@ -94,7 +106,8 @@ public class OcrDetectionDemo {
      */
     @Test
     public void batchDetect(){
-        try (OcrCommonDetModel model = getDetectionModel()){
+        try {
+            OcrCommonDetModel model = getDetectionModel();
             //批量检测要求图片宽高一致
             String folderPath = "/Users/xxx/Downloads/testing33";
             //读取文件夹中所有图片
