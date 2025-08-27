@@ -228,7 +228,8 @@ SmartJavaAI是专为JAVA 开发者打造的一个功能丰富、开箱即用的 
       <td>
         <div align="left">
           <p>语音识别</p>
-          - 支持100种语言
+          - 支持100种语言<br>
+          - 支持实时语音识别
         </div>
       </td>     
       <td>
@@ -592,10 +593,15 @@ SmartJavaAI是专为JAVA 开发者打造的一个功能丰富、开箱即用的 
 ## 献代码的步骤
 
 1、在Gitee或者Github/Gitcode上fork项目到自己的repo
+
 2、把fork过去的项目也就是你的项目clone到你的本地
+
 3、修改代码（记得一定要修改dev分支）
+
 4、commit后push到自己的库（dev分支）
+
 5、登录Gitee或Github/Gitcode在你首页可以看到一个 pull request 按钮，点击它，填写一些说明信息，然后提交即可。
+
 6、等待维护者合并
 
 ## 近期更新日志
