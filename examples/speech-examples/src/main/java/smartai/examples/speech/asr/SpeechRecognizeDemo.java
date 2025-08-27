@@ -22,7 +22,10 @@ import org.apache.commons.io.FileUtils;
 import org.junit.Test;
 import org.vosk.Recognizer;
 
+import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioSystem;
+import javax.sound.sampled.DataLine;
+import javax.sound.sampled.TargetDataLine;
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -194,7 +197,7 @@ public class SpeechRecognizeDemo {
          * macos m系列芯片需要手动下载依赖库，并指定位置，其他平台不需要
          * 下载地址：https://pan.baidu.com/s/1LZ_EX1XdTTp_f5ruud82MA?pwd=1234 提取码: 1234
          */
-//        config.setLibPath(Paths.get("/Users/xxx/Downloads/vosk-arrch64-dylib-main/libvosk.dylib"));
+//        config.setLibPath(Paths.get("/Users/wenjie/Downloads/vosk-arrch64-dylib-main/libvosk.dylib"));
         return SpeechRecognizerFactory.getInstance().getModel(config);
     }
 
@@ -295,6 +298,43 @@ public class SpeechRecognizeDemo {
             int nbytes;
             byte[] b = new byte[4096];
             while ((nbytes = ais.read(b)) >= 0) {
+                if (voskRecognizer.acceptWaveForm(b, nbytes)) {
+                    log.info(voskRecognizer.getResult());
+                } else {
+                    log.info(voskRecognizer.getPartialResult());
+                }
+            }
+            log.info(voskRecognizer.getFinalResult());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * 实时语音识别（VOSK）
+     */
+    @Test
+    public void testVoskRealTime() {
+        try {
+            VoskRecognizer recognizer = (VoskRecognizer)geVoskRecognizer();
+            //使用vosk内部接口，需要指定识别音频的采样率
+            Recognizer voskRecognizer = recognizer.createAdvancedRecognizer(16000);
+            voskRecognizer.setWords(true);
+            voskRecognizer.setPartialWords(true);
+            // 设置音频格式: 16kHz, 16bit, 单声道, PCM
+            AudioFormat format = new AudioFormat(16000, 16, 1, true, false);
+            // 获取可用的 TargetDataLine
+            DataLine.Info info = new DataLine.Info(TargetDataLine.class, format);
+            if (!AudioSystem.isLineSupported(info)) {
+                System.out.println("麦克风不支持该格式");
+                System.exit(0);
+            }
+            TargetDataLine microphone = (TargetDataLine) AudioSystem.getLine(info);
+            microphone.open(format);
+            microphone.start();
+            int nbytes;
+            byte[] b = new byte[4096];
+            while ((nbytes = microphone.read(b,0,b.length)) >= 0) {
                 if (voskRecognizer.acceptWaveForm(b, nbytes)) {
                     log.info(voskRecognizer.getResult());
                 } else {
