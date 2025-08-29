@@ -67,7 +67,7 @@ public class FaceDetDemo {
         //高精度模型，速度慢
         config.setModelEnum(FaceDetModelEnum.RETINA_FACE);//人脸检测模型
         //下载模型并替换本地路径，下载地址：https://pan.baidu.com/s/10l22x5fRz_gwLr8EAHa1Jg?pwd=1234 提取码: 1234
-        config.setModelPath("/Users/xxx/Documents/develop/model/retinaface.pt");
+        config.setModelPath("/Users/wenjie/Documents/develop/face_model/retinaface.pt");
         config.setConfidenceThreshold(FaceDetectConstant.DEFAULT_CONFIDENCE_THRESHOLD);//只返回相似度大于该值的人脸
         config.setNmsThresh(FaceDetectConstant.NMS_THRESHOLD);//用于去除重复的人脸框，当两个框的重叠度超过该值时，只保留一个
         return FaceDetModelFactory.getInstance().getModel(config);
@@ -95,12 +95,21 @@ public class FaceDetDemo {
     @Test
     public void testFaceDetect(){
         try {
-            FaceDetModel faceModel = FaceDetModelFactory.getInstance().getModel();
+            FaceDetModel faceModel = getFaceDetModel();
             R<DetectionResponse> detectedResult = faceModel.detect(imgPath);
-            if(detectedResult.isSuccess()){
-                log.info("人脸检测结果：{}", JSONObject.toJSONString(detectedResult.getData()));
+//            if(detectedResult.isSuccess()){
+//                log.info("人脸检测结果：{}", JSONObject.toJSONString(detectedResult.getData()));
+//            }else{
+//                log.info("人脸检测失败：{}", detectedResult.getMessage());
+//            }
+
+            long start = System.currentTimeMillis();
+            R<DetectionResponse> detectedResult2 = faceModel.detect("/Users/wenjie/Downloads/facetest/surprise.png");
+            log.info("耗时：{}", System.currentTimeMillis() - start);
+            if(detectedResult2.isSuccess()){
+                log.info("人脸检测结果：{}", JSONObject.toJSONString(detectedResult2.getData()));
             }else{
-                log.info("人脸检测失败：{}", detectedResult.getMessage());
+                log.info("人脸检测失败：{}", detectedResult2.getMessage());
             }
         } catch (Exception e) {
             e.printStackTrace();

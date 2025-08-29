@@ -61,7 +61,7 @@ public class OcrRecognizeDemo {
         //指定文本识别模型
         recModelConfig.setRecModelEnum(CommonRecModelEnum.PP_OCR_V5_MOBILE_REC_MODEL);
         //指定识别模型位置，需要更改为自己的模型路径（下载地址请查看文档）
-        recModelConfig.setRecModelPath("/Users/wenjie/Documents/develop/model/ocr/PP-OCRv5_mobile_rec_infer/PP-OCRv5_mobile_rec_infer.onnx");
+        recModelConfig.setRecModelPath("/Users/wenjie/Documents/develop/model/ocr/PP-OCRv5_server_rec_infer/PP-OCRv5_server_rec.onnx");
         recModelConfig.setDevice(device);
         recModelConfig.setTextDetModel(getDetectionModel());
         return OcrModelFactory.getInstance().getRecModel(recModelConfig);
@@ -76,7 +76,7 @@ public class OcrRecognizeDemo {
         //指定检测模型
         config.setModelEnum(CommonDetModelEnum.PP_OCR_V5_MOBILE_DET_MODEL);
         //指定模型位置，需要更改为自己的模型路径（下载地址请查看文档）
-        config.setDetModelPath("/Users/wenjie/Documents/develop/model/ocr/PP-OCRv5_mobile_det_infer/PP-OCRv5_mobile_det_infer.onnx");
+        config.setDetModelPath("/Users/wenjie/Documents/develop/model/ocr/PP-OCRv5_server_det_infer/PP-OCRv5_server_det.onnx");
         config.setDevice(device);
         return OcrModelFactory.getInstance().getDetModel(config);
     }
@@ -127,7 +127,7 @@ public class OcrRecognizeDemo {
             OcrCommonRecModel recModel = getRecModel();
             //不带方向矫正，分行返回文本
             OcrRecOptions options = new OcrRecOptions(false, true);
-            OcrInfo ocrInfo = recModel.recognize("src/main/resources/ocr_2.jpg",options);
+            OcrInfo ocrInfo = recModel.recognize("/Users/wenjie/Downloads/49421755855753_.pic_hd.jpg",options);
             log.info("OCR识别结果：{}", JSONObject.toJSONString(ocrInfo));
         } catch (Exception e) {
             e.printStackTrace();

@@ -12,7 +12,7 @@
         <maven.compiler.source>11</maven.compiler.source>
         <maven.compiler.target>11</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <smartjavaai.version>1.0.23</smartjavaai.version>
+        <smartjavaai.version>1.0.24</smartjavaai.version>
         <!--如果打包运行，需要替换成你的main-->
         <exec.mainClass>smartai.examples.objectdetection.ObjectDetection</exec.mainClass>
 
@@ -34,7 +34,7 @@
         <dependencies>
             <dependency>
                 <groupId>cn.smartjavaai</groupId>
-                <artifactId>smartjavaai-bom</artifactId>
+                <artifactId>bom</artifactId>
                 <version>${smartjavaai.version}</version>
                 <type>pom</type>
                 <!-- 注意这里是import -->
@@ -94,7 +94,7 @@
         <!--目标检测模块-->
         <dependency>
             <groupId>cn.smartjavaai</groupId>
-            <artifactId>smartjavaai-objectdetection</artifactId>
+            <artifactId>vision</artifactId>
         </dependency>
 
 

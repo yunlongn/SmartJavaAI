@@ -63,7 +63,7 @@ public class FaceRecDemo {
         //高精度模型，速度慢
         config.setModelEnum(FaceDetModelEnum.RETINA_FACE);//人脸检测模型
         //下载模型并替换本地路径，下载地址：https://pan.baidu.com/s/10l22x5fRz_gwLr8EAHa1Jg?pwd=1234 提取码: 1234
-        config.setModelPath("/Users/xxx/Documents/develop/model/retinaface.pt");
+//        config.setModelPath("/Users/wenjie/Documents/develop/model/retinaface.pt");
         config.setConfidenceThreshold(FaceDetectConstant.DEFAULT_CONFIDENCE_THRESHOLD);//只返回相似度大于该值的人脸
         config.setNmsThresh(FaceDetectConstant.NMS_THRESHOLD);//用于去除重复的人脸框，当两个框的重叠度超过该值时，只保留一个
         config.setDevice(device);
@@ -170,7 +170,7 @@ public class FaceRecDemo {
         FaceRecConfig config = new FaceRecConfig();
         //高精度模型，速度慢, 追求速度请更换高速模型，具体其他模型参数可以查看文档：http://doc.smartjavaai.cn/face.html
         config.setModelEnum(FaceRecModelEnum.ELASTIC_FACE_MODEL);//人脸检测模型
-        config.setModelPath("/Users/xxx/Documents/develop/model/elasticface.pt");
+        config.setModelPath("/Users/wenjie/Documents/develop/model/elasticface.pt");
         //裁剪人脸：如果图片已经是裁剪过的，则请将此参数设置为false
         config.setCropFace(true);
         //开启人脸对齐：适用于人脸不正的场景，开启将提升人脸特征准确度，关闭可以提升性能

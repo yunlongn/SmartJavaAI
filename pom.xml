@@ -7,25 +7,25 @@
     <name>SmartJavaAI</name>
     <groupId>cn.smartjavaai</groupId>
     <artifactId>smartjavaai-parent</artifactId>
-    <version>1.0.23</version>
+    <version>1.0.24</version>
     <packaging>pom</packaging>
     <description>SmartJavaAI</description>
     <modules>
-        <module>smartjavaai-face</module>
-        <module>smartjavaai-translate</module>
-        <module>smartjavaai-common</module>
-        <module>smartjavaai-objectdetection</module>
-        <module>smartjavaai-all</module>
-        <module>smartjavaai-ocr</module>
-        <module>smartjavaai-bom</module>
-        <module>smartjavaai-speech</module>
+        <module>face</module>
+        <module>translate</module>
+        <module>common</module>
+        <module>vision</module>
+        <module>all</module>
+        <module>ocr</module>
+        <module>bom</module>
+        <module>speech</module>
     </modules>
 
     <properties>
         <maven.compiler.source>8</maven.compiler.source>
         <maven.compiler.target>8</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <djl.version>0.32.0</djl.version>
+        <djl.version>0.34.0</djl.version>
     </properties>
 
     <dependencyManagement>
@@ -175,11 +175,11 @@
 <!--            <artifactId>xgboost</artifactId>-->
 <!--            <scope>runtime</scope>-->
 <!--        </dependency>-->
-        <dependency>
-            <groupId>ai.djl.tensorrt</groupId>
-            <artifactId>tensorrt</artifactId>
-            <scope>runtime</scope>
-        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>ai.djl.tensorrt</groupId>-->
+<!--            <artifactId>tensorrt</artifactId>-->
+<!--            <scope>runtime</scope>-->
+<!--        </dependency>-->
 
         <dependency>
             <groupId>cn.hutool</groupId>
@@ -338,5 +338,6 @@
             </roles>
         </developer>
     </developers>
+
 
 </project>

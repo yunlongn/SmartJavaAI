@@ -2,6 +2,9 @@ package smartai.examples.objectdetection;
 
 import ai.djl.Application;
 import ai.djl.MalformedModelException;
+import ai.djl.ModelException;
+import ai.djl.inference.Predictor;
+import ai.djl.modality.Classifications;
 import ai.djl.modality.cv.Image;
 import ai.djl.modality.cv.ImageFactory;
 import ai.djl.modality.cv.output.*;
@@ -11,6 +14,7 @@ import ai.djl.repository.zoo.ModelNotFoundException;
 import ai.djl.repository.zoo.ModelZoo;
 import ai.djl.repository.zoo.ZooModel;
 import ai.djl.training.util.ProgressBar;
+import ai.djl.translate.TranslateException;
 import cn.smartjavaai.common.config.Config;
 import cn.smartjavaai.common.entity.DetectionInfo;
 import cn.smartjavaai.common.entity.DetectionRectangle;
@@ -42,6 +46,7 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.net.URL;
 import java.nio.file.Paths;
 import java.util.*;
 import java.util.List;
@@ -63,6 +68,32 @@ public class ObjectDetection {
 
     //设备类型
     public static DeviceEnum device = DeviceEnum.CPU;
+
+    public static void main(String[] args) throws ModelException, TranslateException, IOException {
+        Classifications classification = predict();
+        log.info("{}", classification);
+    }
+
+
+    public static Classifications predict() throws IOException, ModelException, TranslateException {
+
+        Config.setCachePath("/Users/wenjie/smartjavaai_cache");
+        URL url = new URL("https://resources.djl.ai/images/action_dance.jpg");
+        // Use DJL PyTorch model zoo model
+        Criteria<URL, Classifications> criteria =
+                Criteria.builder()
+                        .setTypes(URL.class, Classifications.class)
+                        .optModelUrls(
+                                "djl://ai.djl.mxnet/action_recognition")
+                        .optEngine("MXNet")
+                        .optProgress(new ProgressBar())
+                        .build();
+
+        try (ZooModel<URL, Classifications> inception = criteria.loadModel();
+             Predictor<URL, Classifications> action = inception.newPredictor()) {
+            return action.predict(url);
+        }
+    }
 
     @BeforeClass
     public static void beforeAll() throws IOException {
@@ -95,6 +126,8 @@ public class ObjectDetection {
         try {
             DetectorModelConfig config = new DetectorModelConfig();
             config.setModelEnum(DetectorModelEnum.SSD_300_RESNET50);//检测模型，目前支持19种预置模型
+            config.setModelEnum(DetectorModelEnum.YOLOV12_OFFICIAL);
+            config.setModelPath("yolov11s");
             // 指定允许的类别
 //            config.setAllowedClasses(Arrays.asList("person"));
             //指定返回检测数量
@@ -200,6 +233,32 @@ public class ObjectDetection {
             DetectorModel detectorModel = ObjectDetectionModelFactory.getInstance().getModel(config);
             DetectionResponse detect = detectorModel.detect("src/main/resources/dog_bike_car.jpg");
             log.info("目标检测结果：{}", JSONObject.toJSONString(detect));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * tensorflow目标检测
+     */
+    @Test
+    public void objectDetection3(){
+        try {
+            DetectorModelConfig config = new DetectorModelConfig();
+            config.setModelEnum(DetectorModelEnum.TENSORFLOW2_OFFICIAL);
+            config.setModelPath("/Users/wenjie/Documents/develop/model/tensorflow/ssd_mobilenet_v2_320x320_coco17_tpu-8");
+//            config.putCustomParam("synsetUrl", "https://raw.githubusercontent.com/tensorflow/models/master/research/object_detection/data/mscoco_label_map.pbtxt");
+//            config.putCustomParam("synsetPath", "/Users/wenjie/Downloads/mscoco_label_map.pbtxt.txt");
+            config.putCustomParam("synsetFileName", "mscoco.pbtxt");
+            // 指定允许的类别
+//            config.setAllowedClasses(Arrays.asList("person"));
+            //指定返回检测数量
+            config.setTopK(100);
+            config.setDevice(device);
+            DetectorModel detectorModel = ObjectDetectionModelFactory.getInstance().getModel(config);
+            DetectionResponse detectionResponse = detectorModel.detect("src/main/resources/dog_bike_car.jpg");
+            detectorModel.detectAndDraw("src/main/resources/dog_bike_car.jpg", "output/dog_bike_car_detect.jpg");
+            log.info("目标检测结果：{}", JSONObject.toJSONString(detectionResponse));
         } catch (Exception e) {
             e.printStackTrace();
         }
