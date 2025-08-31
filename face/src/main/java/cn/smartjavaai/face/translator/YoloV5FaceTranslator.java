@@ -8,6 +8,7 @@ import ai.djl.ndarray.NDList;
 import ai.djl.ndarray.types.DataType;
 import ai.djl.ndarray.types.Shape;
 import ai.djl.translate.*;
+import cn.smartjavaai.common.utils.LetterBoxUtils;
 
 import java.util.*;
 
@@ -79,8 +80,59 @@ public class YoloV5FaceTranslator implements Translator<Image, DetectedObjects> 
         return builder;
     }
 
+    @Override
+    public NDList processInput(TranslatorContext ctx, Image input) throws Exception {
+        NDArray array = input.toNDArray(ctx.getNDManager(), flag);
+//        NDList list = pipeline.transform(new NDList(array));
+//        Shape shape = list.get(0).getShape();
+//        int processedWidth;
+//        int processedHeight;
+//        long[] dim = shape.getShape();
+//        if (NDImageUtils.isCHW(shape)) {
+//            processedWidth = (int) dim[dim.length - 1];
+//            processedHeight = (int) dim[dim.length - 2];
+//        } else {
+//            processedWidth = (int) dim[dim.length - 2];
+//            processedHeight = (int) dim[dim.length - 3];
+//        }
+
+        LetterBoxUtils.ResizeResult letterBoxResult = LetterBoxUtils.letterbox(ctx.getNDManager(), array, width, height, 114f, LetterBoxUtils.PaddingPosition.CENTER);
+        array = letterBoxResult.image;
+        ctx.setAttachment("width", input.getWidth());
+        ctx.setAttachment("height", input.getHeight());
+        ctx.setAttachment("processedWidth", width);
+        ctx.setAttachment("processedHeight", height);
+        ctx.setAttachment("scale", letterBoxResult.r);
+        // 转为 float32 且归一化到 0~1
+        array = array.toType(DataType.FLOAT32, false).div(255f); // HWC
+        // HWC -> CHW
+        array = array.transpose(2, 0, 1); // CHW
+//        return new NDList(array.expandDims(0));
+        return new NDList(array);
+    }
+
+    @Override
+    public DetectedObjects processOutput(TranslatorContext ctx, NDList list) throws Exception {
+        int imageWidth = (Integer) ctx.getAttachment("width");
+        int imageHeight = (Integer) ctx.getAttachment("height");
+        float scale = (Float) ctx.getAttachment("scale");
+        switch (yoloOutputLayerType) {
+            case DETECT:
+                return processFromDetectOutput();
+            case AUTO:
+                if (list.get(0).getShape().dimension() > 2) {
+                    return processFromDetectOutput();
+                } else {
+                    return processFromBoxOutput(imageWidth, imageHeight, list, scale);
+                }
+            case BOX:
+            default:
+                return processFromBoxOutput(imageWidth, imageHeight, list, scale);
+        }
+    }
+
     /** {@inheritDoc} */
-    protected DetectedObjects processFromBoxOutput(int imageWidth, int imageHeight, NDList list) {
+    protected DetectedObjects processFromBoxOutput(int imageWidth, int imageHeight, NDList list, float scale) {
         float[] flattened = list.get(0).toFloatArray();
         int sizeClasses = classes.size();
         int stride = 15 + sizeClasses;
@@ -119,7 +171,7 @@ public class YoloV5FaceTranslator implements Translator<Image, DetectedObjects> 
                 classIds.add(maxIndex);
             }
         }
-        return nms(imageWidth, imageHeight, boxes, classIds, scores);
+        return nms(imageWidth, imageHeight, boxes, classIds, scores, scale);
     }
 
     private DetectedObjects processFromDetectOutput() {
@@ -127,53 +179,16 @@ public class YoloV5FaceTranslator implements Translator<Image, DetectedObjects> 
                 "detect layer output is not supported yet, check correct YoloV5 export format");
     }
 
-    @Override
-    public DetectedObjects processOutput(TranslatorContext ctx, NDList list) throws Exception {
-        int imageWidth = (Integer) ctx.getAttachment("width");
-        int imageHeight = (Integer) ctx.getAttachment("height");
-        switch (yoloOutputLayerType) {
-            case DETECT:
-                return processFromDetectOutput();
-            case AUTO:
-                if (list.get(0).getShape().dimension() > 2) {
-                    return processFromDetectOutput();
-                } else {
-                    return processFromBoxOutput(imageWidth, imageHeight, list);
-                }
-            case BOX:
-            default:
-                return processFromBoxOutput(imageWidth, imageHeight, list);
-        }
-    }
 
-    @Override
-    public NDList processInput(TranslatorContext ctx, Image input) throws Exception {
-        NDArray array = input.toNDArray(ctx.getNDManager(), flag);
-        NDList list = pipeline.transform(new NDList(array));
-        Shape shape = list.get(0).getShape();
-        int processedWidth;
-        int processedHeight;
-        long[] dim = shape.getShape();
-        if (NDImageUtils.isCHW(shape)) {
-            processedWidth = (int) dim[dim.length - 1];
-            processedHeight = (int) dim[dim.length - 2];
-        } else {
-            processedWidth = (int) dim[dim.length - 2];
-            processedHeight = (int) dim[dim.length - 3];
-        }
-        ctx.setAttachment("width", input.getWidth());
-        ctx.setAttachment("height", input.getHeight());
-        ctx.setAttachment("processedWidth", processedWidth);
-        ctx.setAttachment("processedHeight", processedHeight);
-        return list;
-    }
+
+
 
     protected DetectedObjects nms(
             int imageWidth,
             int imageHeight,
             List<Landmark> boxes,
             List<Integer> classIds,
-            List<Float> scores) {
+            List<Float> scores, float scale) {
         List<String> retClasses = new ArrayList<>();
         List<Double> retProbs = new ArrayList<>();
         List<BoundingBox> retBB = new ArrayList<>();
@@ -196,34 +211,41 @@ public class YoloV5FaceTranslator implements Translator<Image, DetectedObjects> 
             for (int index : nms) {
                 int pos = map.get(index);
                 int id = classIds.get(pos);
-                retClasses.add(classes.get(id));
+
+                int percent = (int) Math.round(scores.get(pos).doubleValue() * 100);
+                String className = "face " + percent + "%"; // classes.get(classId)
+                retClasses.add(className);
                 retProbs.add(scores.get(pos).doubleValue());
 //                Rectangle rect = boxes.get(pos);
                 Landmark rect = boxes.get(pos);
                 List<Point> keypoints = new ArrayList<>();
-                if (removePadding) {
-                    int padW = (width - imageWidth) / 2;
-                    int padH = (height - imageHeight) / 2;
-                    rect.getPath().forEach(point -> {
-                        keypoints.add(new Point(point.getX() - padW, point.getY() - padH));
-                    });
-                    rect =
-                            new Landmark(
-                                    (rect.getX() - padW) / imageWidth,
-                                    (rect.getY() - padH) / imageHeight,
-                                    rect.getWidth() / imageWidth,
-                                    rect.getHeight() / imageHeight,keypoints);
-                } else if (applyRatio) {
-                    rect.getPath().forEach(point -> {
-                        keypoints.add(new Point(point.getX() / width, point.getY() / height));
-                    });
-                    rect =
-                            new Landmark(
-                                    rect.getX() / width,
-                                    rect.getY() / height,
-                                    rect.getWidth() / width,
-                                    rect.getHeight() / height,keypoints);
-                }
+
+                //恢复原图坐标（除回比例，减掉 padding）
+                rect = LetterBoxUtils.restoreBox(rect, scale, imageWidth, imageHeight, width, height, false);
+
+//                if (removePadding) {
+//                    int padW = (width - imageWidth) / 2;
+//                    int padH = (height - imageHeight) / 2;
+//                    rect.getPath().forEach(point -> {
+//                        keypoints.add(new Point(point.getX() - padW, point.getY() - padH));
+//                    });
+//                    rect =
+//                            new Landmark(
+//                                    (rect.getX() - padW) / imageWidth,
+//                                    (rect.getY() - padH) / imageHeight,
+//                                    rect.getWidth() / imageWidth,
+//                                    rect.getHeight() / imageHeight,keypoints);
+//                } else if (applyRatio) {
+//                    rect.getPath().forEach(point -> {
+//                        keypoints.add(new Point(point.getX() / width, point.getY() / height));
+//                    });
+//                    rect =
+//                            new Landmark(
+//                                    rect.getX() / width,
+//                                    rect.getY() / height,
+//                                    rect.getWidth() / width,
+//                                    rect.getHeight() / height,keypoints);
+//                }
                 retBB.add(rect);
             }
         }

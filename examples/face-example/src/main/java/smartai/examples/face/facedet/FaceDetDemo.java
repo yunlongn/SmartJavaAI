@@ -58,18 +58,58 @@ public class FaceDetDemo {
 
 
     /**
-     * 获取人脸检测模型
-     * 注意事项：高精度模型，速度较慢
+     * 获取人脸检测模型（均衡模型）
+     * 均衡模型：兼顾速度和精度
+     * 注意事项：SmartJavaAI提供了多种模型选择(更多模型，请查看文档)，切换模型需要同时修改modelEnum及modelPath
      * @return
      */
     public FaceDetModel getFaceDetModel(){
         FaceDetConfig config = new FaceDetConfig();
-        //高精度模型，速度慢
-        config.setModelEnum(FaceDetModelEnum.RETINA_FACE);//人脸检测模型
+        //人脸检测模型，SmartJavaAI提供了多种模型选择(更多模型，请查看文档)，切换模型需要同时修改modelEnum及modelPath
+        config.setModelEnum(FaceDetModelEnum.MTCNN);
+        //下载模型并替换本地路径，下载地址：https://pan.baidu.com/s/10l22x5fRz_gwLr8EAHa1Jg?pwd=1234 提取码: 1234
+        config.setModelPath("/Users/wenjie/Documents/develop/face_model");
+        //只返回相似度大于该值的人脸,需要根据实际情况调整，分值越大越严格容易漏检，分值越小越宽松容易误识别
+        config.setConfidenceThreshold(0.5f);
+        //用于去除重复的人脸框，当两个框的重叠度超过该值时，只保留一个
+        config.setNmsThresh(FaceDetectConstant.NMS_THRESHOLD);
+        return FaceDetModelFactory.getInstance().getModel(config);
+    }
+
+
+    /**
+     * 获取人脸检测模型（高精度模型）
+     * 注意事项：高精度模型，识别准确度高，速度慢
+     * @return
+     */
+    public FaceDetModel getProFaceDetModel(){
+        FaceDetConfig config = new FaceDetConfig();
+        //人脸检测模型，SmartJavaAI提供了多种模型选择(更多模型，请查看文档)，切换模型需要同时修改modelEnum及modelPath
+        config.setModelEnum(FaceDetModelEnum.RETINA_FACE);
         //下载模型并替换本地路径，下载地址：https://pan.baidu.com/s/10l22x5fRz_gwLr8EAHa1Jg?pwd=1234 提取码: 1234
         config.setModelPath("/Users/wenjie/Documents/develop/face_model/retinaface.pt");
-        config.setConfidenceThreshold(FaceDetectConstant.DEFAULT_CONFIDENCE_THRESHOLD);//只返回相似度大于该值的人脸
-        config.setNmsThresh(FaceDetectConstant.NMS_THRESHOLD);//用于去除重复的人脸框，当两个框的重叠度超过该值时，只保留一个
+        //只返回相似度大于该值的人脸,需要根据实际情况调整，分值越大越严格容易漏检，分值越小越宽松容易误识别
+        config.setConfidenceThreshold(0.5f);
+        //用于去除重复的人脸框，当两个框的重叠度超过该值时，只保留一个
+        config.setNmsThresh(FaceDetectConstant.NMS_THRESHOLD);
+        return FaceDetModelFactory.getInstance().getModel(config);
+    }
+
+    /**
+     * 获取人脸检测模型（极速模型）
+     * 注意事项：极速模型，识别准确度低，速度快
+     * @return
+     */
+    public FaceDetModel getFastFaceDetModel(){
+        FaceDetConfig config = new FaceDetConfig();
+        //人脸检测模型，SmartJavaAI提供了多种模型选择(更多模型，请查看文档)，切换模型需要同时修改modelEnum及modelPath
+        config.setModelEnum(FaceDetModelEnum.YOLOV5_FACE_320);
+        //下载模型并替换本地路径，下载地址：https://pan.baidu.com/s/10l22x5fRz_gwLr8EAHa1Jg?pwd=1234 提取码: 1234
+        config.setModelPath("/Users/wenjie/Documents/develop/face_model/yolo-face/yolov5face-n-0.5-320x320.onnx");
+        //只返回相似度大于该值的人脸,需要根据实际情况调整，分值越大越严格容易漏检，分值越小越宽松容易误识别
+        config.setConfidenceThreshold(0.5f);
+        //用于去除重复的人脸框，当两个框的重叠度超过该值时，只保留一个
+        config.setNmsThresh(FaceDetectConstant.NMS_THRESHOLD);
         return FaceDetModelFactory.getInstance().getModel(config);
     }
 
@@ -84,44 +124,18 @@ public class FaceDetDemo {
         config.setModelEnum(FaceDetModelEnum.SEETA_FACE6_MODEL);
         //指定模型路径：请根据实际情况替换为本地模型文件的绝对路径（下载地址：https://pan.baidu.com/s/10l22x5fRz_gwLr8EAHa1Jg?pwd=1234 提取码: 1234）
         config.setModelPath("C:/Users/Administrator/Downloads/sf3.0_models/sf3.0_models");
+        config.setConfidenceThreshold(0.9);
         return FaceDetModelFactory.getInstance().getModel(config);
     }
 
+
     /**
-     * 人脸检测(默认配置)
-     * 使用默认模型参数检测，默认模型：retinaface，需联网，会自动下载模型
-     * 图片参数：图片路径
+     * 人脸检测
+     * 注意事项：
+     * 1、此用例使用均衡模型，可以切换高精度模型或极速模型
      */
     @Test
     public void testFaceDetect(){
-        try {
-            FaceDetModel faceModel = getFaceDetModel();
-            R<DetectionResponse> detectedResult = faceModel.detect(imgPath);
-//            if(detectedResult.isSuccess()){
-//                log.info("人脸检测结果：{}", JSONObject.toJSONString(detectedResult.getData()));
-//            }else{
-//                log.info("人脸检测失败：{}", detectedResult.getMessage());
-//            }
-
-            long start = System.currentTimeMillis();
-            R<DetectionResponse> detectedResult2 = faceModel.detect("/Users/wenjie/Downloads/facetest/surprise.png");
-            log.info("耗时：{}", System.currentTimeMillis() - start);
-            if(detectedResult2.isSuccess()){
-                log.info("人脸检测结果：{}", JSONObject.toJSONString(detectedResult2.getData()));
-            }else{
-                log.info("人脸检测失败：{}", detectedResult2.getMessage());
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    /**
-     * 人脸检测(自定义模型参数)
-     * 图片参数：图片路径
-     */
-    @Test
-    public void testFaceDetectCustomConfig(){
         try {
             FaceDetModel faceModel = getFaceDetModel();
             R<DetectionResponse> detectedResult = faceModel.detect(imgPath);
@@ -181,10 +195,12 @@ public class FaceDetDemo {
     public void testDetectFaceGPU(){
         try {
             FaceDetConfig config = new FaceDetConfig();
-            //高精度模型，速度慢
-            config.setModelEnum(FaceDetModelEnum.RETINA_FACE);//人脸检测模型
+            //人脸检测模型，SmartJavaAI提供了多种模型选择(更多模型，请查看文档)，切换模型需要同时修改modelEnum及modelPath
+            config.setModelEnum(FaceDetModelEnum.MTCNN);
             //下载模型并替换本地路径，下载地址：https://pan.baidu.com/s/10l22x5fRz_gwLr8EAHa1Jg?pwd=1234 提取码: 1234
-            config.setModelPath("/Users/xxx/Documents/develop/model/retinaface.pt");
+            config.setModelPath("/Users/wenjie/Documents/develop/face_model");
+            //只返回相似度大于该值的人脸,需要根据实际情况调整，分值越大越严格容易漏检，分值越小越宽松容易误识别
+            config.setConfidenceThreshold(0.5f);
             config.setDevice(DeviceEnum.GPU);
             FaceDetModel faceModel = FaceDetModelFactory.getInstance().getModel(config);
             R<DetectionResponse> detectedResult = faceModel.detect(imgPath);
@@ -200,7 +216,7 @@ public class FaceDetDemo {
 
     /**
      * 人脸检测(Seetaface6)
-     * 图片参数：图片路径
+     * 注意事项：不支持macos
      */
     @Test
     public void testFaceDetectSeetaface6(){
@@ -220,12 +236,12 @@ public class FaceDetDemo {
 
     /**
      * 摄像头人脸检测
-     * 注意事项：如果视频比较卡，可以使用轻量的人脸检测模型
+     * 注意事项：实时检测，需要使用极速模型
      */
     @Test
     public void testDetectCamera(){
         try {
-            FaceDetModel faceModel = getSeetaface6DetModel();
+            FaceDetModel faceModel = getFastFaceDetModel();
             OpenCV.loadShared();
             VideoCapture capture = new VideoCapture(0);
             if (!capture.isOpened()) {

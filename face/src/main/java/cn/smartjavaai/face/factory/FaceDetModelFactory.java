@@ -7,6 +7,7 @@ import cn.smartjavaai.face.enums.FaceDetModelEnum;
 import cn.smartjavaai.face.exception.FaceException;
 import cn.smartjavaai.face.model.facedect.CommonFaceDetModel;
 import cn.smartjavaai.face.model.facedect.FaceDetModel;
+import cn.smartjavaai.face.model.facedect.MtcnnFaceDetModel;
 import cn.smartjavaai.face.model.facedect.SeetaFace6FaceDetModel;
 import cn.smartjavaai.face.model.facerec.*;
 import lombok.extern.slf4j.Slf4j;
@@ -122,11 +123,13 @@ public class FaceDetModelFactory {
     // 初始化默认算法
     static {
         registerAlgorithm(FaceDetModelEnum.RETINA_FACE, CommonFaceDetModel.class);
+        registerAlgorithm(FaceDetModelEnum.RETINA_FACE_640_ONNX, CommonFaceDetModel.class);
+        registerAlgorithm(FaceDetModelEnum.RETINA_FACE_1080_720_ONNX, CommonFaceDetModel.class);
         registerAlgorithm(FaceDetModelEnum.ULTRA_LIGHT_FAST_GENERIC_FACE, CommonFaceDetModel.class);
         registerAlgorithm(FaceDetModelEnum.SEETA_FACE6_MODEL, SeetaFace6FaceDetModel.class);
-        registerAlgorithm(FaceDetModelEnum.YOLOV8_FACE, CommonFaceDetModel.class);
         registerAlgorithm(FaceDetModelEnum.YOLOV5_FACE_640, CommonFaceDetModel.class);
         registerAlgorithm(FaceDetModelEnum.YOLOV5_FACE_320, CommonFaceDetModel.class);
+        registerAlgorithm(FaceDetModelEnum.MTCNN, MtcnnFaceDetModel.class);
         log.debug("缓存目录：{}", Config.getCachePath());
     }
 

@@ -19,10 +19,7 @@ import cn.smartjavaai.common.entity.*;
 import cn.smartjavaai.common.entity.Point;
 import cn.smartjavaai.common.entity.face.FaceInfo;
 import cn.smartjavaai.common.pool.PredictorFactory;
-import cn.smartjavaai.common.utils.Base64ImageUtils;
-import cn.smartjavaai.common.utils.FileUtils;
-import cn.smartjavaai.common.utils.ImageUtils;
-import cn.smartjavaai.common.utils.OpenCVUtils;
+import cn.smartjavaai.common.utils.*;
 import cn.smartjavaai.face.config.FaceDetConfig;
 import cn.smartjavaai.face.exception.FaceException;
 import cn.smartjavaai.face.model.facedect.criterial.FaceDetCriteriaFactory;
@@ -85,8 +82,8 @@ public class MtcnnFaceDetModel implements FaceDetModel{
             Path rnetPath = modelPath.resolve("rnet_script.pt");
             Path onetPath = modelPath.resolve("onet_script.pt");
             pNetModel = getModel(pnetPath);
-            rNetModel = getModel(pnetPath);
-            oNetModel = getModel(pnetPath);
+            rNetModel = getModel(rnetPath);
+            oNetModel = getModel(onetPath);
 
             this.pnetPredictorPool = new GenericObjectPool<>(new PredictorFactory<>(pNetModel));
             this.rnetPredictorPool = new GenericObjectPool<>(new PredictorFactory<>(rNetModel));
@@ -266,22 +263,84 @@ public class MtcnnFaceDetModel implements FaceDetModel{
      * @return
      */
     public R<DetectionResponse> detect(Image image){
-        try (NDManager manager = NDManager.newBaseManager(pNetModel.getNDManager().getDevice())){
-            List<Double> scales = MtcnnProcess.generateScales(image);
-            NDArray imgs = MtcnnProcess.processInput(manager, image);
+        Predictor<NDList, NDList> pNetPredictor = null;
+        Predictor<NDList, NDList> rNetPredictor = null;
+        Predictor<NDList, NDList> oNetPredictor = null;
+        try (NDManager manager = pNetModel.getNDManager().newSubManager();){
+            pNetPredictor = pnetPredictorPool.borrowObject();
+            rNetPredictor = rnetPredictorPool.borrowObject();
+            oNetPredictor = onetPredictorPool.borrowObject();
             int h = image.getHeight();
             int w = image.getWidth();
-            NDList outputPnet = PNetModel.firstStage(manager, pnetPredictorPool.borrowObject(), imgs, scales, w, h);
+            //第一阶段
+            NDList outputPnet = PNetModel.firstStage(manager, pNetPredictor, image);
+            if(CollectionUtils.isEmpty(outputPnet)){
+                return R.fail(R.Status.NO_FACE_DETECTED);
+            }
             NDArray boxes = outputPnet.get(0);
             NDArray image_inds = outputPnet.get(1);
+            NDArray imgs = outputPnet.get(2);
+            if(DJLCommonUtils.isNDArrayEmpty(boxes) || DJLCommonUtils.isNDArrayEmpty(image_inds) || DJLCommonUtils.isNDArrayEmpty(imgs)){
+                return R.fail(R.Status.NO_FACE_DETECTED);
+            }
             NDList pad = MtcnnUtils.pad(boxes, w, h);
-            NDList outputRnet = RNetModel.secondStage(manager, rnetPredictorPool.borrowObject(), imgs,boxes,pad, image_inds);
+            //第二阶段
+            NDList outputRnet = RNetModel.secondStage(manager, rNetPredictor, imgs,boxes,pad, image_inds);
+            if(CollectionUtils.isEmpty(outputRnet)){
+                return R.fail(R.Status.NO_FACE_DETECTED);
+            }
             NDArray image_indsFiltered = outputRnet.get(0);
             NDArray scoresFiltered = outputRnet.get(1);
-            MtcnnBatchResult oNetResult = ONetModel.thirdStage(manager, onetPredictorPool.borrowObject(), imgs,boxes, w, h, scoresFiltered, image_indsFiltered);
-            return R.ok(convertToDetectionResponse(oNetResult));
+            boxes = outputRnet.get(2);
+            if(DJLCommonUtils.isNDArrayEmpty(boxes) || DJLCommonUtils.isNDArrayEmpty(image_indsFiltered) || DJLCommonUtils.isNDArrayEmpty(scoresFiltered)){
+                return R.fail(R.Status.NO_FACE_DETECTED);
+            }
+            //第三阶段
+            MtcnnBatchResult oNetResult = ONetModel.thirdStage(manager, oNetPredictor, imgs,boxes, w, h, scoresFiltered, image_indsFiltered);
+            DetectionResponse detectionResponse = convertToDetectionResponse(oNetResult);
+            if(Objects.isNull(detectionResponse)){
+                return R.fail(R.Status.NO_FACE_DETECTED);
+            }
+            return R.ok(detectionResponse);
         } catch (Exception e) {
             throw new RuntimeException(e);
+        } finally {
+            if (pNetPredictor != null) {
+                try {
+                    pnetPredictorPool.returnObject(pNetPredictor); //归还
+                } catch (Exception e) {
+                    log.warn("归还Predictor失败", e);
+                    try {
+                        pNetPredictor.close(); // 归还失败才销毁
+                    } catch (Exception ex) {
+                        log.error("关闭Predictor失败", ex);
+                    }
+                }
+            }
+            if (rNetPredictor != null) {
+                try {
+                    rnetPredictorPool.returnObject(rNetPredictor); //归还
+                } catch (Exception e) {
+                    log.warn("归还Predictor失败", e);
+                    try {
+                        rNetPredictor.close(); // 归还失败才销毁
+                    } catch (Exception ex) {
+                        log.error("关闭Predictor失败", ex);
+                    }
+                }
+            }
+            if (oNetPredictor != null) {
+                try {
+                    onetPredictorPool.returnObject(oNetPredictor); //归还
+                } catch (Exception e) {
+                    log.warn("归还Predictor失败", e);
+                    try {
+                        oNetPredictor.close(); // 归还失败才销毁
+                    } catch (Exception ex) {
+                        log.error("关闭Predictor失败", ex);
+                    }
+                }
+            }
         }
     }
 
@@ -306,6 +365,9 @@ public class MtcnnFaceDetModel implements FaceDetModel{
         NDArray probs = mtcnnBatchResult.probs.get(0);
         NDArray points = mtcnnBatchResult.points.get(0);
 
+        if (DJLCommonUtils.isNDArrayEmpty(boxes) || DJLCommonUtils.isNDArrayEmpty(probs) || DJLCommonUtils.isNDArrayEmpty(points)){
+            return null;
+        }
         long numBoxes = boxes.getShape().get(0);
         for (int i = 0; i < numBoxes; i++) {
             float[] boxCoords = boxes.get(i).toFloatArray(); // [x1, y1, x2, y2]

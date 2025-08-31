@@ -84,16 +84,16 @@ public class Test {
             log.info("user ./gradlew listModel --args='-a' to show artifact detail");
             log.info("============================================================");
         }
-        Map<Application, List<Artifact>> models = ModelZoo.listModels();
-        for (Map.Entry<Application, List<Artifact>> entry : models.entrySet()) {
-            String appName = entry.getKey().toString();
-            for (Artifact artifact : entry.getValue()) {
-                if (withArtifacts) {
-                    log.info("{} djl://{}", appName, artifact);
-                } else {
-                    log.info("{} {}", appName, artifact);
-                }
-            }
-        }
+//        Map<Application, List<Artifact>> models = ModelZoo.listModels();
+//        for (Map.Entry<Application, List<Artifact>> entry : models.entrySet()) {
+//            String appName = entry.getKey().toString();
+//            for (Artifact artifact : entry.getValue()) {
+//                if (withArtifacts) {
+//                    log.info("{} djl://{}", appName, artifact);
+//                } else {
+//                    log.info("{} {}", appName, artifact);
+//                }
+//            }
+//        }
     }
 }

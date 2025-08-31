@@ -63,15 +63,21 @@ public class ExpressionRecDemo {
     }
 
     /**
-     * 获取人脸检测模型
+     * 获取人脸检测模型（均衡模型）
+     * 均衡模型：兼顾速度和精度
+     * 注意事项：SmartJavaAI提供了多种模型选择(更多模型，请查看文档)，切换模型需要同时修改modelEnum及modelPath
      * @return
      */
     public FaceDetModel getFaceDetModel(){
         FaceDetConfig config = new FaceDetConfig();
-        config.setModelEnum(FaceDetModelEnum.RETINA_FACE);//人脸检测模型
-        config.setConfidenceThreshold(FaceDetectConstant.DEFAULT_CONFIDENCE_THRESHOLD);//只返回相似度大于该值的人脸
-        config.setNmsThresh(FaceDetectConstant.NMS_THRESHOLD);//用于去除重复的人脸框，当两个框的重叠度超过该值时，只保留一个
-        config.setDevice(device);
+        //人脸检测模型，SmartJavaAI提供了多种模型选择(更多模型，请查看文档)，切换模型需要同时修改modelEnum及modelPath
+        config.setModelEnum(FaceDetModelEnum.MTCNN);
+        //下载模型并替换本地路径，下载地址：https://pan.baidu.com/s/10l22x5fRz_gwLr8EAHa1Jg?pwd=1234 提取码: 1234
+        config.setModelPath("/Users/wenjie/Documents/develop/face_model");
+        //只返回相似度大于该值的人脸,需要根据实际情况调整，分值越大越严格容易漏检，分值越小越宽松容易误识别
+        config.setConfidenceThreshold(0.5f);
+        //用于去除重复的人脸框，当两个框的重叠度超过该值时，只保留一个
+        config.setNmsThresh(FaceDetectConstant.NMS_THRESHOLD);
         return FaceDetModelFactory.getInstance().getModel(config);
     }
 
@@ -83,7 +89,7 @@ public class ExpressionRecDemo {
     public ExpressionModel getExpressionModel(){
         FaceExpressionConfig config = new FaceExpressionConfig();
         config.setModelEnum(ExpressionModelEnum.FrEmotion);
-        config.setModelPath("/Users/xxx/Documents/develop/model/emotion/fr_expression.onnx");
+        config.setModelPath("/Users/wenjie/Documents/develop/model/emotion/fr_expression.onnx");
         config.setDevice(device);
         config.setAlign(true);
         config.setDetectModel(getFaceDetModel());

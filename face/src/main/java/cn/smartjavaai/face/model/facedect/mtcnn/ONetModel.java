@@ -65,7 +65,7 @@ public class ONetModel {
         NDArray out0 = out.get(0).transpose(1, 0); // permute(1,0)
         NDArray out1 = out.get(1).transpose(1, 0);
         NDArray out2 = out.get(2).transpose(1, 0);
-        NDArray score = out1.get(1); // out1[1, :]
+        NDArray score = out2.get(1); // out1[1, :]
         points = out1.duplicate();
         NDArray ipass = score.gt(0.7); // score > threshold[1]
         // ipass 为布尔/0-1张量，长度应等于 points 的第 1 维（这里是 7）
@@ -84,7 +84,7 @@ public class ONetModel {
         NDArray boxesSelected = boxes.get(manager.create(validIndices)); // 行筛选
         // 取前 4 列
         boxesSelected = boxesSelected.get(":, 0:4"); // 只保留前 4 列
-        scoresFiltered = scoresFiltered.get(ipass).reshape(-1, 1); // score[ipass].unsqueeze(1)
+        scoresFiltered = score.get(ipass).reshape(-1, 1); // score[ipass].unsqueeze(1)
         boxes = NDArrays.concat(new NDList(boxesSelected, scoresFiltered), 1); // 拼接成 (N,5)
 
         // 筛选 image_inds
@@ -92,7 +92,6 @@ public class ONetModel {
         NDArray mv = out0.transpose() // (N, 4)
                 .get(ipass); // 1-D 花式索引在第 0 维，得到 (k, 4)
 
-        System.out.println("----------");
 
         // w_i = boxes[:, 2] - boxes[:, 0] + 1
         NDArray w_i = boxes.get(":,2").sub(boxes.get(":,0")).add(1);

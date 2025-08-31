@@ -1,5 +1,7 @@
 package cn.smartjavaai.common.utils;
 
+import ai.djl.modality.cv.output.Landmark;
+import ai.djl.modality.cv.output.Point;
 import ai.djl.modality.cv.output.Rectangle;
 import ai.djl.modality.cv.util.NDImageUtils;
 import ai.djl.ndarray.NDArray;
@@ -8,7 +10,9 @@ import ai.djl.ndarray.index.NDIndex;
 import ai.djl.ndarray.types.DataType;
 import ai.djl.ndarray.types.Shape;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 /**
  * 按比例缩放，剩余空间用指定颜色填充
@@ -61,7 +65,7 @@ public class LetterBoxUtils {
 //        NDArray paddingImg = manager
 //                .full(new Shape(targetW, targetH, 3), padColor, DataType.UINT8);
 
-        NDArray paddingImg = manager.zeros(new Shape(targetW, targetH, 3), DataType.FLOAT32);
+        NDArray paddingImg = manager.zeros(new Shape(targetH, targetW, 3), DataType.FLOAT32);
         paddingImg = paddingImg.add(114);
 
         int padW = targetW - newW;
@@ -143,6 +147,67 @@ public class LetterBoxUtils {
         double boxW = rectangle.getWidth() / scale / origImageWidth ;
         double boxH = rectangle.getHeight() / scale / origImageHeight;
         return new Rectangle(x1, y1, boxW, boxH);
+    }
+
+    /**
+     * 恢复缩放后的 box(左上角坐标)
+     * @param landmark
+     * @param scale
+     * @param origImageWidth
+     * @param origImageHeight
+     */
+    public static Landmark restoreBox(Landmark landmark, float scale, int origImageWidth, int origImageHeight, int inputWidth, int inputHeight, boolean isNormalized){
+        double x = 0;
+        double y = 0;
+        double width = 0;
+        double height = 0;
+        if(isNormalized){
+            x = landmark.getX() * inputWidth;
+            y = landmark.getY() * inputHeight;
+            width = landmark.getWidth() * inputWidth;
+            height = landmark.getHeight() * inputHeight;
+        }else{
+            x = landmark.getX();
+            y = landmark.getY();
+            width = landmark.getWidth();
+            height = landmark.getHeight();
+        }
+        double paddingWidth = (inputWidth - origImageWidth * scale) / 2;
+        double paddingHeight = (inputHeight - origImageHeight * scale) / 2;
+
+        // 去掉 padding
+        double x_noPad = x - paddingWidth;
+        double y_noPad = y - paddingHeight;
+
+        //模型输出就是原图坐标
+        double x1 = x_noPad / scale / origImageWidth;
+        double y1 = y_noPad / scale / origImageHeight;
+        double boxW = width / scale / origImageWidth ;
+        double boxH = height / scale / origImageHeight;
+
+        List<Point> points = new ArrayList<>();
+        // 要求关键点未归一化
+        landmark.getPath().forEach(point -> {
+            double pointX = (point.getX() - paddingWidth) / scale;
+            double pointY = (point.getY() - paddingHeight) / scale;
+            points.add(new Point(pointX, pointY));
+        });
+        return new Landmark(x1, y1, boxW, boxH, points);
+    }
+
+    /**
+     * 获取缩放后的图片大小
+     * @param origW 原始图片宽度
+     * @param origH 原始图片高度
+     * @param targetWidth 目标图片宽度
+     * @param targetHeight 目标图片高度
+     * @return
+     */
+    public static int[] getResizeSize(int origW, int origH, int targetWidth, int targetHeight){
+        float r = Math.min(targetWidth / (float) origW, targetHeight / (float) origH);
+        int newW = Math.round(origW * r);
+        int newH = Math.round(origH * r);
+        return new int[]{newW, newH};
     }
 
 }

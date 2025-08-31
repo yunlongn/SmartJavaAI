@@ -23,53 +23,80 @@ import java.util.List;
 public class PNetModel {
 
 
-
     /**
-     * 输入图片
-     * @param imgs
-     * @param w
-     * @param h
-     * @param scale
+     * 生成金字塔缩放比例列表
+     * @param image
      * @return
      */
-    public static NDList processInput(NDArray imgs, int w, int h, double scale){
-        int newH = (int) (h * scale + 1);
-        int newW = (int) (w * scale + 1);
-        //  (N, H, W, C)
-        NDArray transposed = imgs.transpose(0, 2, 3, 1);
-        transposed = NDImageUtils.resize(transposed, newW, newH, Image.Interpolation.AREA);
-        // (N, C, H, W)
-        transposed = transposed.transpose(0, 3, 1, 2);
-        // 归一化
-        transposed = transposed.sub(127.5).mul(0.0078125f);
-        System.out.println("inputPnet: " + transposed.getShape());
-        return new NDList(transposed);
-    }
+    public static List<Double> generateScales(Image image){
+        long h = image.getHeight();
+        long w = image.getWidth();
+        // 计算最小缩放比例
+        double minsize = 20;
+        double m = 12.0 / minsize;
+        double minl = Math.min(h, w) * m;
 
-    public static NDList processOutput(NDList outputPnet, double scale, NDManager manager){
-        NDArray reg = outputPnet.get(0);   // [B, 4, H, W]
-        NDArray probs = outputPnet.get(1); // [B, 2, H, W]
-        List<NDArray> boundingBox = generateBoundingBox(reg, probs.get(":, 1"), (float)scale, 0.6f);
-        NDArray boxes_scale = boundingBox.get(0); // [N,9]
-        NDArray imgIndND = boundingBox.get(1); // [N]
-        NDArray pick = NMSUtils.batchedNms(boxes_scale.get(":,:4"), boxes_scale.get(":,4"), imgIndND, 0.5f, manager);
-        return new NDList(boxes_scale, imgIndND, pick);
+        // 创建金字塔缩放比例列表
+        double factor = 0.709;  // 你原代码的 factor
+        List<Double> scales = new ArrayList<>();
+        double scale_i = m;
+        while (minl >= 12) {
+            scales.add(scale_i);
+            scale_i *= factor;
+            minl *= factor;
+        }
+        return scales;
     }
 
 
-    public static NDList firstStage(NDManager manager, Predictor<NDList, NDList> pnetPredictor, NDArray imgs, List<Double> scales, int width, int height) throws TranslateException {
+    public static NDArray pNetPre(Image input,NDManager manager){
+        // Image -> NDArray (H, W, C)
+        NDArray array = input.toNDArray(manager, Image.Flag.COLOR);
+        // 增加 batch 维度 (1, H, W, C) ----
+        array = array.expandDims(0);
+        // 交换维度 (N, C, H, W)
+        array = array.transpose(0, 3, 1, 2);
+        // 转成模型的数据类型
+        if (!array.getDataType().equals(DataType.FLOAT32)) {
+            array = array.toType(DataType.FLOAT32, false);
+        }
+        return array;
+    }
+
+
+    public static NDList firstStage(NDManager manager, Predictor<NDList, NDList> pnetPredictor, Image image) throws TranslateException {
+        List<Double> scales = MtcnnProcess.generateScales(image);
+        NDArray imgs = pNetPre(image,manager);
+        int h = image.getHeight();
+        int w = image.getWidth();
         // 第一阶段
         NDList boxes_list = new NDList();
         NDList image_inds_list = new NDList();
         NDList scale_picks_list = new NDList();
         int offset = 0;
         for (double scale : scales) {
-            NDList inputPnet = processInput(imgs, width, height, scale);
-            NDList outputPnet = pnetPredictor.predict(inputPnet);
-            NDList output = processOutput(outputPnet, scale, manager);
-            NDArray boxes_scale = output.get(0);
-            NDArray imgIndND = output.get(1);
-            NDArray pick = output.get(2);
+            int newH = (int) (h * scale + 1);
+            int newW = (int) (w * scale + 1);
+            //  (N, H, W, C)
+            NDArray transposed = imgs.transpose(0, 2, 3, 1);
+            transposed = NDImageUtils.resize(transposed, newW, newH, Image.Interpolation.AREA);
+            // (N, C, H, W)
+            transposed = transposed.transpose(0, 3, 1, 2);
+            // 归一化
+            transposed = transposed.sub(127.5).mul(0.0078125f);
+
+
+            NDList outputPnet = pnetPredictor.predict(new NDList(transposed));
+            NDArray reg = outputPnet.get(0);   // [B, 4, H, W]
+            NDArray probs = outputPnet.get(1); // [B, 2, H, W]
+
+            List<NDArray> boundingBox = generateBoundingBox(reg, probs.get(":, 1"), (float)scale, 0.6f);
+
+            NDArray boxes_scale = boundingBox.get(0); // [N,9]
+            NDArray imgIndND = boundingBox.get(1); // [N]
+
+            NDArray pick = NMSUtils.batchedNms(boxes_scale.get(":,:4"), boxes_scale.get(":,4"), imgIndND, 0.5f,manager);
+
             boxes_list.add(boxes_scale);
             image_inds_list.add(imgIndND);
             scale_picks_list.add(pick.add(offset));
@@ -96,7 +123,6 @@ public class PNetModel {
         boxes = boxes.get(pick);
         image_inds = image_inds.get(pick);
 
-        System.out.println(Arrays.toString(boxes.get(0).toFloatArray()));
 
         NDArray regw = boxes.get(":, 2").sub(boxes.get(":, 0"));
         NDArray regh = boxes.get(":, 3").sub(boxes.get(":, 1"));
@@ -108,7 +134,7 @@ public class PNetModel {
 
         boxes = NDArrays.stack(new NDList(qq1, qq2, qq3, qq4, boxes.get(":, 4")), 1);
         boxes = MtcnnUtils.rerec(boxes);
-        return new NDList(boxes, image_inds);
+        return new NDList(boxes, image_inds, imgs);
     }
 
     /**
@@ -131,13 +157,8 @@ public class PNetModel {
         // mask = probs >= thresh  -> [B,H,W]
         NDArray mask = probs.gte(threshold);
 
-        System.out.println("reg: " + reg.getShape());
-        System.out.println("probs shape: " + probs.getShape());
-        System.out.println("scale: " + scale);
-        System.out.println("mask: " + mask.getShape());
         // mask_inds = mask.nonzero()  -> [N,3]  每行: (batch, y, x)
         NDArray maskInds = mask.nonzero();
-        System.out.println("maskInds: " + maskInds.getShape());
 
         // image_inds = mask_inds[:, 0]
         NDArray imageInds = maskInds.get(":,0");

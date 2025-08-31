@@ -182,7 +182,12 @@ public class FaceUtils {
             DetectionRectangle rectangle = detectionInfo.getDetectionRectangle();
             graphics.setColor(Color.RED);// 边框颜色
             graphics.drawRect(rectangle.getX(), rectangle.getY(), rectangle.getWidth(),  rectangle.getHeight());
-            drawText(graphics, "face", rectangle.getX(), rectangle.getY(), stroke, 4);
+            String className = "face";
+            if (detectionInfo.getScore() > 0){
+                int percent = (int) Math.round(detectionInfo.getScore() * 100);
+                className = "face " + percent + "%";
+            }
+            drawText(graphics, className , rectangle.getX(), rectangle.getY(), stroke, 4);
             //绘制人脸关键点
             if(detectionInfo.getFaceInfo() != null && detectionInfo.getFaceInfo().getKeyPoints() != null &&
                 !detectionInfo.getFaceInfo().getKeyPoints().isEmpty()){

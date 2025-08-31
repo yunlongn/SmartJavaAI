@@ -101,7 +101,7 @@ public class RNetModel {
             log.debug("No face detected.");
             return null;
         }
-        return new NDList(image_indsFiltered, scoresFiltered);
+        return new NDList(image_indsFiltered, scoresFiltered,boxes);
     }
 
 }

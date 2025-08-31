@@ -13,6 +13,7 @@
 package cn.smartjavaai.face.translator;
 
 import ai.djl.modality.cv.Image;
+import ai.djl.modality.cv.ImageFactory;
 import ai.djl.modality.cv.output.*;
 import ai.djl.ndarray.NDArray;
 import ai.djl.ndarray.NDArrays;
@@ -22,7 +23,11 @@ import ai.djl.ndarray.types.DataType;
 import ai.djl.ndarray.types.Shape;
 import ai.djl.translate.Translator;
 import ai.djl.translate.TranslatorContext;
+import cn.smartjavaai.common.utils.LetterBoxUtils;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -40,29 +45,50 @@ public class FaceDetectionTranslator implements Translator<Image, DetectedObject
     private int[][] scales;
     private int[] steps;
 
+    private int inputWidth = 0;
+    private int inputHeight = 0;
+
     public FaceDetectionTranslator(
             double confThresh,
             double nmsThresh,
             double[] variance,
             int topK,
             int[][] scales,
-            int[] steps) {
+            int[] steps,
+            int inputWidth,
+            int inputHeight) {
         this.confThresh = confThresh;
         this.nmsThresh = nmsThresh;
         this.variance = variance;
         this.topK = topK;
         this.scales = scales;
         this.steps = steps;
+        this.inputWidth = inputWidth;
+        this.inputHeight = inputHeight;
     }
 
     /** {@inheritDoc} */
     @Override
     public NDList processInput(TranslatorContext ctx, Image input) {
-
-        ctx.setAttachment("width", input.getWidth());
-        ctx.setAttachment("height", input.getHeight());
+        ctx.setAttachment("sourceWidth", input.getWidth());
+        ctx.setAttachment("sourceHeight", input.getHeight());
+        ctx.setAttachment("width", inputWidth);
+        ctx.setAttachment("height", inputHeight);
 
         NDArray array = input.toNDArray(ctx.getNDManager(), Image.Flag.COLOR);
+
+        if(inputWidth > 0 && inputHeight > 0){
+            //Letter box resize 640x640 with padding (保持比例，补边缘)
+            LetterBoxUtils.ResizeResult letterBoxResult = LetterBoxUtils.letterbox(ctx.getNDManager(), array, inputWidth, inputHeight, 114f, LetterBoxUtils.PaddingPosition.CENTER);
+            array = letterBoxResult.image;
+            ctx.setAttachment("needRecover", "1");//需要还原
+            ctx.setAttachment("scale", letterBoxResult.r);
+        }else{
+            ctx.setAttachment("needRecover", "0");//不需要还原
+            ctx.setAttachment("width", input.getWidth());
+            ctx.setAttachment("height", input.getHeight());
+        }
+
         array = array.transpose(2, 0, 1).flip(0); // HWC -> CHW RGB -> BGR
         // The network by default takes float32
         if (!array.getDataType().equals(DataType.FLOAT32)) {
@@ -80,6 +106,13 @@ public class FaceDetectionTranslator implements Translator<Image, DetectedObject
 
         int width = (int) ctx.getAttachment("width");
         int height = (int) ctx.getAttachment("height");
+        int sourceWidth = (int) ctx.getAttachment("sourceWidth");
+        int sourceHeight = (int) ctx.getAttachment("sourceHeight");
+        String needRecover = (String) ctx.getAttachment("needRecover");
+        float scale = 0;
+        if("1".equals(needRecover)){
+            scale = (float) ctx.getAttachment("scale");
+        }
 
         NDManager manager = ctx.getNDManager();
         double scaleXY = variance[0];
@@ -91,7 +124,6 @@ public class FaceDetectionTranslator implements Translator<Image, DetectedObject
                         new NDList(
                                 prob.argMax(1).toType(DataType.FLOAT32, false),
                                 prob.max(new int[] {1})));
-
         NDArray boxRecover = boxRecover(manager, width, height, scales, steps);
         NDArray boundingBoxes = list.get(0);
         NDArray bbWH = boundingBoxes.get(":, 2:").mul(scaleWH).exp().mul(boxRecover.get(":, 2:"));
@@ -141,6 +173,7 @@ public class FaceDetectionTranslator implements Translator<Image, DetectedObject
                 }
             }
             if (belowIoU) {
+
                 List<Point> keyPoints = new ArrayList<>();
                 for (int j = 0; j < 5; j++) { // 5 face landmarks
                     double x = landmsArr[j * 2];
@@ -150,9 +183,14 @@ public class FaceDetectionTranslator implements Translator<Image, DetectedObject
                 Landmark landmark =
                         new Landmark(boxArr[0], boxArr[1], boxArr[2], boxArr[3], keyPoints);
 
+                if(needRecover.equals("1")){
+                    landmark = LetterBoxUtils.restoreBox(landmark, scale, sourceWidth, sourceHeight, width, height, true);
+                }
+
                 boxes.add(landmark);
                 recorder.put(classId, boxes);
-                String className = "Face"; // classes.get(classId)
+                int percent = (int) Math.round(probability * 100);
+                String className = "face " + percent + "%"; // classes.get(classId)
                 retNames.add(className);
                 retProbs.add(probability);
                 retBB.add(landmark);

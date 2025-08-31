@@ -1,7 +1,11 @@
 package cn.smartjavaai.common.utils;
 
+import ai.djl.ndarray.NDArray;
+import cn.smartjavaai.common.entity.R;
+
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Objects;
 
 /**
  * @author dwj
@@ -28,5 +32,15 @@ public class DJLCommonUtils {
         Path servingFile = dirPath.resolve("serving.properties");
         return Files.exists(servingFile);
     }
+
+    /**
+     * 判断 NDArray 是否为空
+     * @param ndArray
+     * @return
+     */
+    public static boolean isNDArrayEmpty(NDArray ndArray){
+        return Objects.isNull(ndArray) || ndArray.size() == 0;
+    }
+
 
 }

@@ -8,6 +8,7 @@ import ai.djl.repository.zoo.Criteria;
 import ai.djl.training.util.ProgressBar;
 import ai.djl.translate.Translator;
 import cn.smartjavaai.common.enums.DeviceEnum;
+import cn.smartjavaai.common.utils.LetterBoxUtils;
 import cn.smartjavaai.face.config.FaceDetConfig;
 import cn.smartjavaai.face.config.FaceExpressionConfig;
 import cn.smartjavaai.face.constant.FaceDetectConstant;
@@ -19,9 +20,7 @@ import cn.smartjavaai.face.exception.FaceException;
 import cn.smartjavaai.face.model.expression.translator.DenseNetEmotionTranslator;
 import cn.smartjavaai.face.model.expression.translator.FrEmotionTranslator;
 import cn.smartjavaai.face.translator.FaceDetectionTranslator;
-import cn.smartjavaai.face.translator.SCRFDFaceTranslator;
 import cn.smartjavaai.face.translator.YoloV5FaceTranslator;
-import cn.smartjavaai.face.translator.YoloV8FaceTranslator;
 import org.apache.commons.lang3.StringUtils;
 
 import java.nio.file.Paths;
@@ -73,33 +72,19 @@ public class FaceDetCriteriaFactory {
      */
     public static Translator<Image, DetectedObjects> getTranslator(FaceDetConfig config) {
         Translator<Image, DetectedObjects> translator = null;
-        if(config.getModelEnum() == FaceDetModelEnum.RETINA_FACE){
+        if(config.getModelEnum() == FaceDetModelEnum.RETINA_FACE || config.getModelEnum() == FaceDetModelEnum.RETINA_FACE_640_ONNX
+                || config.getModelEnum() == FaceDetModelEnum.RETINA_FACE_1080_720_ONNX){
             translator =
-                    new FaceDetectionTranslator(config.getConfidenceThreshold(), config.getNmsThresh(), RetinaFaceConstant.variance, FaceDetectConstant.MAX_FACE_LIMIT, RetinaFaceConstant.scales, RetinaFaceConstant.steps);
+                    new FaceDetectionTranslator(config.getConfidenceThreshold(), config.getNmsThresh(), RetinaFaceConstant.variance, FaceDetectConstant.MAX_FACE_LIMIT,
+                            RetinaFaceConstant.scales, RetinaFaceConstant.steps, config.getModelEnum().getInputWidth(), config.getModelEnum().getInputHeight());
         }else if (config.getModelEnum() == FaceDetModelEnum.ULTRA_LIGHT_FAST_GENERIC_FACE){
             translator =
-                    new FaceDetectionTranslator(config.getConfidenceThreshold(), config.getNmsThresh(), UltraLightFastGenericFaceConstant.variance, FaceDetectConstant.MAX_FACE_LIMIT, UltraLightFastGenericFaceConstant.scales, UltraLightFastGenericFaceConstant.steps);
-        }else if (config.getModelEnum() == FaceDetModelEnum.YOLOV8_FACE){
-            Map<String, Object> arguments = new HashMap<>();
-            arguments.put("width", 640);
-            arguments.put("height", 640);
-            arguments.put("resizeShort", 640);
-            arguments.put("centerFit", true);
-            translator = YoloV8FaceTranslator.builder(arguments).build();
+                    new FaceDetectionTranslator(config.getConfidenceThreshold(), config.getNmsThresh(), UltraLightFastGenericFaceConstant.variance,
+                            FaceDetectConstant.MAX_FACE_LIMIT, UltraLightFastGenericFaceConstant.scales, UltraLightFastGenericFaceConstant.steps, config.getModelEnum().getInputWidth(), config.getModelEnum().getInputHeight());
         }else if (config.getModelEnum() == FaceDetModelEnum.YOLOV5_FACE_640
                 || config.getModelEnum() == FaceDetModelEnum.YOLOV5_FACE_320){
-            Map<String, Object> arguments = new HashMap<>();
-            arguments.put("width", config.getModelEnum().getInputWidth());
-            arguments.put("height", config.getModelEnum().getInputHeight());
-            arguments.put("resizeShort", true);
-            arguments.put("centerFit", true);
-            translator = YoloV5FaceTranslator.builder(arguments).build();
-        }else if (config.getModelEnum() == FaceDetModelEnum.SCRFD_160
-                || config.getModelEnum() == FaceDetModelEnum.SCRFD_320
-                || config.getModelEnum() == FaceDetModelEnum.SCRFD_640
-                || config.getModelEnum() == FaceDetModelEnum.SCRFD_1280){
-            translator =
-                    new SCRFDFaceTranslator(config.getConfidenceThreshold(), config.getNmsThresh(), 100, new int[]{8, 16, 32});
+            translator = YoloV5FaceTranslator.builder()
+                            .setImageSize(config.getModelEnum().getInputWidth(), config.getModelEnum().getInputWidth()).build();
         }
         return translator;
     }

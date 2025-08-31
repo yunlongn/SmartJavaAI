@@ -36,8 +36,10 @@ public class Test {
      */
     public static FaceDetModel getFaceDetModel(){
         FaceDetConfig config = new FaceDetConfig();
-        config.setModelEnum(FaceDetModelEnum.RETINA_FACE);//人脸检测模型
-        config.setConfidenceThreshold(FaceDetectConstant.DEFAULT_CONFIDENCE_THRESHOLD);//只返回相似度大于该值的人脸
+//        config.setModelEnum(FaceDetModelEnum.YOLOV8_FACE);//人脸检测模型
+        config.setModelPath("/Users/wenjie/Documents/develop/model/yolo-face/yolov8s-face-lindevs.onnx");
+//        config.setModelPath("/Users/wenjie/Documents/develop/face_model");
+        config.setConfidenceThreshold(0.2);//只返回相似度大于该值的人脸
         config.setNmsThresh(FaceDetectConstant.NMS_THRESHOLD);//用于去除重复的人脸框，当两个框的重叠度超过该值时，只保留一个
         return FaceDetModelFactory.getInstance().getModel(config);
     }
@@ -81,6 +83,11 @@ public class Test {
 //                }
 //            }
 //        }
+
+
+        FaceDetModel faceDetModel = getFaceDetModel();
+        R<Void> result = faceDetModel.detectAndDraw("/Users/wenjie/Downloads/facetest/00974.png", "/Users/wenjie/Downloads/xx333.png");
+        log.info("result:{}", result.isSuccess() + " msg:" + result.getMessage());
     }
 
 

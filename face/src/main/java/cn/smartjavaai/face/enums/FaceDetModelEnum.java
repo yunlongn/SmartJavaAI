@@ -9,24 +9,12 @@ import lombok.Data;
 public enum FaceDetModelEnum {
 
     RETINA_FACE("PyTorch",0,0, "https://resources.djl.ai/test-models/pytorch/retinaface.zip"),
-    RETINA_FACE_ONNX("OnnxRuntime",0,0, null),
+    RETINA_FACE_1080_720_ONNX("OnnxRuntime",1080,720, null),
     RETINA_FACE_640_ONNX("OnnxRuntime",640,640, null),
-    RETINA_FACE_320_ONNX("OnnxRuntime",320,320, null),
-    RETINA_FACE_720_1280_ONNX("OnnxRuntime",720,1280, null),
-    RETINA_FACE_MOBILE_ONNX("OnnxRuntime",0,0, null),
-    RETINA_FACE_MOBILE_320_ONNX("OnnxRuntime",320,320, null),
-    RETINA_FACE_MOBILE_640_ONNX("OnnxRuntime",640,640, null),
-    RETINA_FACE_MOBILE_720_1280_ONNX("OnnxRuntime",720,1080, null),
     ULTRA_LIGHT_FAST_GENERIC_FACE("PyTorch",0,0, "https://resources.djl.ai/test-models/pytorch/ultranet.zip"),
     SEETA_FACE6_MODEL(null,0,0, null),
-    YOLOV8_FACE("OnnxRuntime",640,640, null),
     YOLOV5_FACE_640("OnnxRuntime", 640,640, null),
     YOLOV5_FACE_320("OnnxRuntime",320,320, null),
-    SCRFD_160("OnnxRuntime",160,160, null),
-    SCRFD_320("OnnxRuntime",320,320, null),
-    SCRFD_640("OnnxRuntime",640,640, null),
-    SCRFD_1280("OnnxRuntime",1280,1280, null),
-
     MTCNN("OnnxRuntime",1280,1280, null);
 
 
