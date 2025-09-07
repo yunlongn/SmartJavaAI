@@ -139,15 +139,6 @@
         </dependency>
 
 
-        <!-- linux aarch64 平台 (保留对应平台的配置，可以减小包大小)-->
-        <dependency>
-            <groupId>ai.djl.pytorch</groupId>
-            <artifactId>pytorch-native-cpu</artifactId>
-            <classifier>linux-aarch64</classifier>
-            <scope>runtime</scope>
-            <version>2.5.1</version>
-        </dependency>
-
 
 
 
