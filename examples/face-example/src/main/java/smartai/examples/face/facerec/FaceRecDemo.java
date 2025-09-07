@@ -32,12 +32,10 @@ import java.io.IOException;
 import java.util.List;
 
 /**
- * FaceNet人脸算法模型demo
- * 支持系统：windows 64位，linux 64位，macOS M系列芯片
- * 支持功能：人脸特征提取、人脸比对（1：1）、人脸比对（1：N）、人脸注册
+ * 人脸识别模型demo
  * 模型下载地址：https://pan.baidu.com/s/10l22x5fRz_gwLr8EAHa1Jg?pwd=1234 提取码: 1234
+ * 文档地址：http://doc.smartjavaai.cn/
  * @author dwj
- * @date 2025/4/11
  */
 @Slf4j
 public class FaceRecDemo {
@@ -142,8 +140,8 @@ public class FaceRecDemo {
      */
     public FaceRecModel getHighSpeedFaceRecModel(){
         FaceRecConfig config = new FaceRecConfig();
-        //高精度模型，速度慢
-        config.setModelEnum(FaceRecModelEnum.SEETA_FACE6_MODEL);
+        //模型枚举
+        config.setModelEnum(FaceRecModelEnum.SEETA_FACE6_LIGHT_MODEL);
         //模型路径，请下载模型并替换为本地路径：https://pan.baidu.com/s/10l22x5fRz_gwLr8EAHa1Jg?pwd=1234 提取码: 1234
         config.setModelPath("/Users/xxx/Documents/develop/model/sf3.0_models");
         //裁剪人脸：如果图片已经是裁剪过的，则请将此参数设置为false

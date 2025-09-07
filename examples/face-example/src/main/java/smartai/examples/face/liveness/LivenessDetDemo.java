@@ -54,8 +54,8 @@ import java.util.List;
 /**
  * 静态活体检测demo
  * 模型下载地址：https://pan.baidu.com/s/10l22x5fRz_gwLr8EAHa1Jg?pwd=1234 提取码: 1234
+ * 文档地址：http://doc.smartjavaai.cn/
  * @author dwj
- * @date 2025/5/1
  */
 @Slf4j
 public class LivenessDetDemo {

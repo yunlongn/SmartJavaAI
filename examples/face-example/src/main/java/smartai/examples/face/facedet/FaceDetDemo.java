@@ -39,9 +39,8 @@ import java.nio.file.Paths;
 
 /**
  * 人脸检测模型demo
- * 支持系统：windows 64位，linux 64位, macos M系列
- * 支持功能：人脸检测
  * 模型下载地址：https://pan.baidu.com/s/1d2YlJ2YOdGn3Y-AegyAhmQ?pwd=1234 提取码: 1234
+ * 文档地址：http://doc.smartjavaai.cn/
  * @author dwj
  */
 @Slf4j

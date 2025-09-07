@@ -1,5 +1,6 @@
 package cn.smartjavaai.face.model.facedect;
 
+import ai.djl.Device;
 import ai.djl.MalformedModelException;
 import ai.djl.engine.Engine;
 import ai.djl.inference.Predictor;
@@ -18,6 +19,7 @@ import ai.djl.translate.NoopTranslator;
 import cn.smartjavaai.common.entity.*;
 import cn.smartjavaai.common.entity.Point;
 import cn.smartjavaai.common.entity.face.FaceInfo;
+import cn.smartjavaai.common.enums.DeviceEnum;
 import cn.smartjavaai.common.pool.PredictorFactory;
 import cn.smartjavaai.common.utils.*;
 import cn.smartjavaai.face.config.FaceDetConfig;
@@ -78,12 +80,16 @@ public class MtcnnFaceDetModel implements FaceDetModel{
             throw new FaceException("MTCNN 模型需要指定存放模型文件的目录路径");
         }
         try {
+            Device device = null;
+            if(!Objects.isNull(config.getDevice())){
+                device = config.getDevice() == DeviceEnum.CPU ? Device.cpu() : Device.gpu(config.getGpuId());
+            }
             Path pnetPath = modelPath.resolve("pnet_script.pt");
             Path rnetPath = modelPath.resolve("rnet_script.pt");
             Path onetPath = modelPath.resolve("onet_script.pt");
-            pNetModel = getModel(pnetPath);
-            rNetModel = getModel(rnetPath);
-            oNetModel = getModel(onetPath);
+            pNetModel = getModel(pnetPath, device);
+            rNetModel = getModel(rnetPath, device);
+            oNetModel = getModel(onetPath, device);
 
             this.pnetPredictorPool = new GenericObjectPool<>(new PredictorFactory<>(pNetModel));
             this.rnetPredictorPool = new GenericObjectPool<>(new PredictorFactory<>(rNetModel));
@@ -110,7 +116,7 @@ public class MtcnnFaceDetModel implements FaceDetModel{
      * @throws MalformedModelException
      * @throws IOException
      */
-    public ZooModel<NDList, NDList> getModel(Path modelPath) throws ModelNotFoundException, MalformedModelException, IOException {
+    public ZooModel<NDList, NDList> getModel(Path modelPath, Device device) throws ModelNotFoundException, MalformedModelException, IOException {
         Criteria<NDList, NDList> criteria =
                 Criteria.builder()
                         .setTypes(NDList.class, NDList.class)
@@ -118,6 +124,7 @@ public class MtcnnFaceDetModel implements FaceDetModel{
                         .optEngine("PyTorch")
                         .optModelPath(modelPath)
                         .optProgress(new ProgressBar())
+                        .optDevice(device)
                         .build();
         return criteria.loadModel();
     }

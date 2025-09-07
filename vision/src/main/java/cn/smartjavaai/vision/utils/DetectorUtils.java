@@ -6,6 +6,7 @@ import ai.djl.modality.cv.output.DetectedObjects;
 import ai.djl.modality.cv.output.Mask;
 import ai.djl.modality.cv.output.Rectangle;
 import cn.smartjavaai.common.entity.*;
+import cn.smartjavaai.common.entity.Point;
 import cn.smartjavaai.common.utils.ImageUtils;
 import cn.smartjavaai.obb.entity.ObbResult;
 import cn.smartjavaai.obb.entity.YoloRotatedBox;
@@ -15,6 +16,7 @@ import org.opencv.core.Scalar;
 import org.opencv.imgproc.Imgproc;
 
 import javax.imageio.ImageIO;
+import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
@@ -94,7 +96,7 @@ public class DetectorUtils {
 
 
     /**
-     * 绘制文本框及文本
+     * 绘制旋转框及文本（opencv）
      * @param srcMat
      * @param rotatedBoxeList
      */
@@ -110,5 +112,61 @@ public class DetectorUtils {
         }
     }
 
+
+    /**
+     * 绘制旋转框及文本（BufferedImage）
+     * @param image
+     * @param rotatedBoxeList
+     */
+    public static void drawRectWithText(BufferedImage image, List<YoloRotatedBox> rotatedBoxeList) {
+        Graphics2D g2d = image.createGraphics();
+
+        // 抗锯齿，让线条和文字更平滑
+        g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        g2d.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+
+        // 在左上角画文字，带背景
+        FontMetrics fm = g2d.getFontMetrics();
+
+        for (YoloRotatedBox box : rotatedBoxeList) {
+            // 画笔颜色和字体
+            g2d.setColor(Color.GREEN);
+            g2d.setStroke(new BasicStroke(1.5f)); // 线条粗细
+            g2d.setFont(new Font("SansSerif", Font.PLAIN, 16)); // 设置中文字体，避免乱码
+            List<Point> points = box.toPoints();
+            // 画矩形的4条边
+            g2d.drawLine((int) points.get(0).getX(), (int) points.get(0).getY(), (int) points.get(1).getX(), (int) points.get(1).getY());
+            g2d.drawLine((int) points.get(1).getX(), (int) points.get(1).getY(), (int) points.get(2).getX(), (int) points.get(2).getY());
+            g2d.drawLine((int) points.get(2).getX(), (int) points.get(2).getY(), (int) points.get(3).getX(), (int) points.get(3).getY());
+            g2d.drawLine((int) points.get(3).getX(), (int) points.get(3).getY(), (int) points.get(0).getX(), (int) points.get(0).getY());
+            int percent = (int) Math.round(box.score * 100);
+            String className = box.className + " " + percent + "%";
+            int textWidth = fm.stringWidth(box.className + " " + box.score);
+            int textHeight = fm.getHeight();
+            // 文字位置
+            int textX = (int) points.get(0).getX();
+            int textY = (int) points.get(0).getY() - 5;
+            // 画背景矩形（半透明）
+            g2d.setColor(new Color(0, 0, 0, 128));
+            g2d.fillRect(textX, textY - textHeight, textWidth, textHeight);
+            g2d.setColor(Color.WHITE);
+            // 在左上角画文字
+            g2d.drawString(className, (int) points.get(0).getX(), (int) points.get(0).getY() - 5);
+        }
+        g2d.dispose();
+    }
+
+    /**
+     * 绘制旋转框及文本
+     * @param image
+     * @param rotatedBoxeList
+     */
+    public static void drawRectWithText(Image image, List<YoloRotatedBox> rotatedBoxeList){
+        if(image.getWrappedImage() instanceof  BufferedImage){
+            drawRectWithText((BufferedImage) image.getWrappedImage(), rotatedBoxeList);
+        }else{
+            drawRectWithText((Mat)image.getWrappedImage(), rotatedBoxeList);
+        }
+    }
 
 }

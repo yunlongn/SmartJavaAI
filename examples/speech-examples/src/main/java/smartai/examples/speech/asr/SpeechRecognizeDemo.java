@@ -33,17 +33,17 @@ import java.io.InputStream;
 import java.nio.file.Paths;
 
 /**
- *
  * 语音识别demo
+ * 模型下载网盘：https://pan.baidu.com/s/1kiMF5MF641R7LTn1GpB2lQ?pwd=1234 提取码: 1234
+ * 文档地址：http://doc.smartjavaai.cn/
  * @author dwj
- * @date 2025/8/6
  */
 @Slf4j
 public class SpeechRecognizeDemo {
 
     /**
      * 获取Whisper模型
-     * 模型下载网盘：通过网盘分享的文件：https://pan.baidu.com/s/1kiMF5MF641R7LTn1GpB2lQ?pwd=1234 提取码: 1234
+     * 模型下载网盘：https://pan.baidu.com/s/1kiMF5MF641R7LTn1GpB2lQ?pwd=1234 提取码: 1234
      * 更多模型下载地址：https://huggingface.co/ggerganov/whisper.cpp/tree/main
      * @return
      */
@@ -192,12 +192,12 @@ public class SpeechRecognizeDemo {
          * 每个模型只支持一种语言，请下载对应语音的模型，模型下载地址：https://alphacephei.com/vosk/models
          * 将模型解压后，将模型目录位置填写到此处
          */
-        config.setModelPath("/Users/xxx/Documents/develop/model/speech/vosk-model-cn-0.22");
+        config.setModelPath("/Users/wenjie/Documents/develop/model/speech/vosk-model-cn-0.22");
         /**
          * macos m系列芯片需要手动下载依赖库，并指定位置，其他平台不需要
          * 下载地址：https://pan.baidu.com/s/1LZ_EX1XdTTp_f5ruud82MA?pwd=1234 提取码: 1234
          */
-//        config.setLibPath(Paths.get("/Users/wenjie/Downloads/vosk-arrch64-dylib-main/libvosk.dylib"));
+        config.setLibPath(Paths.get("/Users/wenjie/Downloads/vosk-arrch64-dylib-main/libvosk.dylib"));
         return SpeechRecognizerFactory.getInstance().getModel(config);
     }
 

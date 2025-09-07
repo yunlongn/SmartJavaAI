@@ -30,6 +30,7 @@ import java.util.List;
 /**
  * 人脸属性检测demo
  * 模型下载地址：https://pan.baidu.com/s/10l22x5fRz_gwLr8EAHa1Jg?pwd=1234 提取码: 1234
+ * 文档地址：http://doc.smartjavaai.cn/
  * @author dwj
  */
 @Slf4j
@@ -91,23 +92,6 @@ public class FaceAttributeDetDemo {
         }
     }
 
-    /**
-     * 图片多人脸属性检测（基于已检测出的人脸区域和关键点）
-     */
-    @Test
-    public void testFaceAttributeDetect3(){
-        try {
-            FaceAttributeModel faceAttributeModel = getFaceAttributeModel();
-            FaceAttribute faceAttribute = faceAttributeModel.detectTopFace("src/main/resources/iu_1.jpg");
-            log.info("人脸属性检测结果：{}", JSONObject.toJSONString(faceAttribute));
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        //人脸检测
-
-
-
-    }
 
     /**
      * 图片单人脸人脸属性检测（基于已检测出的人脸区域和关键点）

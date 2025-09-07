@@ -1,11 +1,14 @@
 package cn.smartjavaai.common.entity;
 
+import lombok.Data;
+
 import java.util.List;
 
 /**
  * 定向边界框 检测结果
  * @author dwj
  */
+@Data
 public class ObbDetInfo {
 
     /**

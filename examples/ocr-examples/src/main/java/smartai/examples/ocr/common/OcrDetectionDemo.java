@@ -29,6 +29,7 @@ import java.util.List;
 /**
  * OCR 文本检测 示例
  * 模型下载地址：https://pan.baidu.com/s/15Noz2xHQzqMQSl1B19BobQ?pwd=1234 提取码: 1234
+ * 开发文档：http://doc.smartjavaai.cn/
  * @author dwj
  */
 @Slf4j
@@ -52,7 +53,7 @@ public class OcrDetectionDemo {
      */
     public OcrCommonDetModel getDetectionModel() {
         OcrDetModelConfig config = new OcrDetModelConfig();
-        //指定检测模型
+        //指定检测模型，切换模型需要同时修改modelEnum及modelPath
         config.setModelEnum(CommonDetModelEnum.PP_OCR_V5_MOBILE_DET_MODEL);
         //指定模型位置，需要更改为自己的模型路径（下载地址请查看文档）
         config.setDetModelPath("/Users/xxx/Documents/develop/model/ocr/PP-OCRv5_mobile_det_infer/PP-OCRv5_mobile_det_infer.onnx");

@@ -3,8 +3,11 @@ package cn.smartjavaai.common.utils;
 import ai.djl.modality.cv.BufferedImageFactory;
 import ai.djl.modality.cv.Image;
 import ai.djl.modality.cv.ImageFactory;
+import ai.djl.modality.cv.output.CategoryMask;
 import ai.djl.modality.cv.output.DetectedObjects;
 import ai.djl.ndarray.NDArray;
+import ai.djl.util.RandomUtils;
+import cn.smartjavaai.common.cv.SmartImageFactory;
 import cn.smartjavaai.common.entity.DetectionRectangle;
 import cn.smartjavaai.common.entity.DetectionResponse;
 import org.opencv.core.Mat;
@@ -17,6 +20,7 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 //import java.awt.image.ColorConvertOp;
 import java.awt.image.ComponentSampleModel;
+import java.awt.image.DataBufferByte;
 import java.awt.image.ImageObserver;
 import java.io.File;
 import java.io.IOException;
@@ -499,6 +503,86 @@ public class ImageUtils {
         Imgproc.putText(image, text, origin, font, fontScale, textColor, thickness);
     }
 
+
+    /**
+     * 拷贝图片
+     * @param src
+     * @return
+     */
+    public static BufferedImage copyBufferedImage(BufferedImage src) {
+        BufferedImage copy = new BufferedImage(src.getWidth(), src.getHeight(), src.getType());
+        Graphics2D g = copy.createGraphics();
+        g.drawImage(src, 0, 0, null);
+        g.dispose();
+        return copy;
+    }
+
+
+    /**
+     * 拷贝图片
+     * @param src
+     * @return
+     */
+    public static Image copy(Image src) {
+       Object srcData = src.getWrappedImage();
+       //当图片未BufferedImage，DJL的duplicate会有问题
+       if (srcData instanceof BufferedImage) {
+           return SmartImageFactory.getInstance().fromImage(copyBufferedImage((BufferedImage) srcData));
+       }else{
+           return src.duplicate();
+       }
+    }
+
+    /**
+     * 为不同分类生成不同颜色
+     * @param background
+     * @param opacity
+     * @param classes
+     * @return
+     */
+    public static int[] generateColors(int background, int opacity, List<String> classes) {
+        int[] colors = new int[classes.size()];
+        colors[0] = background;
+        for (int i = 1; i < classes.size(); i++) {
+            int red = RandomUtils.nextInt(256);
+            int green = RandomUtils.nextInt(256);
+            int blue = RandomUtils.nextInt(256);
+            colors[i] = opacity << 24 | red << 16 | green << 8 | blue;
+        }
+        return colors;
+    }
+
+    /**
+     * 生成不同颜色遮罩
+     * @param colors
+     * @param mask
+     * @return
+     */
+    public static Image getColorOverlay(int[] colors,int[][] mask) {
+        int height = mask.length;
+        int width = mask[0].length;
+        int[] pixels = new int[width * height];
+        for (int h = 0; h < height; h++) {
+            for (int w = 0; w < width; w++) {
+                int index = mask[h][w];
+                pixels[h * width + w] = colors[index];
+            }
+        }
+        return SmartImageFactory.getInstance().fromPixels(pixels, width, height);
+    }
+
+    /**
+     * 绘制遮罩
+     * @param categoryMask
+     * @param image
+     * @param opacity
+     * @param background
+     */
+    public static void drawMask(CategoryMask categoryMask, Image image, int opacity, int background) {
+        int[] colors = generateColors(background, opacity, categoryMask.getClasses());
+        Image maskImage = getColorOverlay(colors, categoryMask.getMask());
+        image.drawImage(maskImage, true);
+    }
 
 
 

@@ -116,7 +116,6 @@ public class CommonActionTranslator implements Translator<Image, Classifications
         float[] std = {0.229f * 255, 0.224f * 255, 0.225f * 255};
         // 增加 batch 维度，变成 (1, H, W, C)
         array = array.expandDims(0);
-        System.out.println(Arrays.toString(array.getShape().getShape()));
         return new NDList(array);
     }
 

@@ -136,7 +136,6 @@ public class YoloV8PersonDetTranslator implements Translator<Image, DetectedObje
         int numberRows = Math.toIntExact(shape.get(0));
         int nClasses = Math.toIntExact(shape.get(1));
         int padding = nClasses - classes.size();
-        System.out.println(Arrays.toString(reshapedResult.get(0).toFloatArray()));
         if (padding != 0 && padding != 4) {
             throw new IllegalStateException(
                     "Expected classes: " + (nClasses - 4) + ", got " + classes.size());
@@ -208,17 +207,7 @@ public class YoloV8PersonDetTranslator implements Translator<Image, DetectedObje
                 retProbs.add(scores.get(pos).doubleValue());
 //                Rectangle rect = boxes.get(pos);
                 Rectangle rect = boxes.get(pos);
-                if (removePadding) {
-                    rect =
-                            LetterBoxUtils.restoreBox(rect, scale, origImageWidth, origImageHeight, width, height);
-                } else if (applyRatio) {
-                    rect =
-                            new Rectangle(
-                                    rect.getX() / width,
-                                    rect.getY() / height,
-                                    rect.getWidth() / width,
-                                    rect.getHeight() / height);
-                }
+                rect = LetterBoxUtils.restoreBox(rect, scale, origImageWidth, origImageHeight, width, height);
                 retBB.add(rect);
             }
         }

@@ -1,15 +1,16 @@
 package cn.smartjavaai.objectdetection.stream;
 
+import ai.djl.inference.Predictor;
 import ai.djl.modality.cv.Image;
 import ai.djl.modality.cv.ImageFactory;
 import ai.djl.modality.cv.output.BoundingBox;
 import ai.djl.modality.cv.output.DetectedObjects;
 import ai.djl.modality.cv.output.Mask;
 import ai.djl.modality.cv.output.Rectangle;
+import cn.hutool.core.date.LocalDateTimeUtil;
 import cn.hutool.core.lang.UUID;
 import cn.smartjavaai.common.entity.*;
 import cn.smartjavaai.common.enums.VideoSourceType;
-import cn.smartjavaai.common.utils.FrameConverterUtil;
 import cn.smartjavaai.common.utils.ImageUtils;
 import cn.smartjavaai.common.utils.OpenCVUtils;
 import cn.smartjavaai.objectdetection.exception.DetectionException;
@@ -18,11 +19,10 @@ import cn.smartjavaai.vision.utils.DetectorUtils;
 import lombok.extern.slf4j.Slf4j;
 import nu.pattern.OpenCV;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.pool2.impl.GenericObjectPool;
+import org.bytedeco.ffmpeg.global.avutil;
 import org.bytedeco.javacv.*;
-import org.bytedeco.opencv.global.opencv_imgcodecs;
-import org.opencv.core.Core;
 import org.opencv.core.Mat;
-import org.opencv.imgcodecs.Imgcodecs;
 
 import java.util.*;
 import java.util.concurrent.*;
@@ -41,10 +41,14 @@ public class StreamDetector implements AutoCloseable{
 
     private DetectorModel detectorModel;
     private String streamUrl;
-    private ExecutorService grabberExecutor;   // 专门抓帧的线程
-    private ExecutorService processorExecutor; // 专门处理帧的线程
+    //专门抓帧的线程
+    private ExecutorService grabberExecutor;
+    //专门处理帧的线程
+    private ExecutorService processorExecutor;
+    //回调线程池
+    ExecutorService callbackExecutor;
     private int frameDetectionInterval = 1;
-    private int repeatGap = 5; // 秒
+    private long repeatGap = 5; // 秒
     private volatile boolean isRunning;
     private FrameGrabber grabber;
     private StreamDetectionListener listener;
@@ -55,6 +59,18 @@ public class StreamDetector implements AutoCloseable{
     private Map<String, Long> lastDetectTime = new ConcurrentHashMap<>();
     private BlockingQueue<Frame> frameQueue = new LinkedBlockingQueue<>(100);
 
+    private GenericObjectPool<Predictor<Image, DetectedObjects>> predictorPool;
+
+    private Predictor<Image, DetectedObjects> predictor;
+
+    boolean grabberFinished = false; // 标记结束
+
+    //空帧数量
+    private int nullFrameCount = 0;
+
+    // 连续多少次空帧认为断联
+    private static final int MAX_NULL_FRAMES = 5;
+
     public static Builder builder() { return new Builder(); }
 
     private StreamDetector(Builder builder) {
@@ -64,9 +80,8 @@ public class StreamDetector implements AutoCloseable{
         this.listener = builder.listener;
         this.sourceType = builder.sourceType;
         this.cameraIndex = builder.cameraIndex;
+        this.repeatGap = builder.repeatGap;
         this.converterToMat = new OpenCVFrameConverter.ToOrgOpenCvCoreMat();
-
-
     }
 
     private void initializeGrabber() throws FrameGrabber.Exception {
@@ -78,34 +93,61 @@ public class StreamDetector implements AutoCloseable{
             if (sourceType == VideoSourceType.STREAM) {
                 grabber.setOption("rtsp_transport", "tcp");
                 grabber.setOption("buffer_size", "1024000");
-                grabber.setOption("stimeout", "20000000");
-                grabber.setOption("max_delay", "500000");
+                grabber.setOption("stimeout", "2000000");  // 超时：单位微秒，这里是2秒
+                grabber.setOption("rw_timeout", "2000000"); // 读超时
+                grabber.setOption("max_delay", "5000000");
+                grabber.setOption("timeout", "2000000");    // 总超时
             }
         }
+        //日志级别
+        avutil.av_log_set_level(avutil.AV_LOG_ERROR);
         grabber.start();
+        if(sourceType == VideoSourceType.FILE){
+            // 总帧数
+            int totalFrames = grabber.getLengthInFrames();
+            log.info("视频帧数：{}", totalFrames);
+        }
     }
 
     public void startDetection() {
-        if (isRunning) return;
-        isRunning = true;
+        if (isRunning){
+            throw new RuntimeException("当前正在运行中");
+        }
+        grabberFinished = false;
+        //获取模型Predictor
+        predictorPool = detectorModel.getPool();
+        try {
+            predictor = predictorPool.borrowObject();
+        } catch (Exception e) {
+            throw new DetectionException(e);
+        }
 
         // 初始化抓帧线程池
-        if (grabberExecutor == null) grabberExecutor = Executors.newSingleThreadExecutor();
+        if (grabberExecutor == null || grabberExecutor.isShutdown())
+            grabberExecutor = Executors.newFixedThreadPool(2);
         // 初始化帧处理线程池
-        if (processorExecutor == null) processorExecutor = Executors.newSingleThreadExecutor();
-
+        if (processorExecutor == null || processorExecutor.isShutdown())
+            processorExecutor = Executors.newFixedThreadPool(2);
+        if (callbackExecutor == null || callbackExecutor.isShutdown())
+            callbackExecutor = Executors.newFixedThreadPool(4);
+        try {
+            initializeGrabber();
+        } catch (FrameGrabber.Exception e) {
+            throw new DetectionException("视频流检测启动失败", e);
+        }
+        isRunning = true;
+        log.debug("视频流处理已启动");
         // 初始化抓帧线程
         grabberExecutor.submit(() -> {
             try {
-                initializeGrabber();
                 processFrames();
             } catch (Exception e) {
                 log.error("视频流处理异常", e);
             } finally {
-                release();
+                //标识抓取已结束
+                grabberFinished = true;
             }
         });
-        log.info("视频流处理已启动");
         // 初始化队列处理线程：解决回调比较耗时，导致线程池爆满
         startFrameProcessor();
     }
@@ -114,22 +156,42 @@ public class StreamDetector implements AutoCloseable{
      * 负责抓取视频帧到队列
      */
     private void processFrames() {
-        int frameCount = 0;
-        while (isRunning) {
+        long frameCount = 0;
+        while (!grabberFinished && isRunning) {
             try {
-                Frame frame = grabber.grab();
-                if (frame == null || frame.image == null) continue;
-
+                Frame frame = grabber.grabFrame();
+                if (frame == null || frame.image == null) {
+                    if(sourceType == VideoSourceType.FILE){
+                        log.debug("视频检测结束");
+                        grabberFinished = true;
+                        break;
+                    }else{
+                        log.debug("未检测到视频帧");
+                        nullFrameCount++;
+                        if (nullFrameCount > MAX_NULL_FRAMES) {
+                            log.warn("检测到视频断开，已超过最大空帧次数");
+                            if(isRunning){
+                                stopDetection();
+                            }
+                            if (listener != null) {
+                                listener.onStreamDisconnected();
+                            }
+                            break;
+                        }
+                        continue;
+                    }
+                }
+                nullFrameCount = 0; // 只要拿到正常帧就清零
                 frameCount++;
                 if (frameCount % frameDetectionInterval != 0) continue;
-
                 Frame currentFrame = frame.clone();
-                frameQueue.offer(currentFrame); // 队列满则丢弃，可改为 put 阻塞
+                frameQueue.offer(currentFrame);
+//                log.debug("正在抓取第{}帧，当前帧数：{}", frameCount, frameQueue.size());
             } catch (Exception e) {
                 log.error("抓取视频帧异常", e);
-                if (e instanceof FFmpegFrameGrabber.Exception) reconnect();
             }
         }
+        log.debug("抓取帧线程退出");
     }
 
     /**
@@ -137,18 +199,29 @@ public class StreamDetector implements AutoCloseable{
      */
     private void startFrameProcessor() {
         processorExecutor.submit(() -> {
-            log.info("帧处理线程已启动");
-            while (isRunning || !frameQueue.isEmpty()) {
+            log.debug("帧处理线程已启动");
+            while ((!grabberFinished || !frameQueue.isEmpty()) && isRunning) {
                 try {
                     Frame frame = frameQueue.poll(100, TimeUnit.MILLISECONDS);
-                    if (frame != null) processFrame(frame);
+                    if (frame != null) {
+                        processFrame(frame);
+                    }
                 } catch (InterruptedException e) {
-                   e.printStackTrace();
+                    log.debug("帧处理线程被中断，准备退出");
+                    break;
                 } catch (Exception e) {
                     log.error("帧处理异常", e);
                 }
             }
+            if(isRunning){
+                stopDetection();
+            }
+            if (listener != null) {
+                listener.onStreamEnded();
+            }
+            log.debug("帧处理线程退出");
         });
+
     }
 
     private void processFrame(Frame frame) {
@@ -158,12 +231,16 @@ public class StreamDetector implements AutoCloseable{
             if (mat == null) return;
 
             Image image = ImageFactory.getInstance().fromImage(mat);
-            DetectedObjects detectedObjects = detectorModel.detect(image);
-//            log.debug("检测结果：{}", detectedObjects.toString());
+            DetectedObjects detectedObjects = predictor.predict(image);
+//            log.info("内部检测结果：{}", detectedObjects.toString());
             DetectionResponse detectionResponse = DetectorUtils.convertToDetectionResponse(detectedObjects, image);
+            if(Objects.isNull(detectionResponse)){
+                return;
+            }
             List<DetectionInfo> filtered = filterRepeatedObjects(detectionResponse);
             if (!filtered.isEmpty() && listener != null) {
-                listener.onObjectDetected(filtered, image); // 同帧多物体一次回调
+                Image copyImage = image.duplicate();
+                callbackExecutor.submit(() -> listener.onObjectDetected(filtered, copyImage));
             }
         } catch (Throwable e) {
             e.printStackTrace();
@@ -187,47 +264,86 @@ public class StreamDetector implements AutoCloseable{
         return result;
     }
 
-    private void reconnect() {
-        log.info("尝试重新连接视频流");
-        try {
-            release();
-            Thread.sleep(5000);
-            initializeGrabber();
-        } catch (Exception e) {
-            log.error("重新连接RTSP流失败", e);
+
+    /**
+     * 开始检测下一个视频文件
+     */
+    public void startNextVideo(String videoPath) {
+        if(!grabberFinished){
+            throw new DetectionException("当前视频未检测结束，请先关闭当前检测，再切换下一个视频");
         }
+        if(sourceType != VideoSourceType.FILE){
+            throw new DetectionException("sourceType不是文件");
+        }
+        this.streamUrl = videoPath;
+        this.grabberFinished = false;
+        startDetection();
     }
 
-    public void stopDetection() { isRunning = false; }
-
-    private void release() {
+    public void stopDetection() {
+        log.debug("停止检测中...");
+        isRunning = false;
+        grabberFinished = true;
+        if (predictor != null && predictorPool != null) {
+            try {
+                predictorPool.returnObject(predictor); //归还
+                predictor = null;
+                predictorPool = null;
+            } catch (Exception e) {
+                log.warn("归还Predictor失败", e);
+                try {
+                    predictor.close(); // 归还失败才销毁
+                } catch (Exception ex) {
+                    log.error("关闭Predictor失败", ex);
+                }
+            }
+        }
         if (grabber != null) {
-            try { grabber.stop(); grabber.release(); }
-            catch (FrameGrabber.Exception e) { log.error("释放Grabber失败", e); }
+            try {
+                grabber.stop(); grabber.release();
+                grabber = null;
+            }catch (FrameGrabber.Exception e) {
+                log.error("释放Grabber失败", e);
+            }
         }
+        log.debug("停止检测完毕");
     }
+
 
     @Override
     public void close() {
-        stopDetection();
-        if (grabberExecutor != null) grabberExecutor.shutdownNow();
-        if (processorExecutor != null) processorExecutor.shutdownNow();
-        release();
+//        if(isRunning){
+//            System.out.println("--isRunning：" + isRunning);
+//            stopDetection();
+//        }
+        if (grabberExecutor != null){
+            grabberExecutor.shutdownNow();
+        }
+        if (processorExecutor != null) {
+            processorExecutor.shutdownNow();
+        }
+        if (callbackExecutor != null) {
+            callbackExecutor.shutdownNow();
+        }
     }
 
     public static class Builder {
         private DetectorModel detectorModel;
         private String streamUrl;
-        private ExecutorService executorService;
         private int frameDetectionInterval = 1;
         private StreamDetectionListener listener;
         private VideoSourceType sourceType = VideoSourceType.STREAM; // 默认流
         private int cameraIndex = 0; // 默认第一个摄像头
 
+        private long repeatGap = 5;//同物体重复检测间隔
+
         public Builder detectorModel(DetectorModel m) { this.detectorModel = m; return this; }
         public Builder streamUrl(String url) { this.streamUrl = url; return this; }
-        public Builder executorService(ExecutorService es) { this.executorService = es; return this; }
         public Builder listener(StreamDetectionListener listener) { this.listener = listener; return this; }
+        public Builder repeatGap(long repeatGap) {
+            this.repeatGap = repeatGap;
+            return this;
+        }
         public Builder sourceType(VideoSourceType sourceType) {
             this.sourceType = sourceType;
             return this;
@@ -266,10 +382,6 @@ public class StreamDetector implements AutoCloseable{
                     break;
                 default:
                     throw new DetectionException("不支持的视频源类型: " + sourceType);
-            }
-
-            if (executorService == null) {
-                executorService = Executors.newFixedThreadPool(2); // 至少2个线程
             }
 
             return new StreamDetector(this);

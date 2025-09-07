@@ -37,8 +37,6 @@ public class Yolo5PlateDetectTranslator implements Translator<Image, DetectedObj
 
     private int topK;
 
-    private LetterBoxUtils.ResizeResult letterBoxResult;
-
     public Yolo5PlateDetectTranslator(Map<String, ?> arguments) {
         confThreshold =
                 arguments.containsKey("confThreshold")
@@ -62,7 +60,8 @@ public class Yolo5PlateDetectTranslator implements Translator<Image, DetectedObj
         imageWidth = (int) array.getShape().get(1);
         imageHeight = (int) array.getShape().get(0);
         //Letter box resize 640x640 with padding (保持比例，补边缘)
-        letterBoxResult = LetterBoxUtils.letterbox(manager, array, inputSize, inputSize, 114f, LetterBoxUtils.PaddingPosition.CENTER);
+        LetterBoxUtils.ResizeResult letterBoxResult = LetterBoxUtils.letterbox(manager, array, inputSize, inputSize, 114f, LetterBoxUtils.PaddingPosition.CENTER);
+        ctx.setAttachment("letterBoxResult", letterBoxResult);
         array = letterBoxResult.image;
         // 转为 float32 且归一化到 0~1
         array = array.toType(DataType.FLOAT32, false).div(255f); // HWC
@@ -74,6 +73,7 @@ public class Yolo5PlateDetectTranslator implements Translator<Image, DetectedObj
     @Override
     public DetectedObjects processOutput(TranslatorContext ctx, NDList list) {
         NDManager manager = ctx.getNDManager();
+        LetterBoxUtils.ResizeResult letterBoxResult = (LetterBoxUtils.ResizeResult)ctx.getAttachment("letterBoxResult");
         //[x_center, y_center, w, h, obj_conf, 8个关键点, class1_conf, class2_conf]
         //目标置信度 obj_conf 5:13 关键点 [13:15]分类得分：单层车牌 / 双层车牌
         NDArray dets = list.singletonOrThrow();

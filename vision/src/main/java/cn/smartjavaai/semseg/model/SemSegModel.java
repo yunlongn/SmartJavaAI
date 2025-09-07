@@ -22,21 +22,21 @@ public interface SemSegModel extends AutoCloseable{
 
     /**
      * 语义分割
-     * @param base64Image
-     * @return
-     */
-    default R<CategoryMask> detectBase64(String base64Image){
-        throw new UnsupportedOperationException("默认不支持该功能");
-    }
-
-    /**
-     * 语义分割
      * @param image
      * @return
      */
     default R<CategoryMask> detect(Image image){
         throw new UnsupportedOperationException("默认不支持该功能");
     }
+
+    default R<CategoryMask> detectAndDraw(String imagePath, String outputPath){
+        throw new UnsupportedOperationException("默认不支持该功能");
+    }
+
+    default Image detectAndDraw(Image image){
+        throw new UnsupportedOperationException("默认不支持该功能");
+    }
+
 
 
 }

@@ -113,6 +113,9 @@ public class CommonInstanceSegModel implements InstanceSegModel {
     @Override
     public R<DetectionResponse> detectAndDraw(Image image) {
         DetectedObjects detectedObjects = detectCore(image);
+        if(Objects.isNull(detectedObjects) || detectedObjects.getNumberOfObjects() == 0){
+            return R.fail(R.Status.NO_OBJECT_DETECTED);
+        }
         image.drawBoundingBoxes(detectedObjects);
         DetectionResponse detectionResponse = DetectorUtils.convertToDetectionResponse(detectedObjects, image);
         detectionResponse.setDrawnImage(image);
@@ -124,6 +127,9 @@ public class CommonInstanceSegModel implements InstanceSegModel {
         try {
             Image img = SmartImageFactory.getInstance().fromFile(Paths.get(imagePath));
             DetectedObjects detectedObjects = detectCore(img);
+            if(Objects.isNull(detectedObjects) || detectedObjects.getNumberOfObjects() == 0){
+                return R.fail(R.Status.NO_OBJECT_DETECTED);
+            }
             img.drawBoundingBoxes(detectedObjects);
             img.save(Files.newOutputStream(Paths.get(outputPath)), "png");
             DetectionResponse detectionResponse = DetectorUtils.convertToDetectionResponse(detectedObjects, img);

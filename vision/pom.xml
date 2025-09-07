@@ -36,32 +36,9 @@
             <version>${project.version}</version>
         </dependency>
 
-        <dependency>
-            <groupId>org.bytedeco</groupId>
-            <artifactId>javacpp</artifactId>
-            <version>1.5.10</version>
-            <classifier>macosx-arm64</classifier>
-        </dependency>
-        <dependency>
-            <groupId>org.bytedeco</groupId>
-            <artifactId>ffmpeg</artifactId>
-            <version>6.1.1-1.5.10</version>
-            <classifier>macosx-arm64</classifier>
-        </dependency>
 
-        <dependency>
-            <groupId>org.bytedeco</groupId>
-            <artifactId>openblas</artifactId>
-            <version>0.3.26-1.5.10</version>
-            <classifier>macosx-arm64</classifier>
-        </dependency>
 
-        <dependency>
-            <groupId>org.bytedeco</groupId>
-            <artifactId>opencv</artifactId>
-            <version>4.9.0-1.5.10</version>
-            <classifier>macosx-arm64</classifier>
-        </dependency>
+
     </dependencies>
 
 

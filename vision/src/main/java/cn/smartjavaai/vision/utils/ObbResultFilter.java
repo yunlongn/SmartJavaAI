@@ -2,6 +2,7 @@ package cn.smartjavaai.vision.utils;
 
 import cn.smartjavaai.obb.entity.ObbResult;
 import cn.smartjavaai.obb.entity.YoloRotatedBox;
+import org.apache.commons.collections.CollectionUtils;
 
 import java.util.Collections;
 import java.util.List;
@@ -26,11 +27,12 @@ public class ObbResultFilter {
             return new ObbResult(Collections.emptyList());
         }
 
-        // 1. 按类别过滤
-        List<YoloRotatedBox> filtered = result.getRotatedBoxeList().stream()
-                .filter(box -> allowedClasses.contains(box.className))
-                .collect(Collectors.toList());
-
+        List<YoloRotatedBox> filtered = result.getRotatedBoxeList();
+        if(CollectionUtils.isNotEmpty(allowedClasses)){
+            filtered = result.getRotatedBoxeList().stream()
+                    .filter(box -> allowedClasses.contains(box.className))
+                    .collect(Collectors.toList());
+        }
         // 2. 按 score 排序
 //        filtered.sort((a, b) -> Float.compare(b.score, a.score));
 

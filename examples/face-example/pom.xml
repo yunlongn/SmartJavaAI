@@ -55,11 +55,7 @@
             <artifactId>commons-io</artifactId>
             <version>2.17.0</version>
         </dependency>
-        <dependency>
-            <groupId>org.apache.logging.log4j</groupId>
-            <artifactId>log4j-slf4j2-impl</artifactId>
-            <version>2.24.1</version>
-        </dependency>
+
         <dependency>
             <groupId>org.testng</groupId>
             <artifactId>testng</artifactId>
@@ -72,11 +68,6 @@
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-classic</artifactId>
             <version>1.2.3</version>
-        </dependency>
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-api</artifactId>
-            <version>1.7.30</version>
         </dependency>
 
         <dependency>
@@ -101,7 +92,7 @@
         <dependency>
             <groupId>ai.djl.pytorch</groupId>
             <artifactId>pytorch-jni</artifactId>
-            <version>2.7.1-0.34.0</version>
+            <version>2.5.1-0.32.0</version>
             <scope>runtime</scope>
         </dependency>
 
@@ -138,7 +129,7 @@
             <groupId>ai.djl.pytorch</groupId>
             <artifactId>pytorch-native-cpu</artifactId>
             <classifier>${djl.platform.windows-x86_64}</classifier>
-            <version>2.7.1</version>
+            <version>2.5.1</version>
             <scope>runtime</scope>
         </dependency>
 
@@ -176,9 +167,18 @@
             <groupId>ai.djl.pytorch</groupId>
             <artifactId>pytorch-native-cpu</artifactId>
             <classifier>${djl.platform.linux-x86_64}</classifier>
-            <version>2.7.1</version>
+            <version>2.5.1</version>
             <scope>runtime</scope>
         </dependency>
+        <dependency>
+            <groupId>ai.djl.pytorch</groupId>
+            <artifactId>pytorch-native-cpu-precxx11</artifactId>
+            <classifier>${djl.platform.linux-x86_64}</classifier>
+            <version>2.5.1</version>
+            <scope>runtime</scope>
+        </dependency>
+
+
 
 
         <!-- macOS M系列 平台  (保留对应平台的配置，可以减小包大小)-->
@@ -213,9 +213,11 @@
             <groupId>ai.djl.pytorch</groupId>
             <artifactId>pytorch-native-cpu</artifactId>
             <classifier>${djl.platform.osx-aarch64}</classifier>
-            <version>2.7.1</version>
+            <version>2.5.1</version>
             <scope>runtime</scope>
         </dependency>
+
+
 
 
         <!-- linux aarch64 平台 (保留对应平台的配置，可以减小包大小)-->
@@ -245,22 +247,6 @@
             <artifactId>opencv</artifactId>
             <version>4.9.0-1.5.10</version>
             <classifier>${javacv.platform.linux-arm64}</classifier>
-        </dependency>
-
-        <dependency>
-            <groupId>ai.djl.pytorch</groupId>
-            <artifactId>pytorch-native-cpu-precxx11</artifactId>
-            <classifier>${djl.platform.linux-aarch64}</classifier>
-            <version>2.5.1</version>
-            <scope>runtime</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>ai.djl.pytorch</groupId>
-            <artifactId>pytorch-native-cpu</artifactId>
-            <classifier>linux-aarch64</classifier>
-            <scope>runtime</scope>
-            <version>2.7.1</version>
         </dependency>
 
 
@@ -294,16 +280,10 @@
 
     <repositories>
         <repository>
-            <id>aliyunmaven</id>
-            <name>阿里云公共仓库</name>
-            <url>https://maven.aliyun.com/repository/public</url>
-            <releases>
-                <enabled>true</enabled>
-            </releases>
-            <snapshots>
-                <enabled>false</enabled>
-            </snapshots>
+            <id>central</id>
+            <url>https://repo1.maven.org/maven2/</url>
         </repository>
+
     </repositories>
 
 

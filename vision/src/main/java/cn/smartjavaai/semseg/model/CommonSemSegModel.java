@@ -6,23 +6,32 @@ import ai.djl.inference.Predictor;
 import ai.djl.modality.cv.Image;
 import ai.djl.modality.cv.ImageFactory;
 import ai.djl.modality.cv.output.CategoryMask;
+import ai.djl.modality.cv.output.DetectedObjects;
 import ai.djl.repository.zoo.Criteria;
 import ai.djl.repository.zoo.ModelNotFoundException;
 import ai.djl.repository.zoo.ZooModel;
+import cn.smartjavaai.common.cv.SmartImageFactory;
+import cn.smartjavaai.common.entity.DetectionResponse;
 import cn.smartjavaai.common.entity.R;
 import cn.smartjavaai.common.pool.PredictorFactory;
 import cn.smartjavaai.common.utils.Base64ImageUtils;
+import cn.smartjavaai.common.utils.ImageUtils;
+import cn.smartjavaai.instanceseg.exception.InstanceSegException;
 import cn.smartjavaai.objectdetection.exception.DetectionException;
 import cn.smartjavaai.semseg.config.SemSegModelConfig;
 import cn.smartjavaai.semseg.criteria.SemSegCriteriaFactory;
 import cn.smartjavaai.vision.utils.CategoryMaskFilter;
+import cn.smartjavaai.vision.utils.DetectorUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.pool2.impl.GenericObjectPool;
 
+import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Objects;
 
 /**
@@ -64,25 +73,11 @@ public class CommonSemSegModel implements SemSegModel {
     }
 
     @Override
-    public R<CategoryMask> detectBase64(String base64Image) {
-        if(StringUtils.isBlank(base64Image)){
-            return R.fail(R.Status.INVALID_IMAGE);
-        }
-        try {
-            byte[] imageData = Base64ImageUtils.base64ToImage(base64Image);
-            Image image = ImageFactory.getInstance().fromInputStream(new ByteArrayInputStream(imageData));
-            return detect(image);
-        } catch (IOException e) {
-            throw new DetectionException("读取图片异常", e);
-        }
-    }
-
-    @Override
     public R<CategoryMask> detect(Image image) {
         CategoryMask categoryMask = detectCore(image);
         // 过滤
         if(CollectionUtils.isNotEmpty(config.getAllowedClasses())
-                && Objects.nonNull(categoryMask) && !categoryMask.getClasses().isEmpty()){
+                && Objects.nonNull(categoryMask) && CollectionUtils.isNotEmpty(categoryMask.getClasses())){
             categoryMask = new CategoryMaskFilter(config.getAllowedClasses()).filter(categoryMask);
         }
         return R.ok(categoryMask);
@@ -115,6 +110,33 @@ public class CommonSemSegModel implements SemSegModel {
                 }
             }
         }
+    }
+
+    @Override
+    public R<CategoryMask> detectAndDraw(String imagePath, String outputPath) {
+        try {
+            Image img = SmartImageFactory.getInstance().fromFile(Paths.get(imagePath));
+            CategoryMask categoryMask = detectCore(img);
+            if(Objects.isNull(categoryMask) || CollectionUtils.isEmpty(categoryMask.getClasses())){
+                throw new InstanceSegException("未检测到实例");
+            }
+            ImageUtils.drawMask(categoryMask, img, 180, 0);
+            img.save(Files.newOutputStream(Paths.get(outputPath)), "png");
+            return R.ok(categoryMask);
+        } catch (IOException e) {
+            throw new InstanceSegException(e);
+        }
+    }
+
+    @Override
+    public Image detectAndDraw(Image image) {
+        CategoryMask categoryMask = detectCore(image);
+        if(Objects.isNull(categoryMask) || CollectionUtils.isEmpty(categoryMask.getClasses())){
+            throw new InstanceSegException("未检测到实例");
+        }
+        Image drawnImage = ImageUtils.copy(image);
+        ImageUtils.drawMask(categoryMask, drawnImage, 180, 0);
+        return drawnImage;
     }
 
     @Override

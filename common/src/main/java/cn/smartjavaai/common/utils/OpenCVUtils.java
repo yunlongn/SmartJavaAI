@@ -239,27 +239,27 @@ public class OpenCVUtils {
      * @param src Bytedeco Mat (BGR 或 BGRA)
      * @return OpenCV Mat (BGR 或 BGRA)
      */
-    public static org.opencv.core.Mat convertToOpenCVMat(org.bytedeco.opencv.opencv_core.Mat bMat) {
-
-
-        try {
-            int width = bMat.cols();
-            int height = bMat.rows();
-            int channels = bMat.channels();
-
-            // 创建 OpenCV Mat
-            org.opencv.core.Mat cvMat = new org.opencv.core.Mat(height, width, channels == 3 ? CvType.CV_8UC3 : CvType.CV_8UC1);
-
-            // 从 bytedeco Mat 获取像素数据
-            byte[] data = new byte[width * height * channels];
-            bMat.data().get(data);
-
-            // 填充到 OpenCV Mat
-            cvMat.put(0, 0, data);
-            return cvMat;
-        } catch (Throwable e) {
-            e.printStackTrace();
-        }
-        return null;
-    }
+//    public static org.opencv.core.Mat convertToOpenCVMat(org.bytedeco.opencv.opencv_core.Mat bMat) {
+//
+//
+//        try {
+//            int width = bMat.cols();
+//            int height = bMat.rows();
+//            int channels = bMat.channels();
+//
+//            // 创建 OpenCV Mat
+//            org.opencv.core.Mat cvMat = new org.opencv.core.Mat(height, width, channels == 3 ? CvType.CV_8UC3 : CvType.CV_8UC1);
+//
+//            // 从 bytedeco Mat 获取像素数据
+//            byte[] data = new byte[width * height * channels];
+//            bMat.data().get(data);
+//
+//            // 填充到 OpenCV Mat
+//            cvMat.put(0, 0, data);
+//            return cvMat;
+//        } catch (Throwable e) {
+//            e.printStackTrace();
+//        }
+//        return null;
+//    }
 }

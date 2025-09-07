@@ -68,26 +68,12 @@ public class CommonActionRecModel implements ActionRecModel{
         }
     }
 
-    @Override
-    public R<Classifications> detectBase64(String base64Image) {
-        if(StringUtils.isBlank(base64Image)){
-            return R.fail(R.Status.INVALID_IMAGE);
-        }
-        try {
-            byte[] imageData = Base64ImageUtils.base64ToImage(base64Image);
-            Image image = ImageFactory.getInstance().fromInputStream(new ByteArrayInputStream(imageData));
-            return detect(image);
-        } catch (IOException e) {
-            throw new DetectionException("读取图片异常", e);
-        }
-    }
 
     @Override
     public R<Classifications> detect(Image image) {
         Classifications classifications = detectCore(image);
         // 过滤
-        if(config.getThreshold() > 0 && CollectionUtils.isNotEmpty(config.getAllowedClasses())
-                && Objects.nonNull(classifications) && !classifications.items().isEmpty()){
+        if(Objects.nonNull(classifications) && !classifications.items().isEmpty()){
             classifications = new ClassificationFilter(config.getAllowedClasses(), config.getThreshold()).filter(classifications);
         }
         return R.ok(classifications);

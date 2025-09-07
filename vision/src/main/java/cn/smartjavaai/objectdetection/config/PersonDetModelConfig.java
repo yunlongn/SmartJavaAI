@@ -34,12 +34,6 @@ public class PersonDetModelConfig extends ModelConfig {
      */
     private String modelPath;
 
-
-    /**
-     * 允许的分类列表
-     */
-    private List<String> allowedClasses;
-
     /**
      * 按置信度分数排序后，最多保留的检测框数量
      */

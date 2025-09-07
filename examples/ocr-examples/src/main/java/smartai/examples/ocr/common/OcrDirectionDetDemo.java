@@ -22,8 +22,8 @@ import java.util.List;
 /**
  * OCR 行文本方向检测 示例
  * 模型下载地址：https://pan.baidu.com/s/1MLfd73Vjdpnuls9-oqc9uw?pwd=1234 提取码: 1234
+ * 开发文档：http://doc.smartjavaai.cn/
  * @author dwj
- * @date 2025/5/25
  */
 @Slf4j
 public class OcrDirectionDetDemo {
@@ -43,7 +43,7 @@ public class OcrDirectionDetDemo {
      */
     public OcrDirectionModel getDirectionModel(){
         DirectionModelConfig directionModelConfig = new DirectionModelConfig();
-        //指定行文本方向检测模型
+        //指定行文本方向检测模型，切换模型需要同时修改modelEnum及modelPath
         directionModelConfig.setModelEnum(DirectionModelEnum.PP_LCNET_X0_25);
         //指定行文本方向检测模型路径，需要更改为自己的模型路径（下载地址请查看文档）
         directionModelConfig.setModelPath("/Users/xxx/Documents/develop/model/ocr/PP-LCNet_x0_25_textline_ori_infer/PP-LCNet_x0_25_textline_ori_infer.onnx");
@@ -58,7 +58,7 @@ public class OcrDirectionDetDemo {
      */
     public OcrCommonDetModel getDetectionModel() {
         OcrDetModelConfig config = new OcrDetModelConfig();
-        //指定检测模型
+        //指定检测模型，切换模型需要同时修改modelEnum及modelPath
         config.setModelEnum(CommonDetModelEnum.PP_OCR_V5_MOBILE_DET_MODEL);
         //指定模型位置，需要更改为自己的模型路径（下载地址请查看文档）
         config.setDetModelPath("/Users/xxx/Documents/develop/model/ocr/PP-OCRv5_mobile_det_infer/PP-OCRv5_mobile_det_infer.onnx");

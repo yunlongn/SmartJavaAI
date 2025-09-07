@@ -36,7 +36,7 @@ public class InstanceSegModelConfig extends ModelConfig {
     /**
      * 置信度阈值
      */
-    private float threshold = 0.3f;
+    private float threshold = 0.25f;
 
 
     public InstanceSegModelConfig() {

@@ -11,9 +11,9 @@ import ai.djl.repository.zoo.Criteria;
 import ai.djl.repository.zoo.ModelNotFoundException;
 import ai.djl.repository.zoo.ZooModel;
 import cn.smartjavaai.common.entity.DetectionResponse;
+import cn.smartjavaai.common.entity.R;
 import cn.smartjavaai.common.pool.PredictorFactory;
 import cn.smartjavaai.common.utils.FileUtils;
-import cn.smartjavaai.common.utils.FrameConverterUtil;
 import cn.smartjavaai.common.utils.ImageUtils;
 import cn.smartjavaai.common.utils.OpenCVUtils;
 import cn.smartjavaai.objectdetection.config.DetectorModelConfig;
@@ -119,6 +119,9 @@ public class DetectorModel implements AutoCloseable{
         try {
             img = ImageFactory.getInstance().fromFile(Paths.get(imagePath));
             DetectedObjects detectedObjects = detect(img);
+            if(Objects.isNull(detectedObjects) || detectedObjects.getNumberOfObjects() == 0){
+                throw new DetectionException("未检测到图片中的物体");
+            }
             img.drawBoundingBoxes(detectedObjects);
             ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
             // 调用 save 方法将 Image 写入字节流
@@ -186,6 +189,9 @@ public class DetectorModel implements AutoCloseable{
         }
         Image img = ImageFactory.getInstance().fromImage(OpenCVUtils.image2Mat(sourceImage));
         DetectedObjects detectedObjects = detect(img);
+        if(Objects.isNull(detectedObjects) || detectedObjects.getNumberOfObjects() == 0){
+            throw new DetectionException("未检测到图片中的物体");
+        }
         img.drawBoundingBoxes(detectedObjects);
         try {
             ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
@@ -225,7 +231,6 @@ public class DetectorModel implements AutoCloseable{
             if (predictor != null) {
                 try {
                     predictorPool.returnObject(predictor); //归还
-                    log.debug("释放资源");
                 } catch (Exception e) {
                     log.warn("归还Predictor失败", e);
                     try {

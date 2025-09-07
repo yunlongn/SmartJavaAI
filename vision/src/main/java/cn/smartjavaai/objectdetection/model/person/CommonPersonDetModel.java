@@ -8,10 +8,12 @@ import ai.djl.modality.cv.output.DetectedObjects;
 import ai.djl.repository.zoo.Criteria;
 import ai.djl.repository.zoo.ModelNotFoundException;
 import ai.djl.repository.zoo.ZooModel;
+import cn.hutool.core.img.ImgUtil;
 import cn.smartjavaai.common.cv.SmartImageFactory;
 import cn.smartjavaai.common.entity.DetectionResponse;
 import cn.smartjavaai.common.entity.R;
 import cn.smartjavaai.common.pool.PredictorFactory;
+import cn.smartjavaai.common.utils.ImageUtils;
 import cn.smartjavaai.obb.config.ObbDetModelConfig;
 import cn.smartjavaai.obb.criteria.ObbDetCriteriaFactory;
 import cn.smartjavaai.obb.entity.ObbResult;
@@ -27,6 +29,7 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.pool2.impl.GenericObjectPool;
 import org.opencv.core.Mat;
 
+import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -92,7 +95,7 @@ public class CommonPersonDetModel implements PersonDetModel {
             DetectedObjects detectedObjects = predictor.predict(image);
             //过滤
             if(Objects.nonNull(detectedObjects) && detectedObjects.getNumberOfObjects() > 0){
-                DetectedObjectsFilter detectedObjectsFilter = new DetectedObjectsFilter(config.getAllowedClasses(), config.getTopK());
+                DetectedObjectsFilter detectedObjectsFilter = new DetectedObjectsFilter(null, config.getTopK());
                 detectedObjects = detectedObjectsFilter.filter(detectedObjects);
             }
             return detectedObjects;
@@ -118,9 +121,13 @@ public class CommonPersonDetModel implements PersonDetModel {
     @Override
     public R<DetectionResponse> detectAndDraw(Image image) {
         DetectedObjects detectedObjects = detectCore(image);
-        image.drawBoundingBoxes(detectedObjects);
-        DetectionResponse detectionResponse = DetectorUtils.convertToDetectionResponse(detectedObjects, image);
-        detectionResponse.setDrawnImage(image);
+        if(Objects.isNull(detectedObjects) || detectedObjects.getNumberOfObjects() == 0){
+            return R.fail(R.Status.NO_OBJECT_DETECTED);
+        }
+        Image drawnImage = ImageUtils.copy(image);
+        drawnImage.drawBoundingBoxes(detectedObjects);
+        DetectionResponse detectionResponse = DetectorUtils.convertToDetectionResponse(detectedObjects, drawnImage);
+        detectionResponse.setDrawnImage(drawnImage);
         return R.ok(detectionResponse);
     }
 
@@ -129,6 +136,9 @@ public class CommonPersonDetModel implements PersonDetModel {
         try {
             Image img = SmartImageFactory.getInstance().fromFile(Paths.get(imagePath));
             DetectedObjects detectedObjects = detectCore(img);
+            if(Objects.isNull(detectedObjects) || detectedObjects.getNumberOfObjects() == 0){
+                return R.fail(R.Status.NO_OBJECT_DETECTED);
+            }
             img.drawBoundingBoxes(detectedObjects);
             ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
             // 调用 save 方法将 Image 写入字节流

@@ -61,12 +61,12 @@ public class ObjectDetectionModelFactory {
      * 获取默认模型
      * @return
      */
-    public DetectorModel getModel() {
-        // 初始化默认配置
-        DetectorModelConfig config = new DetectorModelConfig();
-        config.setModelEnum(DetectorModelEnum.YOLO11N);
-        return getModel(config);
-    }
+//    public DetectorModel getModel() {
+//        // 初始化默认配置
+//        DetectorModelConfig config = new DetectorModelConfig();
+//        config.setModelEnum(DetectorModelEnum.YOLO11N);
+//        return getModel(config);
+//    }
 
     /**
      * 关闭所有已加载的模型

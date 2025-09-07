@@ -17,23 +17,23 @@ public class CriteriaBuilderFactory {
 
     public static Criteria<Image, DetectedObjects> createCriteria(DetectorModelConfig config) {
         //以下模型modelPath不允许为空
-        if(config.getModelEnum() == DetectorModelEnum.YOLOV8_OFFICIAL ||
-                config.getModelEnum() == DetectorModelEnum.YOLOV12_OFFICIAL ||
-                config.getModelEnum() == DetectorModelEnum.YOLOV8_CUSTOM ||
-                config.getModelEnum() == DetectorModelEnum.YOLOV12_CUSTOM ||
+        if(config.getModelEnum() == DetectorModelEnum.YOLOV8_OFFICIAL_ONNX ||
+                config.getModelEnum() == DetectorModelEnum.YOLOV12_OFFICIAL_ONNX ||
+                config.getModelEnum() == DetectorModelEnum.YOLOV8_CUSTOM_ONNX ||
+                config.getModelEnum() == DetectorModelEnum.YOLOV12_CUSTOM_ONNX ||
                 config.getModelEnum() == DetectorModelEnum.TENSORFLOW2_OFFICIAL){
             if(StringUtils.isBlank(config.getModelPath())){
                 throw new DetectionException("modelPath is null");
             }
         }
         switch (config.getModelEnum()) {
-            case YOLOV8_OFFICIAL:
+            case YOLOV8_OFFICIAL_ONNX:
                 return new YoloCriteriaBuilder().buildCriteria(config);
-            case YOLOV12_OFFICIAL:
+            case YOLOV12_OFFICIAL_ONNX:
                 return new YoloCriteriaBuilder().buildCriteria(config);
-            case YOLOV8_CUSTOM:
+            case YOLOV8_CUSTOM_ONNX:
                 return new YoloCriteriaBuilder().buildCriteria(config);
-            case YOLOV12_CUSTOM:
+            case YOLOV12_CUSTOM_ONNX:
                 return new YoloCriteriaBuilder().buildCriteria(config);
             case TENSORFLOW2_OFFICIAL:
                 return new Tensorflow2CriteriaBuilder().buildCriteria(config);

@@ -26,15 +26,6 @@ public interface ActionRecModel extends AutoCloseable{
 
     /**
      * 动作检测
-     * @param base64Image
-     * @return
-     */
-    default R<Classifications> detectBase64(String base64Image){
-        throw new UnsupportedOperationException("默认不支持该功能");
-    }
-
-    /**
-     * 动作检测
      * @param image
      * @return
      */

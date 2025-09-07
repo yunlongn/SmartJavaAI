@@ -3,8 +3,10 @@ package cn.smartjavaai.action.criteria;
 import ai.djl.Device;
 import ai.djl.modality.Classifications;
 import ai.djl.modality.cv.Image;
+import ai.djl.modality.cv.output.DetectedObjects;
 import ai.djl.repository.zoo.Criteria;
 import ai.djl.training.util.ProgressBar;
+import ai.djl.translate.Translator;
 import cn.smartjavaai.action.config.ActionRecModelConfig;
 import cn.smartjavaai.action.enums.ActionRecModelEnum;
 import cn.smartjavaai.action.model.CommonActionTranslator;
@@ -23,45 +25,48 @@ import java.util.concurrent.ConcurrentHashMap;
 public class ActionRecCriteriaFactory {
 
 
+    /**
+     * 创建动作识别Criteria
+     * @param config
+     * @return
+     */
     public static Criteria<Image, Classifications> createCriteria(ActionRecModelConfig config) {
         Device device = null;
         if(!Objects.isNull(config.getDevice())){
             device = config.getDevice() == DeviceEnum.CPU ? Device.cpu() : Device.gpu(config.getGpuId());
         }
-        Criteria<Image, Classifications> criteria = null;
-        ConcurrentHashMap params = new ConcurrentHashMap<String, String>();
-        params.putAll(config.getCustomParams());
-        if(config.getModelEnum() == ActionRecModelEnum.VIT_BASE_PATCH16_224){
-            criteria =
-                    Criteria.builder()
-                            .setTypes(Image.class, Classifications.class)
-                            .optModelUrls(StringUtils.isNotBlank(config.getModelPath()) ? null :
-                                    config.getModelEnum().getModelUri())
-                            .optModelPath(StringUtils.isNotBlank(config.getModelPath()) ? Paths.get(config.getModelPath()) : null)
-                            .optEngine("PyTorch")
-                            .optDevice(device)
-                            .optProgress(new ProgressBar())
-                            .build();
-        }else {
+        Translator<Image, Classifications> translator = getTranslator(config);
+        if(StringUtils.isBlank(config.getModelEnum().getModelUrl())){
+            //检查模型路径
             if (StringUtils.isBlank(config.getModelPath())){
                 throw new ActionException("请指定模型路径");
             }
-            int width = 224;
-            int height = 224;
-            if(config.getModelEnum() == ActionRecModelEnum.INCEPTIONV3_KINETICS400){
-                width = 299;
-                height = 299;
-            }
-            criteria =
-                    Criteria.builder()
-                            .setTypes(Image.class, Classifications.class)
-                            .optTranslator(new CommonActionTranslator(width, height))
-                            .optEngine("OnnxRuntime")
-                            .optModelPath(Paths.get(config.getModelPath()))
-                            .optDevice(device)
-                            .optProgress(new ProgressBar())
-                            .build();
         }
+        Criteria<Image, Classifications> criteria =
+                Criteria.builder()
+                        .setTypes(Image.class, Classifications.class)
+                        .optModelUrls(StringUtils.isNotBlank(config.getModelPath()) ? null : config.getModelEnum().getModelUrl())
+                        .optModelPath(StringUtils.isNotBlank(config.getModelPath()) ? Paths.get(config.getModelPath()) : null)
+                        .optTranslator(translator)
+                        .optDevice(device)
+                        .optProgress(new ProgressBar())
+                        .optEngine(config.getModelEnum().getEngine())
+                        .build();
         return criteria;
+    }
+
+    /**
+     * 获取动作识别Translator
+     * @param config
+     * @return
+     */
+    public static Translator<Image, Classifications> getTranslator(ActionRecModelConfig config) {
+        Translator<Image, Classifications> translator = null;
+        if(config.getModelEnum() == ActionRecModelEnum.INCEPTIONV1_KINETICS400_ONNX
+                || config.getModelEnum() == ActionRecModelEnum.INCEPTIONV3_KINETICS400_ONNX
+                || config.getModelEnum() == ActionRecModelEnum.INCEPTIONV3_KINETICS400_ONNX){
+            translator =new CommonActionTranslator(config.getModelEnum().getInputWidth(), config.getModelEnum().getInputHeight());
+        }
+        return translator;
     }
 }
