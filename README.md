@@ -428,7 +428,7 @@ SmartJavaAI是专为JAVA 开发者打造的一个功能丰富、开箱即用的 
 在项目的 `pom.xml` 的 `dependencies` 中可以一次性引入全部功能（如下所示）。
 ⚠️ **注意：不推荐直接引入全部依赖**，更推荐根据实际需求，按功能模块单独引入，避免引入不必要的包。
 
-详细引入方式请查看 [文档](http://doc.smartjavaai.cn/Install)、或查看[示例代码](https://gitee.com/dengwenjie/SmartJavaAI/tree/master/examples)
+详细引入方式请查看 [文档](http://doc.smartjavaai.cn/install.html)、或查看[示例代码](https://gitee.com/dengwenjie/SmartJavaAI/tree/master/examples)
 
 ```xml
 <dependency>
