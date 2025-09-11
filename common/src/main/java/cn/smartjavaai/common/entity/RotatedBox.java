@@ -1,9 +1,12 @@
 package cn.smartjavaai.common.entity;
 
+import lombok.Data;
+
 /**
  * 旋转框
  * @author dwj
  */
+@Data
 public class RotatedBox {
 
     /**
