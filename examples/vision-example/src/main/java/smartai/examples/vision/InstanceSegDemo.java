@@ -78,7 +78,7 @@ public class InstanceSegDemo {
             Image image = SmartImageFactory.getInstance().fromFile(Paths.get("src/main/resources/dog_bike_car.jpg"));
             R<DetectionResponse> result = detectorModel.detect(image);
             if(result.isSuccess()){
-                log.info("实例分割结果：{}", result.getData());
+                log.info("实例分割结果：{}", JSONObject.toJSONString(result.getData()));
             }else{
                 log.info("实例分割失败：{}", result.getMessage());
             }

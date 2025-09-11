@@ -41,14 +41,12 @@ public class PoseDetDemo {
      * 获取姿态估计模型
      * 注意事项：
      * 1、更多模型请查看文档：http://doc.smartjavaai.cn
-     * 2、模型可检测物体请查看：模型同目录文件synset.txt
      */
     public PoseModel getModel(){
         PoseModelConfig config = new PoseModelConfig();
         //姿态估计模型，切换模型需要同时修改modelEnum及modelPath
-        config.setModelEnum(PoseModelEnum.YOLOV8N_POSE_PT);
-        //模型所在路径，synset.txt也需要放在同目录下
-        config.setModelPath("/Users/wenjie/Documents/develop/model/vision/pose/yolo11n-pose-onnx/yolo11n-pose.onnx");
+        config.setModelEnum(PoseModelEnum.YOLO11N_POSE_PT);
+        config.setModelPath("/Users/wenjie/Documents/develop/model/vision/pose/yolo11n-pose-pt");
         config.setDevice(device);
         //置信度阈值
         config.setThreshold(0.25f);

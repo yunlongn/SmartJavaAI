@@ -53,7 +53,6 @@ public class SemSegDemo {
         config.setModelPath("/Users/wenjie/Documents/develop/model/vision/semseg/deeplabv3/deeplabv3.pt");
         // 指定允许的类别
 //            config.setAllowedClasses(Arrays.asList("person","car"));
-        //指定返回检测数量
         config.setDevice(device);
         return SemSegModelFactory.getInstance().getModel(config);
     }
