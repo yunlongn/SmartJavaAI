@@ -136,7 +136,7 @@
         <dependency>
             <groupId>ai.djl.tensorflow</groupId>
             <artifactId>tensorflow-native-cpu</artifactId>
-            <classifier>win-x86_64</classifier>
+            <classifier>${djl.platform.windows-x86_64}</classifier>
             <scope>runtime</scope>
             <version>2.16.1</version>
         </dependency>
@@ -144,7 +144,7 @@
         <dependency>
             <groupId>ai.djl.mxnet</groupId>
             <artifactId>mxnet-native-mkl</artifactId>
-            <classifier>win-x86_64</classifier>
+            <classifier>${djl.platform.windows-x86_64}</classifier>
             <scope>runtime</scope>
             <version>1.9.1</version>
         </dependency>
@@ -179,6 +179,7 @@
             <classifier>${javacv.platform.linux-x86_64}</classifier>
         </dependency>
 
+        <!--PyTorch离线平台依赖-->
         <dependency>
             <groupId>ai.djl.pytorch</groupId>
             <artifactId>pytorch-native-cpu</artifactId>
@@ -190,14 +191,14 @@
         <dependency>
             <groupId>ai.djl.tensorflow</groupId>
             <artifactId>tensorflow-native-cpu</artifactId>
-            <classifier>linux-x86_64</classifier>
+            <classifier>${djl.platform.linux-x86_64}</classifier>
             <scope>runtime</scope>
             <version>2.16.1</version>
         </dependency>
         <dependency>
             <groupId>ai.djl.mxnet</groupId>
             <artifactId>mxnet-native-mkl</artifactId>
-            <classifier>linux-x86_64</classifier>
+            <classifier>${djl.platform.linux-x86_64}</classifier>
             <scope>runtime</scope>
             <version>1.9.1</version>
         </dependency>
