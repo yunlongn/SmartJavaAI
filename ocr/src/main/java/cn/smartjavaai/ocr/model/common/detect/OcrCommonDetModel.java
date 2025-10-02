@@ -27,6 +27,8 @@ public interface OcrCommonDetModel extends AutoCloseable{
      * @param imagePath 图片路径
      * @return
      */
+
+    @Deprecated
     default List<OcrBox> detect(String imagePath) {
         throw new UnsupportedOperationException("默认不支持该功能");
     }
@@ -37,6 +39,7 @@ public interface OcrCommonDetModel extends AutoCloseable{
      * @param image BufferedImage
      * @return
      */
+    @Deprecated
     default List<OcrBox> detect(BufferedImage image) {
         throw new UnsupportedOperationException("默认不支持该功能");
     }
@@ -47,6 +50,7 @@ public interface OcrCommonDetModel extends AutoCloseable{
      * @param imageData 图片字节数组
      * @return
      */
+    @Deprecated
     default List<OcrBox> detect(byte[] imageData) {
         throw new UnsupportedOperationException("默认不支持该功能");
     }
@@ -74,7 +78,17 @@ public interface OcrCommonDetModel extends AutoCloseable{
      * @param sourceImage
      * @return
      */
+    @Deprecated
     default BufferedImage detectAndDraw(BufferedImage sourceImage){
+        throw new UnsupportedOperationException("默认不支持该功能");
+    }
+
+    /**
+     * 检测并绘制结果
+     * @param sourceImage
+     * @return
+     */
+    default Image detectAndDraw(Image sourceImage){
         throw new UnsupportedOperationException("默认不支持该功能");
     }
 
@@ -83,6 +97,7 @@ public interface OcrCommonDetModel extends AutoCloseable{
      * @param imageList BufferedImage
      * @return
      */
+    @Deprecated
     default List<List<OcrBox>> batchDetect(List<BufferedImage> imageList) {
         throw new UnsupportedOperationException("默认不支持该功能");
     }
@@ -97,6 +112,10 @@ public interface OcrCommonDetModel extends AutoCloseable{
     }
 
     default GenericObjectPool<Predictor<Image, NDList>> getPool(){
+        throw new UnsupportedOperationException("默认不支持该功能");
+    }
+
+    default void setFromFactory(boolean fromFactory){
         throw new UnsupportedOperationException("默认不支持该功能");
     }
 

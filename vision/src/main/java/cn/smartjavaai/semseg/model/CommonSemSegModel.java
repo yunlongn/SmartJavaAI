@@ -18,6 +18,7 @@ import cn.smartjavaai.common.utils.Base64ImageUtils;
 import cn.smartjavaai.common.utils.ImageUtils;
 import cn.smartjavaai.instanceseg.exception.InstanceSegException;
 import cn.smartjavaai.objectdetection.exception.DetectionException;
+import cn.smartjavaai.pose.model.PoseDetModelFactory;
 import cn.smartjavaai.semseg.config.SemSegModelConfig;
 import cn.smartjavaai.semseg.criteria.SemSegCriteriaFactory;
 import cn.smartjavaai.vision.utils.CategoryMaskFilter;
@@ -122,6 +123,7 @@ public class CommonSemSegModel implements SemSegModel {
             }
             ImageUtils.drawMask(categoryMask, img, 180, 0);
             img.save(Files.newOutputStream(Paths.get(outputPath)), "png");
+            ImageUtils.releaseOpenCVMat(img);
             return R.ok(categoryMask);
         } catch (IOException e) {
             throw new InstanceSegException(e);
@@ -141,6 +143,9 @@ public class CommonSemSegModel implements SemSegModel {
 
     @Override
     public void close() throws Exception {
+        if (fromFactory) {
+            SemSegModelFactory.removeFromCache(config.getModelEnum());
+        }
         try {
             if (predictorPool != null) {
                 predictorPool.close();
@@ -155,5 +160,15 @@ public class CommonSemSegModel implements SemSegModel {
         } catch (Exception e) {
             log.warn("关闭 model 失败", e);
         }
+    }
+
+    private boolean fromFactory = false;
+
+    @Override
+    public void setFromFactory(boolean fromFactory) {
+        this.fromFactory = fromFactory;
+    }
+    public boolean isFromFactory() {
+        return fromFactory;
     }
 }

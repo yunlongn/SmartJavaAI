@@ -4,31 +4,27 @@ import ai.djl.MalformedModelException;
 import ai.djl.engine.Engine;
 import ai.djl.inference.Predictor;
 import ai.djl.modality.cv.Image;
-import ai.djl.modality.cv.ImageFactory;
 import ai.djl.ndarray.NDManager;
 import ai.djl.repository.zoo.Criteria;
 import ai.djl.repository.zoo.ModelNotFoundException;
 import ai.djl.repository.zoo.ZooModel;
-import cn.hutool.core.lang.UUID;
+import cn.smartjavaai.common.cv.SmartImageFactory;
 import cn.smartjavaai.common.entity.*;
 import cn.smartjavaai.common.entity.face.FaceInfo;
 import cn.smartjavaai.common.entity.face.FaceSearchResult;
 import cn.smartjavaai.common.pool.PredictorFactory;
+import cn.smartjavaai.common.utils.BufferedImageUtils;
 import cn.smartjavaai.common.utils.FileUtils;
 import cn.smartjavaai.common.utils.ImageUtils;
-import cn.smartjavaai.common.utils.OpenCVUtils;
-import cn.smartjavaai.face.config.FaceDetConfig;
 import cn.smartjavaai.face.config.FaceRecConfig;
 import cn.smartjavaai.face.constant.FaceDetectConstant;
 import cn.smartjavaai.face.entity.FaceRegisterInfo;
 import cn.smartjavaai.face.entity.FaceSearchParams;
-import cn.smartjavaai.face.enums.FaceDetModelEnum;
 import cn.smartjavaai.face.enums.SimilarityType;
 import cn.smartjavaai.face.exception.FaceException;
-import cn.smartjavaai.face.factory.FaceDetModelFactory;
-import cn.smartjavaai.face.model.facedect.FaceDetModel;
+import cn.smartjavaai.face.factory.FaceRecModelFactory;
 import cn.smartjavaai.face.model.facerec.criteria.FaceRecCriteriaFactory;
-import cn.smartjavaai.face.preprocess.DJLImagePreprocessor;
+import cn.smartjavaai.face.preprocess.DJLImageFacePreprocessor;
 import cn.smartjavaai.face.utils.*;
 import cn.smartjavaai.face.vector.config.MilvusConfig;
 import cn.smartjavaai.face.vector.config.SQLiteConfig;
@@ -39,8 +35,8 @@ import cn.smartjavaai.face.vector.entity.FaceVector;
 import cn.smartjavaai.face.vector.exception.VectorDBException;
 import io.milvus.param.MetricType;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.pool2.ObjectPool;
 import org.apache.commons.pool2.impl.GenericObjectPool;
 import org.opencv.core.Mat;
 
@@ -95,7 +91,7 @@ public class CommonFaceRecModel implements FaceRecModel{
             throw new FaceException("config为null");
         }
         if(Objects.isNull(config.getDetectModel())){
-            config.setDetectModel(getDefaultDetModel());
+            throw new FaceException("请指定人脸检测模型");
         }
         this.config = config;
         Criteria<Image, float[]> faceFeatureCriteria = FaceRecCriteriaFactory.createCriteria(config);
@@ -217,7 +213,7 @@ public class CommonFaceRecModel implements FaceRecModel{
 
     @Override
     public R<Float> featureComparison(BufferedImage sourceImage1, BufferedImage sourceImag2) {
-        if(!ImageUtils.isImageValid(sourceImage1) || !ImageUtils.isImageValid(sourceImag2)){
+        if(!BufferedImageUtils.isImageValid(sourceImage1) || !BufferedImageUtils.isImageValid(sourceImag2)){
             throw new FaceException("图像无效");
         }
         R<float[]> feature1 = extractTopFaceFeature(sourceImage1);
@@ -246,19 +242,6 @@ public class CommonFaceRecModel implements FaceRecModel{
         }
     }
 
-    /**
-     * 获取默认人脸检测模型
-     * @return
-     */
-    private FaceDetModel getDefaultDetModel() {
-        FaceDetConfig detectModelConfig = new FaceDetConfig();
-        detectModelConfig.setModelEnum(FaceDetModelEnum.ULTRA_LIGHT_FAST_GENERIC_FACE);
-        detectModelConfig.setConfidenceThreshold(0.98);
-        log.debug("创建默认人脸检测模型：ULTRA_LIGHT_FAST_GENERIC_FACE");
-        FaceDetModel detectModel = FaceDetModelFactory.getInstance().getModel(detectModelConfig);
-        return detectModel;
-    }
-
     @Override
     public R<DetectionResponse> extractFeatures(BufferedImage image) {
         R<DetectionResponse> detectedResult = config.getDetectModel().detect(image);
@@ -268,9 +251,9 @@ public class CommonFaceRecModel implements FaceRecModel{
         if(Objects.isNull(detectedResult.getData()) || Objects.isNull(detectedResult.getData().getDetectionInfoList()) || detectedResult.getData().getDetectionInfoList().isEmpty()){
             return R.fail(R.Status.NO_FACE_DETECTED);
         }
-        Image djlImage = ImageFactory.getInstance().fromImage(OpenCVUtils.image2Mat(image));
+        Image djlImage = SmartImageFactory.getInstance().fromBufferedImage(image);
         try (NDManager manager = model.getNDManager().newSubManager()) {
-            DJLImagePreprocessor djlImagePreprocessor = new DJLImagePreprocessor(djlImage, manager);
+            DJLImageFacePreprocessor djlImagePreprocessor = new DJLImageFacePreprocessor(djlImage, manager);
             for (DetectionInfo detectionInfo : detectedResult.getData().getDetectionInfoList()){
                 DetectionRectangle rectangle = detectionInfo.getDetectionRectangle();
                 FaceInfo faceInfo = detectionInfo.getFaceInfo();
@@ -289,12 +272,17 @@ public class CommonFaceRecModel implements FaceRecModel{
                         subImage = djlImagePreprocessor.process();
                     }
                 }
-
                 features = featureExtraction(subImage);
+                if (subImage != null && subImage.getWrappedImage() instanceof Mat) {
+                    ((Mat)subImage.getWrappedImage()).release();
+                }
                 faceInfo.setFeature(features);
             }
+        }finally {
+            if (djlImage != null && djlImage.getWrappedImage() instanceof Mat) {
+                ((Mat)djlImage.getWrappedImage()).release();
+            }
         }
-        ((Mat)djlImage.getWrappedImage()).release();
         return detectedResult;
     }
 
@@ -335,10 +323,10 @@ public class CommonFaceRecModel implements FaceRecModel{
         if(Objects.isNull(detectedResult.getData()) || Objects.isNull(detectedResult.getData().getDetectionInfoList()) || detectedResult.getData().getDetectionInfoList().isEmpty()){
             return R.fail(R.Status.NO_FACE_DETECTED);
         }
-        Image djlImage = ImageFactory.getInstance().fromImage(OpenCVUtils.image2Mat(image));
+        Image djlImage = SmartImageFactory.getInstance().fromBufferedImage(image);
         float[] features = null;
         try (NDManager manager = model.getNDManager().newSubManager()) {
-            DJLImagePreprocessor djlImagePreprocessor = new DJLImagePreprocessor(djlImage, manager);
+            DJLImageFacePreprocessor djlImagePreprocessor = new DJLImageFacePreprocessor(djlImage, manager);
             //只取第一个人脸
             DetectionInfo detectionInfo = detectedResult.getData().getDetectionInfoList().get(0);
             DetectionRectangle rectangle = detectionInfo.getDetectionRectangle();
@@ -358,8 +346,14 @@ public class CommonFaceRecModel implements FaceRecModel{
                 }
             }
             features = featureExtraction(subImage);
+            if (subImage != null && subImage.getWrappedImage() instanceof Mat) {
+                ((Mat)subImage.getWrappedImage()).release();
+            }
+        }finally {
+            if (djlImage != null && djlImage.getWrappedImage() instanceof Mat) {
+                ((Mat)djlImage.getWrappedImage()).release();
+            }
         }
-        ((Mat)djlImage.getWrappedImage()).release();
         return Objects.isNull(features) ? R.fail(R.Status.Unknown) : R.ok(features);
     }
 
@@ -596,7 +590,7 @@ public class CommonFaceRecModel implements FaceRecModel{
             throw new FaceException("人脸查询参数为空");
         }
         //设置默认值
-        float threshold = Objects.isNull(params.getThreshold()) ? FaceDetectConstant.FACENET_DEFAULT_SIMILARITY_THRESHOLD : params.getThreshold();
+        float threshold = Objects.isNull(params.getThreshold()) ? config.getModelEnum().getThreshold() : params.getThreshold();
         int topK = Objects.isNull(params.getTopK()) ? 1 : params.getTopK();
         boolean normalize = Objects.isNull(params.getNormalizeSimilarity()) ? NORMALIZE_SIMILARITY : params.getNormalizeSimilarity();
         FaceSearchParams searchParams = new FaceSearchParams(topK, threshold, normalize);
@@ -629,13 +623,16 @@ public class CommonFaceRecModel implements FaceRecModel{
             return detectionResponse;
         }
         //设置默认值
-        float threshold = Objects.isNull(params.getThreshold()) ? FaceDetectConstant.FACENET_DEFAULT_SIMILARITY_THRESHOLD : params.getThreshold();
+        float threshold = Objects.isNull(params.getThreshold()) ? config.getModelEnum().getThreshold() : params.getThreshold();
         int topK = Objects.isNull(params.getTopK()) ? 1 : params.getTopK();
         boolean normalize = Objects.isNull(params.getNormalizeSimilarity()) ? NORMALIZE_SIMILARITY : params.getNormalizeSimilarity();
         FaceSearchParams searchParams = new FaceSearchParams(topK, threshold, normalize);
         for (DetectionInfo detectionInfo : detectionResponse.getData().getDetectionInfoList()){
             if(Objects.nonNull(detectionInfo.getFaceInfo()) && Objects.nonNull(detectionInfo.getFaceInfo().getFeature())){
                 List<FaceSearchResult> searchResults = vectorDBClient.search(detectionInfo.getFaceInfo().getFeature(), searchParams);
+                if (CollectionUtils.isEmpty(searchResults)){
+                    return R.fail(1000, "未找到匹配结果");
+                }
                 detectionInfo.getFaceInfo().setFaceSearchResults(searchResults);
             }
         }
@@ -686,9 +683,184 @@ public class CommonFaceRecModel implements FaceRecModel{
         vectorDBClient.releaseFaceFeatures();
     }
 
+    @Override
+    public R<Float> featureComparison(Image image1, Image image2) {
+        R<float[]> feature1 = extractTopFaceFeature(image1);
+        if (!feature1.isSuccess()){
+            return R.fail(feature1.getCode(), feature1.getMessage());
+        }
+        R<float[]> feature2 = extractTopFaceFeature(image2);
+        if (!feature2.isSuccess()){
+            return R.fail(feature2.getCode(), feature2.getMessage());
+        }
+        float ret = calculSimilar(feature1.getData(), feature2.getData());
+        return R.ok(ret);
+    }
+
+    @Override
+    public R<String> register(FaceRegisterInfo faceRegisterInfo, Image image) {
+        if(vectorDBClient == null){
+            throw new VectorDBException("向量数据库未初始化成功");
+        }
+        //提取最大人脸特征
+        R<float[]> featureResponse = extractTopFaceFeature(image);
+        if(!featureResponse.isSuccess()){
+            return R.fail(featureResponse.getCode(), featureResponse.getMessage());
+        }
+        return register(faceRegisterInfo, featureResponse.getData());
+    }
+
+    @Override
+    public void upsertFace(FaceRegisterInfo faceRegisterInfo, Image image) {
+        if(vectorDBClient == null){
+            throw new VectorDBException("向量数据库未初始化成功");
+        }
+        if(Objects.isNull(faceRegisterInfo)){
+            throw new FaceException("注册信息为空");
+        }
+        if(StringUtils.isBlank(faceRegisterInfo.getId())){
+            throw new FaceException("注册信息中ID为空");
+        }
+        //提取最大人脸特征
+        R<float[]> featureResponse = extractTopFaceFeature(image);
+        if(!featureResponse.isSuccess()){
+            throw new FaceException(featureResponse.getMessage());
+        }
+        upsertFace(faceRegisterInfo, featureResponse.getData());
+    }
+
+    @Override
+    public R<DetectionResponse> search(Image image, FaceSearchParams params) {
+        if(vectorDBClient == null){
+            throw new VectorDBException("向量数据库未初始化成功");
+        }
+        //提取所有人脸特征
+        R<DetectionResponse> detectionResponse = extractFeatures(image);
+        if(!detectionResponse.isSuccess()){
+            return detectionResponse;
+        }
+        //设置默认值
+        float threshold = Objects.isNull(params.getThreshold()) ? config.getModelEnum().getThreshold() : params.getThreshold();
+        int topK = Objects.isNull(params.getTopK()) ? 1 : params.getTopK();
+        boolean normalize = Objects.isNull(params.getNormalizeSimilarity()) ? NORMALIZE_SIMILARITY : params.getNormalizeSimilarity();
+        FaceSearchParams searchParams = new FaceSearchParams(topK, threshold, normalize);
+        for (DetectionInfo detectionInfo : detectionResponse.getData().getDetectionInfoList()){
+            if(Objects.nonNull(detectionInfo.getFaceInfo()) && Objects.nonNull(detectionInfo.getFaceInfo().getFeature())){
+                List<FaceSearchResult> searchResults = vectorDBClient.search(detectionInfo.getFaceInfo().getFeature(), searchParams);
+                if (CollectionUtils.isEmpty(searchResults)){
+                    return R.fail(1000, "未找到匹配结果");
+                }
+                detectionInfo.getFaceInfo().setFaceSearchResults(searchResults);
+            }
+        }
+        return detectionResponse;
+    }
+
+    @Override
+    public R<List<FaceSearchResult>> searchByTopFace(Image image, FaceSearchParams params) {
+        if(vectorDBClient == null){
+            return R.fail(1000, "向量数据库未初始化成功");
+        }
+        //提取最大人脸特征
+        R<float[]> featureResponse = extractTopFaceFeature(image);
+        if(!featureResponse.isSuccess()){
+            return R.fail(featureResponse.getCode(), featureResponse.getMessage());
+        }
+        return R.ok(search(featureResponse.getData(), params));
+    }
+
+    @Override
+    public R<DetectionResponse> extractFeatures(Image image) {
+        R<DetectionResponse> detectedResult = config.getDetectModel().detect(image);
+        if(!detectedResult.isSuccess()){
+            return detectedResult;
+        }
+        if(Objects.isNull(detectedResult.getData()) || Objects.isNull(detectedResult.getData().getDetectionInfoList()) || detectedResult.getData().getDetectionInfoList().isEmpty()){
+            return R.fail(R.Status.NO_FACE_DETECTED);
+        }
+        try (NDManager manager = model.getNDManager().newSubManager()) {
+            DJLImageFacePreprocessor djlImagePreprocessor = new DJLImageFacePreprocessor(image, manager);
+            for (DetectionInfo detectionInfo : detectedResult.getData().getDetectionInfoList()){
+                DetectionRectangle rectangle = detectionInfo.getDetectionRectangle();
+                FaceInfo faceInfo = detectionInfo.getFaceInfo();
+                float[] features = null;
+                Image subImage = null;
+                //人脸对齐
+                if(config.isAlign()){
+                    //人脸对齐
+                    double[][] pointsArray = FaceUtils.facePoints(faceInfo.getKeyPoints());
+                    djlImagePreprocessor.enableCrop(rectangle).enableAffine(pointsArray, 96, 112);
+                    subImage = djlImagePreprocessor.process();
+                }else{
+                    //裁剪
+                    djlImagePreprocessor.enableCrop(rectangle);
+                    if(config.isCropFace()){
+                        subImage = djlImagePreprocessor.process();
+                    }
+                }
+                features = featureExtraction(subImage);
+                if (subImage != null && subImage.getWrappedImage() instanceof Mat) {
+                    ((Mat)subImage.getWrappedImage()).release();
+                }
+                faceInfo.setFeature(features);
+            }
+        }
+        return detectedResult;
+    }
+
+    @Override
+    public R<float[]> extractTopFaceFeature(Image image) {
+        R<DetectionResponse> detectedResult = config.getDetectModel().detect(image);
+        if(!detectedResult.isSuccess()){
+            return R.fail(detectedResult.getCode(), detectedResult.getMessage());
+        }
+        if(Objects.isNull(detectedResult.getData()) || Objects.isNull(detectedResult.getData().getDetectionInfoList()) || detectedResult.getData().getDetectionInfoList().isEmpty()){
+            return R.fail(R.Status.NO_FACE_DETECTED);
+        }
+        float[] features = null;
+        try (NDManager manager = model.getNDManager().newSubManager()) {
+            DJLImageFacePreprocessor djlImagePreprocessor = new DJLImageFacePreprocessor(image, manager);
+            //只取第一个人脸
+            DetectionInfo detectionInfo = detectedResult.getData().getDetectionInfoList().get(0);
+            DetectionRectangle rectangle = detectionInfo.getDetectionRectangle();
+            FaceInfo faceInfo = detectionInfo.getFaceInfo();
+            Image subImage = null;
+            //人脸对齐
+            if(config.isAlign()){
+                //人脸对齐
+                double[][] pointsArray = FaceUtils.facePoints(faceInfo.getKeyPoints());
+                djlImagePreprocessor.enableCrop(rectangle).enableAffine(pointsArray, 96, 112);
+                subImage = djlImagePreprocessor.process();
+            }else{
+                //裁剪
+                djlImagePreprocessor.enableCrop(rectangle);
+                if(config.isCropFace()){
+                    subImage = djlImagePreprocessor.process();
+                }
+            }
+            features = featureExtraction(subImage);
+            if (subImage != null && subImage.getWrappedImage() instanceof Mat) {
+                ((Mat)subImage.getWrappedImage()).release();
+            }
+        }
+        return Objects.isNull(features) ? R.fail(R.Status.Unknown) : R.ok(features);
+    }
+
+
+    @Override
+    public Image drawSearchResult(Image image, FaceSearchParams params, String displayField) {
+        R<DetectionResponse> detectionResponse = search(image, params);
+        Image drawImage = ImageUtils.copy(image);
+        BufferedImage bufferedImage = ImageUtils.toBufferedImage(drawImage);
+        BufferedImageUtils.drawFaceSearchResult(bufferedImage, detectionResponse.getData(), displayField);
+        return SmartImageFactory.getInstance().fromBufferedImage(bufferedImage);
+    }
 
     @Override
     public void close() {
+        if (fromFactory) {
+            FaceRecModelFactory.removeFromCache(config.getModelEnum());
+        }
         try {
             if (predictorPool != null) {
                 predictorPool.close();
@@ -716,5 +888,16 @@ public class CommonFaceRecModel implements FaceRecModel{
     @Override
     public GenericObjectPool<Predictor<Image, float[]>> getPool() {
         return predictorPool;
+    }
+
+
+    private boolean fromFactory = false;
+
+    @Override
+    public void setFromFactory(boolean fromFactory) {
+        this.fromFactory = fromFactory;
+    }
+    public boolean isFromFactory() {
+        return fromFactory;
     }
 }

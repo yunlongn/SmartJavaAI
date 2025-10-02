@@ -30,6 +30,7 @@ public interface FaceDetModel extends AutoCloseable{
      * @param imagePath 图片路径
      * @return
      */
+    @Deprecated
     default R<DetectionResponse> detect(String imagePath){
         throw new UnsupportedOperationException("默认不支持该功能");
     }
@@ -39,6 +40,7 @@ public interface FaceDetModel extends AutoCloseable{
      * @param imageInputStream 图片输入流
      * @return
      */
+    @Deprecated
     default R<DetectionResponse> detect(InputStream imageInputStream){
         throw new UnsupportedOperationException("默认不支持该功能");
     }
@@ -48,6 +50,7 @@ public interface FaceDetModel extends AutoCloseable{
      * @param image BufferedImage
      * @return
      */
+    @Deprecated
     default R<DetectionResponse> detect(BufferedImage image){
         throw new UnsupportedOperationException("默认不支持该功能");
     }
@@ -57,6 +60,7 @@ public interface FaceDetModel extends AutoCloseable{
      * @param imageData
      * @return
      */
+    @Deprecated
     default R<DetectionResponse> detect(byte[] imageData){
         throw new UnsupportedOperationException("默认不支持该功能");
     }
@@ -66,16 +70,46 @@ public interface FaceDetModel extends AutoCloseable{
      * @param base64Image
      * @return
      */
+    @Deprecated
     default R<DetectionResponse> detectBase64(String base64Image) {
         throw new UnsupportedOperationException("默认不支持该功能");
     }
+
+    /**
+     * 人脸检测
+     * @param image
+     * @return
+     */
+    default DetectedObjects detectCore(Image image){
+        throw new UnsupportedOperationException("默认不支持该功能");
+    }
+
+    /**
+     * 人脸检测
+     * @param image
+     * @return
+     */
+    default R<DetectionResponse> detect(Image image){
+        throw new UnsupportedOperationException("默认不支持该功能");
+    }
+
+
+    /**
+     * 检测并绘制人脸
+     * @param image
+     * @return
+     */
+    default R<DetectionResponse> detectAndDraw(Image image){
+        throw new UnsupportedOperationException("默认不支持该功能");
+    }
+
 
     /**
      * 检测并绘制人脸
      * @param imagePath 图片输入路径（包含文件名称）
      * @param outputPath 图片输出路径（包含文件名称）
      */
-    default R<Void> detectAndDraw(String imagePath, String outputPath){
+    default R<DetectionResponse> detectAndDraw(String imagePath, String outputPath){
         throw new UnsupportedOperationException("默认不支持该功能");
     }
 
@@ -84,6 +118,7 @@ public interface FaceDetModel extends AutoCloseable{
      * @param sourceImage
      * @return
      */
+    @Deprecated
     default R<BufferedImage> detectAndDraw(BufferedImage sourceImage){
         throw new UnsupportedOperationException("默认不支持该功能");
     }
@@ -93,4 +128,7 @@ public interface FaceDetModel extends AutoCloseable{
     }
 
 
+    default void setFromFactory(boolean fromFactory){
+        throw new UnsupportedOperationException("默认不支持该功能");
+    }
 }

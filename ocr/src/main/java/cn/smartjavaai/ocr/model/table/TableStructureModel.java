@@ -31,6 +31,7 @@ public interface TableStructureModel extends AutoCloseable{
      * @param image
      * @return
      */
+    @Deprecated
     default R<TableStructureResult> detect(BufferedImage image){
         throw new UnsupportedOperationException("默认不支持该功能");
     }
@@ -40,6 +41,7 @@ public interface TableStructureModel extends AutoCloseable{
      * @param imagePath 图片路径
      * @return
      */
+    @Deprecated
     default R<TableStructureResult> detect(String imagePath) {
         throw new UnsupportedOperationException("默认不支持该功能");
     }
@@ -49,6 +51,7 @@ public interface TableStructureModel extends AutoCloseable{
      * @param imageData 图片字节数组
      * @return
      */
+    @Deprecated
     default R<TableStructureResult> detect(byte[] imageData) {
         throw new UnsupportedOperationException("默认不支持该功能");
     }
@@ -66,4 +69,10 @@ public interface TableStructureModel extends AutoCloseable{
     default GenericObjectPool<Predictor<Image, TableStructureResult>> getPool() {
         throw new UnsupportedOperationException("默认不支持该功能");
     }
+
+    default void setFromFactory(boolean fromFactory){
+        throw new UnsupportedOperationException("默认不支持该功能");
+    }
+
+
 }

@@ -237,7 +237,7 @@ public class SQLiteClient implements VectorDBClient {
     private void loadAllFeaturesToMemory() {
         try {
             int pageSize = 1000;
-            int page = 0;
+            int page = 1;
             while (true) {
                 List<FaceVector> batch = faceDao.findFace(page, pageSize);
                 if (CollectionUtils.isEmpty(batch)) {

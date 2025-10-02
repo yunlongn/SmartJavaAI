@@ -38,15 +38,30 @@ public interface FaceRecModel extends AutoCloseable{
         throw new UnsupportedOperationException("默认不支持该功能");
     }
 
+
+
+    /**
+     * 特征比较
+     * @param image1 图1
+     * @param image2 图2
+     * @return
+     */
+    default R<Float> featureComparison(Image image1, Image image2){
+        throw new UnsupportedOperationException("默认不支持该功能");
+    }
+
     /**
      * 特征比较
      * @param imagePath1 图1路径
      * @param imagePath2 图2路径
      * @return
      */
+    @Deprecated
     default R<Float> featureComparison(String imagePath1, String imagePath2){
         throw new UnsupportedOperationException("默认不支持该功能");
     }
+
+
 
     /**
      * 特征比较
@@ -54,6 +69,7 @@ public interface FaceRecModel extends AutoCloseable{
      * @param sourceImag2 图2BufferedImage
      * @return
      */
+    @Deprecated
     default R<Float> featureComparison(BufferedImage sourceImage1, BufferedImage sourceImag2){
         throw new UnsupportedOperationException("默认不支持该功能");
     }
@@ -65,7 +81,19 @@ public interface FaceRecModel extends AutoCloseable{
      * @param imageData2
      * @return
      */
+    @Deprecated
     default R<Float> featureComparison(byte[] imageData1, byte[] imageData2){
+        throw new UnsupportedOperationException("默认不支持该功能");
+    }
+
+    /**
+     * 注册人脸
+     * 提取分数最高人脸进行注册
+     * @param faceRegisterInfo 注册人脸信息
+     * @param image
+     * @return
+     */
+    default R<String> register(FaceRegisterInfo faceRegisterInfo, Image image){
         throw new UnsupportedOperationException("默认不支持该功能");
     }
 
@@ -76,6 +104,7 @@ public interface FaceRecModel extends AutoCloseable{
      * @param imagePath 图片路径
      * @return
      */
+    @Deprecated
     default R<String> register(FaceRegisterInfo faceRegisterInfo, String imagePath){
         throw new UnsupportedOperationException("默认不支持该功能");
     }
@@ -87,6 +116,7 @@ public interface FaceRecModel extends AutoCloseable{
      * @param inputStream
      * @return
      */
+    @Deprecated
     default R<String> register(FaceRegisterInfo faceRegisterInfo, InputStream inputStream){
         throw new UnsupportedOperationException("默认不支持该功能");
     }
@@ -98,6 +128,7 @@ public interface FaceRecModel extends AutoCloseable{
      * @param sourceImage
      * @return
      */
+    @Deprecated
     default R<String> register(FaceRegisterInfo faceRegisterInfo, BufferedImage sourceImage){
         throw new UnsupportedOperationException("默认不支持该功能");
     }
@@ -110,6 +141,7 @@ public interface FaceRecModel extends AutoCloseable{
      * @param imageData
      * @return
      */
+    @Deprecated
     default R<String> register(FaceRegisterInfo faceRegisterInfo, byte[] imageData){
         throw new UnsupportedOperationException("默认不支持该功能");
     }
@@ -129,9 +161,21 @@ public interface FaceRecModel extends AutoCloseable{
      * 更新或注册人脸
      * 自动提取分数最高人脸进行更新
      * @param faceRegisterInfo 注册人脸信息
+     * @param image
+     * @return
+     */
+    default void upsertFace(FaceRegisterInfo faceRegisterInfo, Image image){
+        throw new UnsupportedOperationException("默认不支持该功能");
+    }
+
+    /**
+     * 更新或注册人脸
+     * 自动提取分数最高人脸进行更新
+     * @param faceRegisterInfo 注册人脸信息
      * @param imagePath
      * @return
      */
+    @Deprecated
     default void upsertFace(FaceRegisterInfo faceRegisterInfo, String imagePath){
         throw new UnsupportedOperationException("默认不支持该功能");
     }
@@ -144,6 +188,7 @@ public interface FaceRecModel extends AutoCloseable{
      * @param sourceImage
      * @return
      */
+    @Deprecated
     default void upsertFace(FaceRegisterInfo faceRegisterInfo, BufferedImage sourceImage){
         throw new UnsupportedOperationException("默认不支持该功能");
     }
@@ -167,7 +212,18 @@ public interface FaceRecModel extends AutoCloseable{
      * @param imageData
      * @return
      */
+    @Deprecated
     default void upsertFace(FaceRegisterInfo faceRegisterInfo, byte[] imageData){
+        throw new UnsupportedOperationException("默认不支持该功能");
+    }
+
+    /**
+     * 查询人脸（查询图片中所有人脸）
+     * @param image
+     * @param params 人脸查询参数
+     * @return
+     */
+    default R<DetectionResponse> search(Image image, FaceSearchParams params){
         throw new UnsupportedOperationException("默认不支持该功能");
     }
 
@@ -178,6 +234,7 @@ public interface FaceRecModel extends AutoCloseable{
      * @param params 人脸查询参数
      * @return
      */
+    @Deprecated
     default R<DetectionResponse> search(String imagePath, FaceSearchParams params){
         throw new UnsupportedOperationException("默认不支持该功能");
     }
@@ -189,6 +246,7 @@ public interface FaceRecModel extends AutoCloseable{
      * @param sourceImage
      * @return
      */
+    @Deprecated
     default R<DetectionResponse> search(BufferedImage sourceImage, FaceSearchParams params){
         throw new UnsupportedOperationException("默认不支持该功能");
     }
@@ -199,6 +257,7 @@ public interface FaceRecModel extends AutoCloseable{
      * @param imageData
      * @return
      */
+    @Deprecated
     default R<DetectionResponse> search(byte[] imageData, FaceSearchParams params){
         throw new UnsupportedOperationException("默认不支持该功能");
     }
@@ -217,10 +276,23 @@ public interface FaceRecModel extends AutoCloseable{
      * 查询人脸
      * 从图像中提取分数最高的人脸特征，并在人脸库中进行 1:N 查询
      * 适用于单人脸场景
+     * @param image
+     * @param params 人脸查询参数
+     * @return
+     */
+    default R<List<FaceSearchResult>> searchByTopFace(Image image, FaceSearchParams params){
+        throw new UnsupportedOperationException("默认不支持该功能");
+    }
+
+    /**
+     * 查询人脸
+     * 从图像中提取分数最高的人脸特征，并在人脸库中进行 1:N 查询
+     * 适用于单人脸场景
      * @param imagePath
      * @param params 人脸查询参数
      * @return
      */
+    @Deprecated
     default R<List<FaceSearchResult>> searchByTopFace(String imagePath, FaceSearchParams params){
         throw new UnsupportedOperationException("默认不支持该功能");
     }
@@ -233,6 +305,7 @@ public interface FaceRecModel extends AutoCloseable{
      * @param sourceImage
      * @return
      */
+    @Deprecated
     default R<List<FaceSearchResult>> searchByTopFace(BufferedImage sourceImage, FaceSearchParams params){
         throw new UnsupportedOperationException("默认不支持该功能");
     }
@@ -244,6 +317,7 @@ public interface FaceRecModel extends AutoCloseable{
      * @param imageData
      * @return
      */
+    @Deprecated
     default R<List<FaceSearchResult>> searchByTopFace(byte[] imageData, FaceSearchParams params){
         throw new UnsupportedOperationException("默认不支持该功能");
     }
@@ -286,12 +360,24 @@ public interface FaceRecModel extends AutoCloseable{
         throw new UnsupportedOperationException("默认不支持该功能");
     }
 
+
+    /**
+     * 特征提取（所有人脸）
+     * 适用于多人脸场景
+     * @param image
+     * @return
+     */
+    default R<DetectionResponse> extractFeatures(Image image){
+        throw new UnsupportedOperationException("默认不支持该功能");
+    }
+
     /**
      * 特征提取（所有人脸）
      * 适用于多人脸场景
      * @param imagePath 图片路径
      * @return
      */
+    @Deprecated
     default R<DetectionResponse> extractFeatures(String imagePath){
         throw new UnsupportedOperationException("默认不支持该功能");
     }
@@ -302,6 +388,7 @@ public interface FaceRecModel extends AutoCloseable{
      * @param imageData 图片字节流
      * @return
      */
+    @Deprecated
     default R<DetectionResponse> extractFeatures(byte[] imageData){
         throw new UnsupportedOperationException("默认不支持该功能");
     }
@@ -312,7 +399,18 @@ public interface FaceRecModel extends AutoCloseable{
      * @param image BufferedImage
      * @return
      */
+    @Deprecated
     default R<DetectionResponse> extractFeatures(BufferedImage image){
+        throw new UnsupportedOperationException("默认不支持该功能");
+    }
+
+    /**
+     * 特征提取（提取分数最高人脸特征）
+     * 适用于单人脸场景
+     * @param image
+     * @return
+     */
+    default R<float[]> extractTopFaceFeature(Image image){
         throw new UnsupportedOperationException("默认不支持该功能");
     }
 
@@ -323,6 +421,7 @@ public interface FaceRecModel extends AutoCloseable{
      * @param image BufferedImage
      * @return
      */
+    @Deprecated
     default R<float[]> extractTopFaceFeature(BufferedImage image){
         throw new UnsupportedOperationException("默认不支持该功能");
     }
@@ -333,6 +432,7 @@ public interface FaceRecModel extends AutoCloseable{
      * @param imagePath 图片路径
      * @return
      */
+    @Deprecated
     default R<float[]> extractTopFaceFeature(String imagePath){
         throw new UnsupportedOperationException("默认不支持该功能");
     }
@@ -343,6 +443,7 @@ public interface FaceRecModel extends AutoCloseable{
      * @param imageData 图片字节流
      * @return
      */
+    @Deprecated
     default R<float[]> extractTopFaceFeature(byte[] imageData){
         throw new UnsupportedOperationException("默认不支持该功能");
     }
@@ -370,8 +471,22 @@ public interface FaceRecModel extends AutoCloseable{
         throw new UnsupportedOperationException("默认不支持该功能");
     }
 
+    /**
+     * 绘制人脸搜索结果
+     * @param image
+     * @param params
+     * @param displayField
+     */
+    default Image drawSearchResult(Image image, FaceSearchParams params, String displayField){
+        throw new UnsupportedOperationException("默认不支持该功能");
+    }
+
 
     default GenericObjectPool<Predictor<Image, float[]>> getPool() {
+        throw new UnsupportedOperationException("默认不支持该功能");
+    }
+
+    default void setFromFactory(boolean fromFactory){
         throw new UnsupportedOperationException("默认不支持该功能");
     }
 

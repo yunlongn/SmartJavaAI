@@ -47,6 +47,7 @@ public interface OcrCommonRecModel extends AutoCloseable{
      * @param imagePath 图片路径
      * @return
      */
+    @Deprecated
     default OcrInfo recognize(String imagePath, OcrRecOptions options) {
         throw new UnsupportedOperationException("默认不支持该功能");
     }
@@ -66,6 +67,7 @@ public interface OcrCommonRecModel extends AutoCloseable{
      * @param image BufferedImage
      * @return
      */
+    @Deprecated
     default OcrInfo recognize(BufferedImage image, OcrRecOptions options) {
         throw new UnsupportedOperationException("默认不支持该功能");
     }
@@ -76,6 +78,7 @@ public interface OcrCommonRecModel extends AutoCloseable{
      * @param imageData 图片字节数组
      * @return
      */
+    @Deprecated
     default OcrInfo recognize(byte[] imageData, OcrRecOptions options) {
         throw new UnsupportedOperationException("默认不支持该功能");
     }
@@ -92,9 +95,20 @@ public interface OcrCommonRecModel extends AutoCloseable{
 
     /**
      * 识别并绘制结果
+     * @param image
+     * @return
+     */
+    @Deprecated
+    default OcrInfo recognizeAndDraw(Image image, int fontSize, OcrRecOptions options){
+        throw new UnsupportedOperationException("默认不支持该功能");
+    }
+
+    /**
+     * 识别并绘制结果
      * @param sourceImage
      * @return
      */
+    @Deprecated
     default BufferedImage recognizeAndDraw(BufferedImage sourceImage, int fontSize, OcrRecOptions options){
         throw new UnsupportedOperationException("默认不支持该功能");
     }
@@ -103,6 +117,7 @@ public interface OcrCommonRecModel extends AutoCloseable{
      * @param imageData 图片字节数组
      * @return
      */
+    @Deprecated
     default String recognizeAndDrawToBase64(byte[] imageData, int fontSize, OcrRecOptions options){
         throw new UnsupportedOperationException("默认不支持该功能");
     }
@@ -112,10 +127,12 @@ public interface OcrCommonRecModel extends AutoCloseable{
      * @param imageData 图片字节数组
      * @return
      */
+    @Deprecated
     default OcrInfo recognizeAndDraw(byte[] imageData, int fontSize, OcrRecOptions options){
         throw new UnsupportedOperationException("默认不支持该功能");
     }
 
+    @Deprecated
     default List<OcrInfo> batchRecognize(List<BufferedImage> imageList, OcrRecOptions options) {
         throw new UnsupportedOperationException("默认不支持该功能");
     }
@@ -125,6 +142,10 @@ public interface OcrCommonRecModel extends AutoCloseable{
     }
 
     default GenericObjectPool<Predictor<Image, String>> getPool() {
+        throw new UnsupportedOperationException("默认不支持该功能");
+    }
+
+    default void setFromFactory(boolean fromFactory){
         throw new UnsupportedOperationException("默认不支持该功能");
     }
 

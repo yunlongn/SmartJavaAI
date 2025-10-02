@@ -4,6 +4,7 @@ import ai.djl.modality.cv.Image;
 import ai.djl.ndarray.NDArray;
 import ai.djl.ndarray.NDManager;
 import ai.djl.opencv.OpenCVImageFactory;
+import cn.smartjavaai.common.utils.BufferedImageUtils;
 import cn.smartjavaai.common.utils.ImageUtils;
 import cn.smartjavaai.common.utils.OpenCVUtils;
 import com.seeta.sdk.SeetaImageData;
@@ -56,7 +57,7 @@ public class FaceAlignUtils {
     public static SeetaImageData faceAlign(BufferedImage sourceImage, SeetaPointF[] pointFS) {
         NDManager manager = NDManager.newBaseManager();
         //获取子图中人脸关键点坐标
-        double[][] pointsArray = FaceUtils.facePoints(pointFS);
+        double[][] pointsArray = Seetaface6Utils.facePoints(pointFS);
         NDArray srcPoints = manager.create(pointsArray);
         NDArray dstPoints = FaceUtils.faceTemplate512x512(manager);
         // 5点仿射变换
@@ -64,7 +65,7 @@ public class FaceAlignUtils {
         Mat mat = FaceAlignUtils.warpAffine(OpenCVUtils.image2Mat(sourceImage), affine_matrix);
         BufferedImage alignImage = OpenCVUtils.mat2Image(mat);
         SeetaImageData imageData = new SeetaImageData(alignImage.getWidth(), alignImage.getHeight(), 3);
-        imageData.data = ImageUtils.getMatrixBGR(alignImage);
+        imageData.data = BufferedImageUtils.getMatrixBGR(alignImage);
         return imageData;
     }
 }

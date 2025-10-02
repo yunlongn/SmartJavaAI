@@ -1,14 +1,18 @@
 package cn.smartjavaai.face.model.facedect;
 
 import ai.djl.engine.Engine;
+import ai.djl.modality.cv.Image;
+import cn.smartjavaai.common.cv.SmartImageFactory;
 import cn.smartjavaai.common.entity.DetectionResponse;
 import cn.smartjavaai.common.entity.R;
 import cn.smartjavaai.common.enums.DeviceEnum;
 import cn.smartjavaai.common.utils.Base64ImageUtils;
+import cn.smartjavaai.common.utils.BufferedImageUtils;
 import cn.smartjavaai.common.utils.FileUtils;
 import cn.smartjavaai.common.utils.ImageUtils;
 import cn.smartjavaai.face.config.FaceDetConfig;
 import cn.smartjavaai.face.exception.FaceException;
+import cn.smartjavaai.face.factory.FaceDetModelFactory;
 import cn.smartjavaai.face.seetaface.NativeLoader;
 import cn.smartjavaai.face.utils.FaceUtils;
 import com.seeta.pool.*;
@@ -82,6 +86,59 @@ public class SeetaFace6FaceDetModel implements FaceDetModel{
     }
 
     @Override
+    public R<DetectionResponse> detect(Image image) {
+        SeetaImageData imageData = new SeetaImageData(image.getWidth(), image.getHeight(), 3);
+        imageData.data = ImageUtils.getMatrixBGR(image);
+        FaceDetector predictor = null;
+        FaceLandmarker faceLandmarker = null;
+        try {
+            predictor = faceDetectorPool.borrowObject();
+            predictor.set(FaceDetector.Property.PROPERTY_THRESHOLD, config.getConfidenceThreshold() > 0 ? config.getConfidenceThreshold() : THRESHOLD);
+            faceLandmarker = faceLandmarkerPool.borrowObject();
+            SeetaRect[] seetaResult = predictor.Detect(imageData);
+            List<SeetaPointF[]> seetaPointFSList = new ArrayList<SeetaPointF[]>();
+            for(SeetaRect seetaRect : seetaResult){
+                //提取人脸的5点人脸标识
+                SeetaPointF[] pointFS = new SeetaPointF[faceLandmarker.number()];
+                faceLandmarker.mark(imageData, seetaRect, pointFS);
+                seetaPointFSList.add(pointFS);
+            }
+            return R.ok(FaceUtils.convertToDetectionResponse(seetaResult, seetaPointFSList));
+        } catch (Exception e) {
+            throw new FaceException("目标检测错误", e);
+        }finally {
+            if (predictor != null) {
+                try {
+                    faceDetectorPool.returnObject(predictor); //归还
+                } catch (Exception e) {
+                    log.warn("归还Predictor失败", e);
+                }
+            }
+            if (faceLandmarker != null) {
+                try {
+                    faceLandmarkerPool.returnObject(faceLandmarker); //归还
+                } catch (Exception e) {
+                    log.warn("归还Predictor失败", e);
+                }
+            }
+        }
+    }
+
+    @Override
+    public R<DetectionResponse> detectAndDraw(Image image) {
+        R<DetectionResponse> result = detect(image);
+        if(result.getCode() != R.Status.SUCCESS.getCode()){
+            return R.fail(result.getCode(), result.getMessage());
+        }
+        if(Objects.isNull(result.getData()) || Objects.isNull(result.getData().getDetectionInfoList()) || result.getData().getDetectionInfoList().isEmpty()){
+            return R.fail(R.Status.NO_FACE_DETECTED);
+        }
+        Image drawnImage = ImageUtils.drawBoundingBoxes(image, result.getData());
+        result.getData().setDrawnImage(drawnImage);
+        return result;
+    }
+
+    @Override
     public R<DetectionResponse> detect(String imagePath) {
         if(!FileUtils.isFileExists(imagePath)){
             return R.fail(R.Status.FILE_NOT_FOUND);
@@ -112,11 +169,11 @@ public class SeetaFace6FaceDetModel implements FaceDetModel{
 
     @Override
     public R<DetectionResponse> detect(BufferedImage image) {
-        if(!ImageUtils.isImageValid(image)){
+        if(!BufferedImageUtils.isImageValid(image)){
             return R.fail(R.Status.INVALID_IMAGE);
         }
         SeetaImageData imageData = new SeetaImageData(image.getWidth(), image.getHeight(), 3);
-        imageData.data = ImageUtils.getMatrixBGR(image);
+        imageData.data = BufferedImageUtils.getMatrixBGR(image);
         FaceDetector predictor = null;
         FaceLandmarker faceLandmarker = null;
         try {
@@ -174,19 +231,14 @@ public class SeetaFace6FaceDetModel implements FaceDetModel{
     }
 
     @Override
-    public R<Void> detectAndDraw(String imagePath, String outputPath) {
+    public R<DetectionResponse> detectAndDraw(String imagePath, String outputPath) {
         if(!FileUtils.isFileExists(imagePath)){
             return R.fail(R.Status.FILE_NOT_FOUND);
         }
+        Image image = null;
+        Image drawImage = null;
         try {
-            //创建保存路径
-            Path imageOutputPath = Paths.get(outputPath);
-            BufferedImage image = null;
-            try {
-                image = ImageIO.read(new File(Paths.get(imagePath).toAbsolutePath().toString()));
-            } catch (IOException e) {
-                throw new FaceException("无效图片路径", e);
-            }
+            image = SmartImageFactory.getInstance().fromFile(imagePath);
             R<DetectionResponse> result = detect(image);
             if(result.getCode() != R.Status.SUCCESS.getCode()){
                 return R.fail(result.getCode(), result.getMessage());
@@ -195,16 +247,20 @@ public class SeetaFace6FaceDetModel implements FaceDetModel{
                 return R.fail(R.Status.NO_FACE_DETECTED);
             }
             //绘制人脸框
-            FaceUtils.drawBoundingBoxes(image, result.getData(), imageOutputPath.toAbsolutePath().toString());
-            return R.ok();
+            drawImage = ImageUtils.drawBoundingBoxes(image, result.getData());
+            ImageUtils.save(drawImage, Paths.get(outputPath), "png");
+            return result;
         } catch (IOException e) {
-            throw new FaceException(e);
+            throw new FaceException("保存图片失败", e);
+        } finally {
+            ImageUtils.releaseOpenCVMat(image);
+            ImageUtils.releaseOpenCVMat(drawImage);
         }
     }
 
     @Override
     public R<BufferedImage> detectAndDraw(BufferedImage sourceImage) {
-        if(!ImageUtils.isImageValid(sourceImage)){
+        if(!BufferedImageUtils.isImageValid(sourceImage)){
             return R.fail(R.Status.INVALID_IMAGE);
         }
         R<DetectionResponse> result = detect(sourceImage);
@@ -215,12 +271,12 @@ public class SeetaFace6FaceDetModel implements FaceDetModel{
             return R.fail(R.Status.NO_FACE_DETECTED);
         }
         //绘制人脸框
-        try {
-            return R.ok(FaceUtils.drawBoundingBoxes(sourceImage, result.getData()));
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+        BufferedImage drawnImage = BufferedImageUtils.copyBufferedImage(sourceImage);
+        BufferedImageUtils.drawBoundingBoxes(drawnImage, result.getData());
+        return R.ok(drawnImage);
     }
+
+
 
 
     public FaceDetectorPool getFaceDetectorPool() {
@@ -231,8 +287,23 @@ public class SeetaFace6FaceDetModel implements FaceDetModel{
         return faceLandmarkerPool;
     }
 
+
+    private boolean fromFactory = false;
+
+    @Override
+    public void setFromFactory(boolean fromFactory) {
+        this.fromFactory = fromFactory;
+    }
+    public boolean isFromFactory() {
+        return fromFactory;
+    }
+
+
     @Override
     public void close() throws Exception {
+        if (fromFactory) {
+            FaceDetModelFactory.removeFromCache(config.getModelEnum());
+        }
         try {
             if (faceDetectorPool != null) {
                 faceDetectorPool.close();

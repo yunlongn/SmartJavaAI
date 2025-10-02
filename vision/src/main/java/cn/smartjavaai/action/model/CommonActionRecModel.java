@@ -110,6 +110,9 @@ public class CommonActionRecModel implements ActionRecModel{
 
     @Override
     public void close() throws Exception {
+        if (fromFactory) {
+            ActionRecModelFactory.removeFromCache(config.getModelEnum());
+        }
         try {
             if (predictorPool != null) {
                 predictorPool.close();
@@ -124,5 +127,15 @@ public class CommonActionRecModel implements ActionRecModel{
         } catch (Exception e) {
             log.warn("关闭 model 失败", e);
         }
+    }
+
+    private boolean fromFactory = false;
+
+    @Override
+    public void setFromFactory(boolean fromFactory) {
+        this.fromFactory = fromFactory;
+    }
+    public boolean isFromFactory() {
+        return fromFactory;
     }
 }

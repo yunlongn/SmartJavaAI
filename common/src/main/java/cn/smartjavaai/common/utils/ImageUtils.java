@@ -1,209 +1,38 @@
 package cn.smartjavaai.common.utils;
 
-import ai.djl.modality.cv.BufferedImageFactory;
 import ai.djl.modality.cv.Image;
 import ai.djl.modality.cv.ImageFactory;
 import ai.djl.modality.cv.output.CategoryMask;
 import ai.djl.modality.cv.output.DetectedObjects;
+import ai.djl.modality.cv.util.NDImageUtils;
 import ai.djl.ndarray.NDArray;
+import ai.djl.ndarray.NDManager;
+import ai.djl.opencv.OpenCVImageFactory;
 import ai.djl.util.RandomUtils;
+import cn.hutool.core.codec.Base64;
 import cn.smartjavaai.common.cv.SmartImageFactory;
+import cn.smartjavaai.common.entity.DetectionInfo;
 import cn.smartjavaai.common.entity.DetectionRectangle;
 import cn.smartjavaai.common.entity.DetectionResponse;
+import cn.smartjavaai.common.entity.PolygonLabel;
 import org.opencv.core.Mat;
-import org.opencv.core.Scalar;
-import org.opencv.core.Size;
-import org.opencv.imgproc.Imgproc;
 
-import javax.imageio.ImageIO;
-import java.awt.*;
 import java.awt.image.BufferedImage;
 //import java.awt.image.ColorConvertOp;
-import java.awt.image.ComponentSampleModel;
-import java.awt.image.DataBufferByte;
-import java.awt.image.ImageObserver;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
-import java.util.Objects;
 
 /**
  * 图片处理工具类
  */
 public class ImageUtils {
-    /**
-     * @param image
-     * @param bandOffset 用于推断通道顺序
-     * @return
-     */
-    private static boolean equalBandOffsetWith3Byte(BufferedImage image, int[] bandOffset) {
-        if (image.getType() == BufferedImage.TYPE_3BYTE_BGR) {
-            if (image.getData().getSampleModel() instanceof ComponentSampleModel) {
-                ComponentSampleModel sampleModel = (ComponentSampleModel) image.getData().getSampleModel();
-                if (Arrays.equals(sampleModel.getBandOffsets(), bandOffset)) {
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
-
-    /**
-     * 推断图像是否为BGR格式
-     *
-     * @return
-     */
-    public static boolean isBGR3Byte(BufferedImage image) {
-        return equalBandOffsetWith3Byte(image, new int[]{0, 1, 2});
-    }
-
-    /**
-     * 对图像解码返回BGR格式矩阵数据
-     *
-     * @param image
-     * @return
-     */
-    public static byte[] getMatrixBGR(BufferedImage image) {
-        byte[] matrixBGR;
-        if (isBGR3Byte(image)) {
-            matrixBGR = (byte[]) image.getData().getDataElements(0, 0, image.getWidth(), image.getHeight(), null);
-        } else {
-            // ARGB格式图像数据
-            int intrgb[] = image.getRGB(0, 0, image.getWidth(), image.getHeight(), null, 0, image.getWidth());
-            matrixBGR = new byte[image.getWidth() * image.getHeight() * 3];
-            // ARGB转BGR格式
-            for (int i = 0, j = 0; i < intrgb.length; ++i, j += 3) {
-                matrixBGR[j] = (byte) (intrgb[i] & 0xff);
-                matrixBGR[j + 1] = (byte) ((intrgb[i] >> 8) & 0xff);
-                matrixBGR[j + 2] = (byte) ((intrgb[i] >> 16) & 0xff);
-            }
-        }
-        return matrixBGR;
-    }
-
-
-    public static BufferedImage bgrToBufferedImage(byte[] data, int width, int height) {
-        int type = BufferedImage.TYPE_3BYTE_BGR;
-        // bgr to rgb
-        byte b;
-        for (int i = 0; i < data.length; i = i + 3) {
-            b = data[i];
-            data[i] = data[i + 2];
-            data[i + 2] = b;
-        }
-        BufferedImage image = new BufferedImage(width, height, type);
-        image.getRaster().setDataElements(0, 0, width, height, data);
-        return image;
-    }
-
-    /**
-     * 检查图像是否有效
-     * @param image
-     * @return
-     */
-    public static boolean isImageValid(BufferedImage image) {
-        // 检查是否为 null 或尺寸异常（如宽高为0）
-        return image != null && image.getWidth() > 0 && image.getHeight() > 0;
-    }
-
-    /**
-     * 画检测框
-     *
-     * @param image
-     * @param x
-     * @param y
-     * @param width
-     * @param height
-     */
-    public static void drawImageRect(BufferedImage image, int x, int y, int width, int height) {
-        // 将绘制图像转换为Graphics2D
-        Graphics2D g = (Graphics2D) image.getGraphics();
-        try {
-            g.setColor(new Color(0, 255, 0));
-            // 声明画笔属性 ：粗 细（单位像素）末端无修饰 折线处呈尖角
-            BasicStroke bStroke = new BasicStroke(2, BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER);
-            g.setStroke(bStroke);
-            g.drawRect(x, y, width, height);
-        } finally {
-            g.dispose();
-        }
-    }
-
-    /**
-     * 画检测框
-     *
-     * @param image
-     * @param x
-     * @param y
-     * @param width
-     * @param height
-     */
-    public static void drawBufferedImageRect(Image image, int x, int y, int width, int height) {
-        // 将绘制图像转换为Graphics2D
-        BufferedImage bufferedImage = (BufferedImage)image.getWrappedImage();
-        Graphics2D g = (Graphics2D) bufferedImage.getGraphics();
-        try {
-            g.setColor(new Color(0, 255, 0));
-            // 声明画笔属性 ：粗 细（单位像素）末端无修饰 折线处呈尖角
-            BasicStroke bStroke = new BasicStroke(2, BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER);
-            g.setStroke(bStroke);
-            g.drawRect(x, y, width, height);
-        } finally {
-            g.dispose();
-        }
-    }
-
-
-    /**
-     * 保存BufferedImage图片
-     *
-     * @param img
-     * @param name
-     * @param path
-     */
-    public static void saveImage(BufferedImage img, String name, String path) {
-        Mat mat = OpenCVUtils.image2Mat(img);
-        Image djlImg = ImageFactory.getInstance().fromImage(mat); // 支持多种图片格式，自动适配
-        Path outputDir = Paths.get(path);
-        Path imagePath = outputDir.resolve(name);
-        // OpenJDK 不能保存 jpg 图片的 alpha channel
-        try {
-            djlImg.save(Files.newOutputStream(imagePath), "png");
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        mat.release();
-    }
-
-
-    /**
-     * 保存BufferedImage图片
-     *
-     * @param img
-     * @param path
-     */
-    public static void saveImage(BufferedImage img, String path) {
-        Mat mat = OpenCVUtils.image2Mat(img);
-        Image djlImg = ImageFactory.getInstance().fromImage(mat); // 支持多种图片格式，自动适配
-        Path outputDir = Paths.get(path);
-        // OpenJDK 不能保存 jpg 图片的 alpha channel
-        try {
-            djlImg.save(Files.newOutputStream(outputDir), "png");
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        mat.release();
-    }
-
-
-
-
-
 
 
     /**
@@ -213,7 +42,7 @@ public class ImageUtils {
      * @param name
      * @param path
      */
-    public static void saveImage(Image img, String name, String path) {
+    public static void save(Image img, String name, String path) {
         Path outputDir = Paths.get(path);
         Path imagePath = outputDir.resolve(name);
         // OpenJDK 不能保存 jpg 图片的 alpha channel
@@ -223,6 +52,23 @@ public class ImageUtils {
             e.printStackTrace();
         }
     }
+
+    /**
+     * 获取图片矩阵BGR
+     *
+     * @param img
+     * @return
+     */
+    public static byte[] getMatrixBGR(Image img) {
+        if (img.getWrappedImage() instanceof BufferedImage){
+            return BufferedImageUtils.getMatrixBGR((BufferedImage)img.getWrappedImage());
+        }else if (img.getWrappedImage() instanceof Mat){
+            return OpenCVUtils.getMatrixBGR((Mat)img.getWrappedImage());
+        }else {
+            throw new RuntimeException("不支持的图片类型");
+        }
+    }
+
 
     /**
      * 保存图片,含检测框
@@ -245,138 +91,6 @@ public class ImageUtils {
     }
 
 
-
-
-    /**
-     * 画检测框(有倾斜角)
-     *
-     * @param image
-     * @param box
-     */
-    public static void drawImageRect(BufferedImage image, NDArray box) {
-        float[] points = box.toFloatArray();
-        int[] xPoints = new int[5];
-        int[] yPoints = new int[5];
-
-        for (int i = 0; i < 4; i++) {
-            xPoints[i] = (int) points[2 * i];
-            yPoints[i] = (int) points[2 * i + 1];
-        }
-        xPoints[4] = xPoints[0];
-        yPoints[4] = yPoints[0];
-
-        // 将绘制图像转换为Graphics2D
-        Graphics2D g = (Graphics2D) image.getGraphics();
-        try {
-            g.setColor(new Color(0, 255, 0));
-            // 声明画笔属性 ：粗 细（单位像素）末端无修饰 折线处呈尖角
-            BasicStroke bStroke = new BasicStroke(4, BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER);
-            g.setStroke(bStroke);
-            g.drawPolyline(xPoints, yPoints, 5); // xPoints, yPoints, nPoints
-        } finally {
-            g.dispose();
-        }
-    }
-
-    /**
-     * 画检测框(有倾斜角)和文本
-     *
-     * @param image
-     * @param box
-     * @param text
-     */
-    public static void drawImageRectWithText(BufferedImage image, NDArray box, String text) {
-        float[] points = box.toFloatArray();
-        int[] xPoints = new int[5];
-        int[] yPoints = new int[5];
-
-        for (int i = 0; i < 4; i++) {
-            xPoints[i] = (int) points[2 * i];
-            yPoints[i] = (int) points[2 * i + 1];
-        }
-        xPoints[4] = xPoints[0];
-        yPoints[4] = yPoints[0];
-
-        // 将绘制图像转换为Graphics2D
-        Graphics2D g = (Graphics2D) image.getGraphics();
-        try {
-            int fontSize = 32;
-            Font font = new Font("楷体", Font.PLAIN, fontSize);
-            g.setFont(font);
-            g.setColor(new Color(0, 0, 255));
-            // 声明画笔属性 ：粗 细（单位像素）末端无修饰 折线处呈尖角
-            BasicStroke bStroke = new BasicStroke(2, BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER);
-            g.setStroke(bStroke);
-            g.drawPolyline(xPoints, yPoints, 5); // xPoints, yPoints, nPoints
-            g.drawString(text, xPoints[0], yPoints[0]);
-        } finally {
-            g.dispose();
-        }
-    }
-
-
-
-    /**
-     * 显示文字
-     *
-     * @param image
-     * @param text
-     * @param x
-     * @param y
-     */
-    public static void drawImageText(BufferedImage image, String text, int x, int y) {
-        Graphics graphics = image.getGraphics();
-        int fontSize = 32;
-        Font font = new Font("楷体", Font.PLAIN, fontSize);
-        try {
-            graphics.setFont(font);
-            graphics.setColor(new Color(0, 0, 255));
-            int strWidth = graphics.getFontMetrics().stringWidth(text);
-            graphics.drawString(text, x, y);
-        } finally {
-            graphics.dispose();
-        }
-    }
-
-
-    /**
-     * 画检测框(有倾斜角)和文本
-     *
-     * @param image
-     * @param box
-     * @param text
-     */
-    public static void drawImageRectWithText(BufferedImage image, DetectionRectangle box, String text, Color color) {
-        // 将绘制图像转换为Graphics2D
-        Graphics2D graphics = (Graphics2D) image.getGraphics();
-        try {
-            graphics.setColor(Color.RED);// 边框颜色
-            graphics.setStroke(new BasicStroke(2));   // 线宽2像素
-            graphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
-                    RenderingHints.VALUE_ANTIALIAS_ON); // 抗锯齿
-            int stroke = 2;
-            graphics.setColor(color);// 边框颜色
-            graphics.drawRect(box.getX(), box.getY(), box.getWidth(), box.getHeight());
-            drawText(graphics, text, box.getX(), box.getY(), stroke, 4);
-            graphics.dispose();
-        } finally {
-            graphics.dispose();
-        }
-    }
-
-    public static void drawText(Graphics2D g, String text, int x, int y, int stroke, int padding) {
-        FontMetrics metrics = g.getFontMetrics();
-        x += stroke / 2;
-        y += stroke / 2;
-        int width = metrics.stringWidth(text) + padding * 2 - stroke / 2;
-        int height = metrics.getHeight() + metrics.getDescent();
-        int ascent = metrics.getAscent();
-        y = Math.max(0, y - height);
-        java.awt.Rectangle background = new java.awt.Rectangle(x, y, width, height);
-        g.fill(background);
-        g.setPaint(Color.WHITE);
-        g.drawString(text, x + padding, y + ascent);
-    }
 
     /**
      * 计算左上角，右下角坐标 （x0,y0,x1,y1）
@@ -448,7 +162,7 @@ public class ImageUtils {
                             name.endsWith(".gif") || name.endsWith(".tiff") ||
                             name.endsWith(".webp")) {
 
-                        Image img = ImageFactory.getInstance().fromInputStream(Files.newInputStream(file.toPath()));
+                        Image img = SmartImageFactory.getInstance().fromInputStream(Files.newInputStream(file.toPath()));
                         imageList.add(img);
                     }
                 }
@@ -476,46 +190,6 @@ public class ImageUtils {
         return true;
     }
 
-    /**
-     * 在图像上绘制带白色背景、黑色文字的文本
-     */
-    public static void putTextWithBackground(Mat image, String text, org.opencv.core.Point origin, Scalar textColor, Scalar backgroundColor, int padding) {
-        // 默认字体
-        int font = Imgproc.FONT_HERSHEY_SCRIPT_SIMPLEX;
-        // 默认字体缩放大小
-        double fontScale = 1.0;
-        //线条粗细
-        int thickness = 2;
-        //获取文字大小
-        int[] baseLine = new int[1];
-        Size textSize = Imgproc.getTextSize(text, font, fontScale, thickness, baseLine);
-        int textWidth = (int) textSize.width;
-        int textHeight = (int) textSize.height;
-
-        //计算带padding的背景框
-        org.opencv.core.Point bgTopLeft = new org.opencv.core.Point(origin.x - padding, origin.y - textHeight - padding);
-        org.opencv.core.Point bgBottomRight = new org.opencv.core.Point(origin.x + textWidth + padding, origin.y + baseLine[0] + padding);
-
-        //绘制背景矩形
-        Imgproc.rectangle(image, bgTopLeft, bgBottomRight, backgroundColor, Imgproc.FILLED);
-
-        //绘制文字（黑色）
-        Imgproc.putText(image, text, origin, font, fontScale, textColor, thickness);
-    }
-
-
-    /**
-     * 拷贝图片
-     * @param src
-     * @return
-     */
-    public static BufferedImage copyBufferedImage(BufferedImage src) {
-        BufferedImage copy = new BufferedImage(src.getWidth(), src.getHeight(), src.getType());
-        Graphics2D g = copy.createGraphics();
-        g.drawImage(src, 0, 0, null);
-        g.dispose();
-        return copy;
-    }
 
 
     /**
@@ -525,9 +199,9 @@ public class ImageUtils {
      */
     public static Image copy(Image src) {
        Object srcData = src.getWrappedImage();
-       //当图片未BufferedImage，DJL的duplicate会有问题
+       //当图片是BufferedImage，DJL的duplicate会有问题
        if (srcData instanceof BufferedImage) {
-           return SmartImageFactory.getInstance().fromImage(copyBufferedImage((BufferedImage) srcData));
+           return SmartImageFactory.getInstance().fromBufferedImage(BufferedImageUtils.copyBufferedImage((BufferedImage) srcData));
        }else{
            return src.duplicate();
        }
@@ -584,8 +258,241 @@ public class ImageUtils {
         image.drawImage(maskImage, true);
     }
 
+    /**
+     * 保存 Image 到指定路径，格式根据后缀自动推断
+     */
+    public static void save(Image image, Path path) throws IOException {
+        String fileName = path.getFileName().toString().toLowerCase();
+        String format = "png"; // 默认 png
+        if (fileName.endsWith(".jpg") || fileName.endsWith(".jpeg")) {
+            format = "jpg";
+        } else if (fileName.endsWith(".bmp")) {
+            format = "bmp";
+        } else if (fileName.endsWith(".webp")) {
+            format = "webp";
+        }
+        Files.createDirectories(path.getParent());
+        try (OutputStream os = Files.newOutputStream(path)) {
+            image.save(os, format);
+        }
+    }
+
+    /**
+     * 保存 Image 到指定路径，格式根据后缀自动推断
+     */
+    public static void save(Image image, Path path, String format) throws IOException {
+        Files.createDirectories(path.getParent());
+        try (OutputStream os = Files.newOutputStream(path)) {
+            image.save(os, format);
+        }
+    }
+
+    /**
+     * 保存 Image 到指定路径
+     */
+    public static void save(Image image, String imagePath) throws IOException {
+        Path path = Paths.get(imagePath);
+        Files.createDirectories(path.getParent());
+        try (OutputStream os = Files.newOutputStream(path)) {
+            image.save(os, "png");
+        }
+    }
+
+    /**
+     * 转换为 BufferedImage
+     */
+    public static BufferedImage toBufferedImage(Image image) {
+        Object wrapped = image.getWrappedImage();
+        if (wrapped instanceof BufferedImage) {
+            return (BufferedImage) wrapped;
+        } else if (wrapped instanceof Mat) {
+            Mat mat = (Mat) wrapped;
+            return OpenCVUtils.mat2Image(mat);
+        } else {
+            throw new IllegalArgumentException("Unsupported wrapped image type: " + wrapped.getClass());
+        }
+    }
+
+    /**
+     * 转换为 Mat
+     */
+    public static Mat toMat(Image image) {
+        Object wrapped = image.getWrappedImage();
+        if (wrapped instanceof BufferedImage) {
+            return OpenCVUtils.image2Mat((BufferedImage) wrapped);
+        } else if (wrapped instanceof Mat) {
+            return (Mat) wrapped;
+        } else {
+            throw new IllegalArgumentException("Unsupported wrapped image type: " + wrapped.getClass());
+        }
+    }
+
+    /**
+     * Image 转 byte[] （默认 png 格式）
+     */
+    public static byte[] toBytes(Image image, String format) {
+        try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
+            image.save(baos, format);
+            return baos.toByteArray();
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to convert Image to byte[]", e);
+        }
+    }
+
+    /**
+     * 保存 Image 到 OutputStream
+     *
+     * @param image   图像对象
+     * @param os      输出流（需要调用方负责关闭）
+     * @param format  保存格式（png/jpg/webp）
+     */
+    public static void toOutputStream(Image image, OutputStream os, String format) {
+        try {
+            image.save(os, format);
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to write image to OutputStream", e);
+        }
+    }
+
+    /**
+     * 转换 Image 为 Base64 字符串
+     *
+     * @param image  图像对象
+     * @param format 输出格式（png/jpg/webp）
+     * @return Base64 编码的字符串
+     */
+    public static String toBase64(Image image, String format) {
+        try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
+            image.save(baos, format);
+            return Base64.encode(baos.toByteArray());
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to convert image to Base64", e);
+        }
+    }
+
+    /**
+     * 释放 OpenCV Mat
+     * @param image
+     */
+    public static void releaseOpenCVMat(Image image){
+        if (image != null && image.getWrappedImage() instanceof Mat){
+            ((Mat)image.getWrappedImage()).release();
+        }
+    }
+
+    /**
+     * 绘制检测结果
+     * @param sourceImage
+     * @param detectionResponse
+     * @return
+     */
+    public static Image drawBoundingBoxes(Image sourceImage, DetectionResponse detectionResponse){
+        Object srcData = sourceImage.getWrappedImage();
+        if (srcData instanceof BufferedImage) {
+            BufferedImage copyBufferedImage = BufferedImageUtils.copyBufferedImage((BufferedImage) srcData);
+            BufferedImageUtils.drawBoundingBoxes(copyBufferedImage, detectionResponse);
+            return SmartImageFactory.getInstance().fromBufferedImage(copyBufferedImage);
+        }else if (srcData instanceof Mat) {
+            Mat srcMat = ((Mat) srcData).clone();
+            OpenCVUtils.drawBoundingBoxes(srcMat, detectionResponse);
+            return SmartImageFactory.getInstance().fromMat(srcMat);
+        }else {
+            throw new IllegalArgumentException("Unsupported wrapped image type: " + srcData.getClass());
+        }
+    }
+
+    /**
+     * 逆时针旋转图片
+     *
+     * @param image
+     * @param times
+     * @return
+     */
+    public static Image rotateImg(Image image, int times) {
+        try (NDManager manager = NDManager.newBaseManager()) {
+            NDArray rotated = NDImageUtils.rotate90(image.toNDArray(manager), times);
+            return OpenCVImageFactory.getInstance().fromNDArray(rotated);
+        }
+    }
+
+    /**
+     * 图片旋转
+     *
+     * @param manager
+     * @param image
+     * @return
+     */
+    public static Image rotateImg(NDManager manager, Image image) {
+        NDArray rotated = NDImageUtils.rotate90(image.toNDArray(manager), 1);
+        return ImageFactory.getInstance().fromNDArray(rotated);
+    }
+
+
+    public static void drawPolygonWithText(Image image, List<PolygonLabel> polygonLabelList, int fontSize) {
+        Object srcData = image.getWrappedImage();
+        if (srcData instanceof BufferedImage) {
+            BufferedImageUtils.drawPolygonWithText((BufferedImage) srcData, polygonLabelList, fontSize);
+        }else if (srcData instanceof Mat) {
+            Mat srcMat = (Mat) srcData;
+            OpenCVUtils.drawPolygonWithText(srcMat, polygonLabelList, fontSize);
+        }else {
+            throw new IllegalArgumentException("Unsupported wrapped image type: " + srcData.getClass());
+        }
+    }
 
 
 
+    /**
+     * 绘制矩形框
+     * @param image
+     * @param box
+     * @param text
+     */
+    public static void drawRectAndText(Image image, DetectionRectangle box, String text) {
+        Object srcData = image.getWrappedImage();
+        if (srcData instanceof BufferedImage) {
+            BufferedImageUtils.drawRectAndText((BufferedImage) srcData, box, text,12);
+        }else if (srcData instanceof Mat) {
+            Mat srcMat = (Mat) srcData;
+            OpenCVUtils.drawRectAndText(srcMat, box, text, 0.5);
+        }else {
+            throw new IllegalArgumentException();
+        }
+    }
 
+    /**
+     * 绘制矩形框
+     * @param image
+     * @param box
+     * @param text
+     */
+    public static void drawRectAndText(Image image, DetectionRectangle box, String text, double fontSize) {
+        Object srcData = image.getWrappedImage();
+        if (srcData instanceof BufferedImage) {
+            BufferedImageUtils.drawRectAndText((BufferedImage) srcData, box, text, (int)fontSize);
+        }else if (srcData instanceof Mat) {
+            Mat srcMat = (Mat) srcData;
+            OpenCVUtils.drawRectAndText(srcMat, box, text, fontSize);
+        }else {
+            throw new IllegalArgumentException();
+        }
+    }
+
+    public static void drawRectAndText(Image image, DetectionInfo detectionInfo){
+        Object srcData = image.getWrappedImage();
+        if (srcData instanceof BufferedImage) {
+            BufferedImageUtils.drawRectAndText((BufferedImage) srcData, detectionInfo);
+        }else if (srcData instanceof Mat) {
+            Mat srcMat = (Mat) srcData;
+            OpenCVUtils.drawRectAndText(srcMat, detectionInfo);
+        }else {
+            throw new IllegalArgumentException();
+        }
+    }
+
+    public static void drawRectAndText(Image image, List<DetectionInfo> detectionInfoList){
+        for(DetectionInfo detectionInfo : detectionInfoList){
+            drawRectAndText(image, detectionInfo);
+        }
+    }
 }

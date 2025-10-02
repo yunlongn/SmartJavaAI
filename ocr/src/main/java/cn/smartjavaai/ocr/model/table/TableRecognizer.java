@@ -1,18 +1,12 @@
 package cn.smartjavaai.ocr.model.table;
 
 import ai.djl.modality.cv.Image;
-import ai.djl.modality.cv.ImageFactory;
-import ai.djl.modality.cv.output.BoundingBox;
-import ai.djl.modality.cv.output.DetectedObjects;
-import ai.djl.modality.cv.output.Rectangle;
-import ai.djl.translate.TranslateException;
-import ai.djl.util.JsonUtils;
+import cn.smartjavaai.common.cv.SmartImageFactory;
 import cn.smartjavaai.common.entity.DetectionRectangle;
 import cn.smartjavaai.common.entity.R;
+import cn.smartjavaai.common.utils.BufferedImageUtils;
 import cn.smartjavaai.common.utils.FileUtils;
 import cn.smartjavaai.common.utils.ImageUtils;
-import cn.smartjavaai.common.utils.OpenCVUtils;
-import cn.smartjavaai.ocr.config.OcrRecModelConfig;
 import cn.smartjavaai.ocr.config.OcrRecOptions;
 import cn.smartjavaai.ocr.entity.OcrBox;
 import cn.smartjavaai.ocr.entity.OcrInfo;
@@ -28,7 +22,6 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
-import org.opencv.core.Mat;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
@@ -107,19 +100,17 @@ public class TableRecognizer {
      * @return
      */
     public R<TableStructureResult> recognize(BufferedImage image) {
-        if(!ImageUtils.isImageValid(image)){
+        if(!BufferedImageUtils.isImageValid(image)){
             return R.fail(R.Status.INVALID_IMAGE);
         }
         Image img = null;
         try {
-            img = ImageFactory.getInstance().fromImage(OpenCVUtils.image2Mat(image));
+            img = SmartImageFactory.getInstance().fromBufferedImage(image);
             return recognize(img);
         } catch (Exception e) {
             throw new OcrException(e);
         } finally {
-            if(Objects.nonNull(img)){
-                ((Mat)img.getWrappedImage()).release();
-            }
+            ImageUtils.releaseOpenCVMat(img);
         }
     }
 
@@ -134,14 +125,12 @@ public class TableRecognizer {
         }
         Image img = null;
         try {
-            img = ImageFactory.getInstance().fromFile(Paths.get(imagePath));
+            img = SmartImageFactory.getInstance().fromFile(Paths.get(imagePath));
             return recognize(img);
         } catch (IOException e) {
             throw new OcrException("无效的图片", e);
         } finally {
-            if (Objects.nonNull(img)){
-                ((Mat)img.getWrappedImage()).release();
-            }
+            ImageUtils.releaseOpenCVMat(img);
         }
     }
 
@@ -176,9 +165,13 @@ public class TableRecognizer {
         for (int i = 0; i < tableStructureResult.getOcrItemList().size(); i++){
             OcrItem item = tableStructureResult.getOcrItemList().get(i);
             DetectionRectangle detectionRectangle = item.getOcrBox().toDetectionRectangle();
-            ImageUtils.drawImageRectWithText(image, detectionRectangle, i + "", Color.RED);
+            BufferedImageUtils.drawRectAndText(image, detectionRectangle, i + "", Color.RED);
         }
-        ImageUtils.saveImage(image, savePath);
+        try {
+            BufferedImageUtils.saveImage(image, savePath);
+        } catch (IOException e) {
+            throw new OcrException(e);
+        }
     }
 
 
@@ -195,7 +188,25 @@ public class TableRecognizer {
         for (int i = 0; i < tableStructureResult.getOcrItemList().size(); i++){
             OcrItem item = tableStructureResult.getOcrItemList().get(i);
             DetectionRectangle detectionRectangle = item.getOcrBox().toDetectionRectangle();
-            ImageUtils.drawImageRectWithText(image, detectionRectangle, i + "", Color.RED);
+            BufferedImageUtils.drawRectAndText(image, detectionRectangle, i + "", Color.RED);
+        }
+        return image;
+    }
+
+    /**
+     * 绘制表格
+     * @param tableStructureResult
+     * @param image
+     * @return
+     */
+    public Image drawTable(TableStructureResult tableStructureResult, Image image){
+        if(Objects.isNull(tableStructureResult) || CollectionUtils.isEmpty(tableStructureResult.getTableTagList())){
+            throw new OcrException("表格结构为空");
+        }
+        for (int i = 0; i < tableStructureResult.getOcrItemList().size(); i++){
+            OcrItem item = tableStructureResult.getOcrItemList().get(i);
+            DetectionRectangle detectionRectangle = item.getOcrBox().toDetectionRectangle();
+            ImageUtils.drawRectAndText(image, detectionRectangle, i + "");
         }
         return image;
     }

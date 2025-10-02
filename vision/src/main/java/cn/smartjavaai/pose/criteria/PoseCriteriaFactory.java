@@ -4,6 +4,7 @@ import ai.djl.Device;
 import ai.djl.modality.Classifications;
 import ai.djl.modality.cv.Image;
 import ai.djl.modality.cv.output.Joints;
+import ai.djl.modality.cv.translator.YoloPoseTranslatorFactory;
 import ai.djl.repository.zoo.Criteria;
 import ai.djl.training.util.ProgressBar;
 import ai.djl.translate.Translator;
@@ -20,6 +21,7 @@ import cn.smartjavaai.obb.exception.ObbDetException;
 import cn.smartjavaai.obb.translator.YoloV11OddTranslator;
 import cn.smartjavaai.objectdetection.constant.DetectorConstant;
 import cn.smartjavaai.pose.config.PoseModelConfig;
+import cn.smartjavaai.pose.enums.PoseModelEnum;
 import cn.smartjavaai.pose.exception.PoseException;
 import org.apache.commons.lang3.StringUtils;
 
@@ -58,19 +60,26 @@ public class PoseCriteriaFactory {
      * @return
      */
     public static Criteria<Image, Joints[]> createDJLCriteria(PoseModelConfig config, Device device) {
-        if(StringUtils.isNotBlank(config.getModelPath())
-                && DJLCommonUtils.isServingPropertiesExists(Paths.get(config.getModelPath()))){
-            throw new PoseException("模型所在目录未找到 serving.properties 文件");
+//        if(StringUtils.isNotBlank(config.getModelPath())
+//                && !DJLCommonUtils.isServingPropertiesExists(Paths.get(config.getModelPath()))){
+//            throw new PoseException("模型所在目录未找到 serving.properties 文件");
+//        }
+
+        Criteria<Image, Joints[]> criteria = null;
+        if(config.getModelEnum() == PoseModelEnum.YOLO11N_POSE_PT || config.getModelEnum() == PoseModelEnum.YOLO11N_POSE_ONNX
+                || config.getModelEnum() == PoseModelEnum.YOLOV8N_POSE_PT || config.getModelEnum() == PoseModelEnum.YOLOV8N_POSE_ONNX){
+            criteria =
+                    Criteria.builder()
+                            .setTypes(Image.class, Joints[].class)
+                            .optModelUrls(StringUtils.isNotBlank(config.getModelPath()) ? null : config.getModelEnum().getModelUri())
+                            .optModelPath(StringUtils.isNotBlank(config.getModelPath()) ? Paths.get(config.getModelPath()) : null)
+                            .optDevice(device)
+                            .optTranslatorFactory(new YoloPoseTranslatorFactory())
+                            .optArgument("threshold", config.getThreshold() > 0 ? config.getThreshold() : null)
+                            .optProgress(new ProgressBar())
+                            .build();
         }
-        Criteria<Image, Joints[]> criteria =
-                Criteria.builder()
-                        .setTypes(Image.class, Joints[].class)
-                        .optModelUrls(StringUtils.isNotBlank(config.getModelPath()) ? null : config.getModelEnum().getModelUri())
-                        .optModelPath(StringUtils.isNotBlank(config.getModelPath()) ? Paths.get(config.getModelPath()) : null)
-                        .optDevice(device)
-                        .optArgument("threshold", config.getThreshold() > 0 ? config.getThreshold() : null)
-                        .optProgress(new ProgressBar())
-                        .build();
+
         return criteria;
     }
 

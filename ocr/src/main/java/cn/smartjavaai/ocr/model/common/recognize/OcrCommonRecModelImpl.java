@@ -4,7 +4,6 @@ import ai.djl.MalformedModelException;
 import ai.djl.engine.Engine;
 import ai.djl.inference.Predictor;
 import ai.djl.modality.cv.Image;
-import ai.djl.modality.cv.ImageFactory;
 import ai.djl.ndarray.NDArray;
 import ai.djl.ndarray.NDManager;
 import ai.djl.repository.zoo.Criteria;
@@ -12,14 +11,16 @@ import ai.djl.repository.zoo.ModelNotFoundException;
 import ai.djl.repository.zoo.ModelZoo;
 import ai.djl.repository.zoo.ZooModel;
 import cn.hutool.core.img.ImgUtil;
+import cn.smartjavaai.common.cv.SmartImageFactory;
 import cn.smartjavaai.common.pool.PredictorFactory;
+import cn.smartjavaai.common.utils.BufferedImageUtils;
 import cn.smartjavaai.common.utils.FileUtils;
 import cn.smartjavaai.common.utils.ImageUtils;
-import cn.smartjavaai.common.utils.OpenCVUtils;
 import cn.smartjavaai.ocr.config.OcrRecModelConfig;
 import cn.smartjavaai.ocr.config.OcrRecOptions;
 import cn.smartjavaai.ocr.entity.*;
 import cn.smartjavaai.ocr.exception.OcrException;
+import cn.smartjavaai.ocr.factory.OcrModelFactory;
 import cn.smartjavaai.ocr.model.common.detect.OcrCommonDetModel;
 import cn.smartjavaai.ocr.model.common.direction.OcrDirectionModel;
 import cn.smartjavaai.ocr.model.common.recognize.criteria.OcrCommonRecCriterialFactory;
@@ -33,7 +34,6 @@ import org.opencv.core.Mat;
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.*;
@@ -95,14 +95,12 @@ public class OcrCommonRecModelImpl implements OcrCommonRecModel {
         }
         Image img = null;
         try {
-            img = ImageFactory.getInstance().fromFile(Paths.get(imagePath));
+            img = SmartImageFactory.getInstance().fromFile(Paths.get(imagePath));
             return recognize(img, options);
         } catch (IOException e) {
             throw new OcrException("无效的图片", e);
         } finally {
-            if (img != null) {
-                ((Mat) img.getWrappedImage()).release();
-            }
+            ImageUtils.releaseOpenCVMat(img);
         }
     }
 
@@ -138,7 +136,7 @@ public class OcrCommonRecModelImpl implements OcrCommonRecModel {
             //高宽比 > 1.5
             if (subImg.getHeight() * 1.0 / subImg.getWidth() > 1.5) {
                 //旋转图片90度
-                subImg = OcrUtils.rotateImg(manager, subImg);
+                subImg = ImageUtils.rotateImg(manager, subImg);
                 //ImageUtils.saveImage(subImg, i + "rotate.png", "build/output");
             }
             imageList.add(subImg);
@@ -236,30 +234,31 @@ public class OcrCommonRecModelImpl implements OcrCommonRecModel {
         if (!FileUtils.isFileExists(imagePath)) {
             throw new OcrException("图像文件不存在");
         }
+        Image img = null;
         try {
-            Image img = ImageFactory.getInstance().fromFile(Paths.get(imagePath));
+            img = SmartImageFactory.getInstance().fromFile(Paths.get(imagePath));
             OcrInfo ocrInfo = recognize(img, options);
             if (Objects.isNull(ocrInfo) || Objects.isNull(ocrInfo.getLineList()) || ocrInfo.getLineList().isEmpty()) {
                 throw new OcrException("未检测到文字");
             }
-            Mat wrappedImage = (Mat) img.getWrappedImage();
-            BufferedImage bufferedImage = OpenCVUtils.mat2Image(wrappedImage);
-            OcrUtils.drawRectWithText(bufferedImage, ocrInfo, fontSize);
-            ImageUtils.saveImage(bufferedImage, outputPath);
-            wrappedImage.release();
+            BufferedImage bufferedImage = ImageUtils.toBufferedImage(img);
+            OcrUtils.drawOcrResult(bufferedImage, ocrInfo, fontSize);
+            BufferedImageUtils.saveImage(bufferedImage, outputPath);
         } catch (IOException e) {
             throw new OcrException(e);
+        }finally {
+            ImageUtils.releaseOpenCVMat(img);
         }
     }
 
     @Override
     public OcrInfo recognize(BufferedImage image, OcrRecOptions options) {
-        if (!ImageUtils.isImageValid(image)) {
+        if (!BufferedImageUtils.isImageValid(image)) {
             throw new OcrException("图像无效");
         }
-        Image img = ImageFactory.getInstance().fromImage(OpenCVUtils.image2Mat(image));
+        Image img = SmartImageFactory.getInstance().fromBufferedImage(image);
         OcrInfo ocrInfo = recognize(img, options);
-        ((Mat) img.getWrappedImage()).release();
+        ImageUtils.releaseOpenCVMat(img);
         return ocrInfo;
     }
 
@@ -278,15 +277,15 @@ public class OcrCommonRecModelImpl implements OcrCommonRecModel {
 
     @Override
     public BufferedImage recognizeAndDraw(BufferedImage sourceImage, int fontSize, OcrRecOptions options) {
-        if (!ImageUtils.isImageValid(sourceImage)) {
+        if (!BufferedImageUtils.isImageValid(sourceImage)) {
             throw new OcrException("图像无效");
         }
-        Image img = ImageFactory.getInstance().fromImage(OpenCVUtils.image2Mat(sourceImage));
+        Image img = SmartImageFactory.getInstance().fromBufferedImage(sourceImage);
         OcrInfo ocrInfo = recognize(img, options);
         if (Objects.isNull(ocrInfo) || Objects.isNull(ocrInfo.getLineList()) || ocrInfo.getLineList().isEmpty()) {
             throw new OcrException("未检测到文字");
         }
-        OcrUtils.drawRectWithText(sourceImage, ocrInfo, fontSize);
+        OcrUtils.drawOcrResult(sourceImage, ocrInfo, fontSize);
         return sourceImage;
     }
 
@@ -301,7 +300,7 @@ public class OcrCommonRecModelImpl implements OcrCommonRecModel {
         }
         try {
             BufferedImage sourceImage = ImageIO.read(new ByteArrayInputStream(imageData));
-            OcrUtils.drawRectWithText(sourceImage, ocrInfo, fontSize);
+            OcrUtils.drawOcrResult(sourceImage, ocrInfo, fontSize);
             return ImgUtil.toBase64(sourceImage, "png");
         } catch (IOException e) {
             throw new OcrException("导出图片失败", e);
@@ -313,18 +312,21 @@ public class OcrCommonRecModelImpl implements OcrCommonRecModel {
         if (Objects.isNull(imageData)) {
             throw new OcrException("图像无效");
         }
-        OcrInfo ocrInfo = recognize(imageData, options);
+        Image img = null;
+        try {
+            img = SmartImageFactory.getInstance().fromBytes(imageData);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        OcrInfo ocrInfo = recognize(img, options);
         if (Objects.isNull(ocrInfo) || Objects.isNull(ocrInfo.getLineList()) || ocrInfo.getLineList().isEmpty()) {
             throw new OcrException("未检测到文字");
         }
-        try {
-            BufferedImage sourceImage = ImageIO.read(new ByteArrayInputStream(imageData));
-            OcrUtils.drawRectWithText(sourceImage, ocrInfo, fontSize);
-            ocrInfo.setBase64Img(ImgUtil.toBase64(sourceImage, "png"));
-            return ocrInfo;
-        } catch (IOException e) {
-            throw new OcrException("导出图片失败", e);
-        }
+        //opencv中文乱码，使用BufferedImage
+        BufferedImage sourceImage = ImageUtils.toBufferedImage(img);
+        OcrUtils.drawOcrResult(sourceImage, ocrInfo, fontSize);
+        ocrInfo.setDrawnImage(SmartImageFactory.getInstance().fromBufferedImage(sourceImage));
+        return ocrInfo;
     }
 
     @Override
@@ -332,13 +334,13 @@ public class OcrCommonRecModelImpl implements OcrCommonRecModel {
         List<Image> djlImageList = new ArrayList<>(imageList.size());
         try {
             for (BufferedImage bufferedImage : imageList) {
-                djlImageList.add(ImageFactory.getInstance().fromImage(OpenCVUtils.image2Mat(bufferedImage)));
+                djlImageList.add(SmartImageFactory.getInstance().fromBufferedImage(bufferedImage));
             }
             return batchRecognizeDJLImage(djlImageList, options);
         } catch (Exception e) {
             throw new OcrException(e);
         } finally {
-            djlImageList.forEach(image -> ((Mat) image.getWrappedImage()).release());
+            djlImageList.forEach(image -> ImageUtils.releaseOpenCVMat(image));
         }
     }
 
@@ -370,7 +372,7 @@ public class OcrCommonRecModelImpl implements OcrCommonRecModel {
                     throw new OcrException("请配置方向模型");
                 }
                 List<Mat> matList = imageList.stream()
-                        .map(image -> (Mat) image.getWrappedImage())
+                        .map(image -> ImageUtils.toMat(image))
                         .collect(Collectors.toList());
                 List<List<OcrItem>> ocrItemList = directionModel.batchDetect(boxeList, matList);
                 if (CollectionUtils.isEmpty(ocrItemList) || ocrItemList.size() != imageList.size()) {
@@ -378,7 +380,7 @@ public class OcrCommonRecModelImpl implements OcrCommonRecModel {
                 }
                 allImageAlignList = new ArrayList<Image>();
                 for (int i = 0; i < ocrItemList.size(); i++) {
-                    Mat srcMat = (Mat) imageList.get(i).getWrappedImage();
+                    Mat srcMat = ImageUtils.toMat(imageList.get(i));
                     List<Image> imageAlignList = batchAlignWithDirection(ocrItemList.get(i), srcMat, manager);
 //                    for(int j = 0; j < imageAlignList.size(); j++){
 //                        ImageUtils.saveImage(imageAlignList.get(j),"dir-"+i+"-"+j+".png","/Users/xxx/Downloads/testing33");
@@ -387,10 +389,10 @@ public class OcrCommonRecModelImpl implements OcrCommonRecModel {
                 }
             } else {
                 for (int i = 0; i < boxeList.size(); i++) {
-                    Mat srcMat = (Mat) imageList.get(i).getWrappedImage();
+                    Mat srcMat = ImageUtils.toMat(imageList.get(i));
                     List<Image> imageAlignList = batchAlign(boxeList.get(i), srcMat, manager);
 //                    for(int j = 0; j < imageAlignList.size(); j++){
-//                        ImageUtils.saveImage(imageAlignList.get(j),i+"-"+j+".png","/Users/xxx/Downloads/testing33");
+//                        ImageUtils.saveImage(imageAlignList.get(j),i+"-"+j+".png","/Users/wenjie/Downloads/testing33");
 //                    }
                     allImageAlignList.addAll(imageAlignList);
                 }
@@ -435,7 +437,7 @@ public class OcrCommonRecModelImpl implements OcrCommonRecModel {
         try {
             predictor = recPredictorPool.borrowObject();
             List<String> textList = predictor.batchPredict(imageAlignList);
-            imageAlignList.forEach(subImg -> ((Mat) subImg.getWrappedImage()).release());
+            imageAlignList.forEach(subImg -> ImageUtils.releaseOpenCVMat(subImg));
             return textList;
         } catch (Exception e) {
             throw new OcrException("OCR检测错误", e);
@@ -453,6 +455,19 @@ public class OcrCommonRecModelImpl implements OcrCommonRecModel {
                 }
             }
         }
+    }
+
+
+    @Override
+    public OcrInfo recognizeAndDraw(Image image, int fontSize, OcrRecOptions options) {
+        OcrInfo ocrInfo = recognize(image, options);
+        if (Objects.isNull(ocrInfo) || Objects.isNull(ocrInfo.getLineList()) || ocrInfo.getLineList().isEmpty()) {
+            throw new OcrException("未检测到文字");
+        }
+        BufferedImage sourceImage = ImageUtils.toBufferedImage(image);
+        OcrUtils.drawOcrResult(sourceImage, ocrInfo, fontSize);
+        ocrInfo.setDrawnImage(SmartImageFactory.getInstance().fromBufferedImage(sourceImage));
+        return ocrInfo;
     }
 
     @Override
@@ -482,6 +497,9 @@ public class OcrCommonRecModelImpl implements OcrCommonRecModel {
 
     @Override
     public void close() throws Exception {
+        if (fromFactory) {
+            OcrModelFactory.removeRecModelFromCache(config.getRecModelEnum());
+        }
         try {
             if (recPredictorPool != null) {
                 recPredictorPool.close();
@@ -496,5 +514,15 @@ public class OcrCommonRecModelImpl implements OcrCommonRecModel {
         } catch (Exception e) {
             log.warn("关闭 model 失败", e);
         }
+    }
+
+    private boolean fromFactory = false;
+
+    @Override
+    public void setFromFactory(boolean fromFactory) {
+        this.fromFactory = fromFactory;
+    }
+    public boolean isFromFactory() {
+        return fromFactory;
     }
 }

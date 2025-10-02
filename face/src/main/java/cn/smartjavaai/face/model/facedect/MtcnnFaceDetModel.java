@@ -5,7 +5,6 @@ import ai.djl.MalformedModelException;
 import ai.djl.engine.Engine;
 import ai.djl.inference.Predictor;
 import ai.djl.modality.cv.Image;
-import ai.djl.modality.cv.ImageFactory;
 import ai.djl.modality.cv.output.BoundingBox;
 import ai.djl.modality.cv.output.DetectedObjects;
 import ai.djl.ndarray.NDArray;
@@ -16,6 +15,7 @@ import ai.djl.repository.zoo.ModelNotFoundException;
 import ai.djl.repository.zoo.ZooModel;
 import ai.djl.training.util.ProgressBar;
 import ai.djl.translate.NoopTranslator;
+import cn.smartjavaai.common.cv.SmartImageFactory;
 import cn.smartjavaai.common.entity.*;
 import cn.smartjavaai.common.entity.Point;
 import cn.smartjavaai.common.entity.face.FaceInfo;
@@ -24,6 +24,7 @@ import cn.smartjavaai.common.pool.PredictorFactory;
 import cn.smartjavaai.common.utils.*;
 import cn.smartjavaai.face.config.FaceDetConfig;
 import cn.smartjavaai.face.exception.FaceException;
+import cn.smartjavaai.face.factory.FaceDetModelFactory;
 import cn.smartjavaai.face.model.facedect.criterial.FaceDetCriteriaFactory;
 import cn.smartjavaai.face.model.facedect.mtcnn.*;
 import cn.smartjavaai.face.utils.FaceUtils;
@@ -53,7 +54,7 @@ import java.util.Objects;
  * @author dwj
  */
 @Slf4j
-public class MtcnnFaceDetModel implements FaceDetModel{
+public class MtcnnFaceDetModel extends CommonFaceDetModel{
 
 
     public ZooModel<NDList, NDList> pNetModel;
@@ -65,6 +66,8 @@ public class MtcnnFaceDetModel implements FaceDetModel{
     private GenericObjectPool<Predictor<NDList, NDList>> rnetPredictorPool;
     private GenericObjectPool<Predictor<NDList, NDList>> onetPredictorPool;
 
+    private FaceDetConfig config;
+
 
     /**
      * 加载模型
@@ -72,6 +75,7 @@ public class MtcnnFaceDetModel implements FaceDetModel{
      */
     @Override
     public void loadModel(FaceDetConfig config){
+        this.config = config;
         if(StringUtils.isBlank(config.getModelPath())){
             throw new FaceException("modelPath is null");
         }
@@ -130,146 +134,13 @@ public class MtcnnFaceDetModel implements FaceDetModel{
     }
 
 
-
-    /**
-     * 检测人脸
-     * @param imagePath 图片路径
-     * @return
-     * @throws Exception
-     */
-    @Override
-    public R<DetectionResponse> detect(String imagePath){
-        if(!FileUtils.isFileExists(imagePath)){
-            return R.fail(R.Status.FILE_NOT_FOUND);
-        }
-        Image img = null;
-        try {
-            img = ImageFactory.getInstance().fromFile(Paths.get(imagePath));
-            return detect(img);
-        } catch (IOException e) {
-            throw new FaceException("无效的图片", e);
-        } finally {
-            if (img != null) {
-                ((Mat)img.getWrappedImage()).release();
-            }
-        }
-
-    }
-
-    /**
-     * 检测人脸
-     * @param imageInputStream 图片流
-     * @return
-     * @throws Exception
-     */
-    @Override
-    public R<DetectionResponse> detect(InputStream imageInputStream){
-        if(Objects.isNull(imageInputStream)){
-            return R.fail(R.Status.INVALID_IMAGE);
-        }
-        Image img = null;
-        try {
-            img = ImageFactory.getInstance().fromInputStream(imageInputStream);
-            return detect(img);
-        } catch (IOException e) {
-            throw new FaceException("无效图片输入流", e);
-        } finally {
-            if (img != null) {
-                ((Mat)img.getWrappedImage()).release();
-            }
-        }
-    }
-
-    @Override
-    public R<DetectionResponse> detect(BufferedImage image) {
-        if(!ImageUtils.isImageValid(image)){
-            return R.fail(R.Status.INVALID_IMAGE);
-        }
-        Image img = null;
-        try {
-            img = ImageFactory.getInstance().fromImage(OpenCVUtils.image2Mat(image));
-            return detect(img);
-        } catch (Exception e) {
-            throw new FaceException(e);
-        } finally {
-            if (img != null) {
-                ((Mat)img.getWrappedImage()).release();
-            }
-        }
-
-    }
-
-    @Override
-    public R<DetectionResponse> detect(byte[] imageData) {
-        if(Objects.isNull(imageData)){
-            return R.fail(R.Status.INVALID_IMAGE);
-        }
-        return detect(new ByteArrayInputStream(imageData));
-    }
-
-    @Override
-    public R<DetectionResponse> detectBase64(String base64Image) {
-        if(StringUtils.isBlank(base64Image)){
-            return R.fail(R.Status.INVALID_IMAGE);
-        }
-        byte[] imageData = Base64ImageUtils.base64ToImage(base64Image);
-        return detect(imageData);
-    }
-
-    @Override
-    public R<Void> detectAndDraw(String imagePath, String outputPath) {
-        if(!FileUtils.isFileExists(imagePath)){
-            return R.fail(R.Status.FILE_NOT_FOUND);
-        }
-        Image img = null;
-        try {
-            img = ImageFactory.getInstance().fromFile(Paths.get(imagePath));
-            R<DetectionResponse> detectionResponseR = detect(img);
-            if(!detectionResponseR.isSuccess()){
-                return R.fail(detectionResponseR.getCode(), detectionResponseR.getMessage());
-            }
-            if(Objects.isNull(detectionResponseR.getData()) ||
-                    CollectionUtils.isEmpty(detectionResponseR.getData().getDetectionInfoList())){
-                return R.fail(R.Status.NO_FACE_DETECTED);
-            }
-            BufferedImage sourceImage = OpenCVUtils.mat2Image((Mat)img.getWrappedImage());
-            FaceUtils.drawBoundingBoxes(sourceImage, detectionResponseR.getData(), outputPath);
-            return R.ok();
-        } catch (IOException e) {
-            throw new FaceException(e);
-        } finally {
-            if (img != null){
-                ((Mat)img.getWrappedImage()).release();
-            }
-        }
-    }
-
-    @Override
-    public R<BufferedImage> detectAndDraw(BufferedImage sourceImage) {
-        if(!ImageUtils.isImageValid(sourceImage)){
-            return R.fail(R.Status.INVALID_IMAGE);
-        }
-        try {
-            R<DetectionResponse> detectionResponseR = detect(sourceImage);
-            if(!detectionResponseR.isSuccess()){
-                return R.fail(detectionResponseR.getCode(), detectionResponseR.getMessage());
-            }
-            if(Objects.isNull(detectionResponseR.getData()) ||
-                    CollectionUtils.isEmpty(detectionResponseR.getData().getDetectionInfoList())){
-                return R.fail(R.Status.NO_FACE_DETECTED);
-            }
-            return R.ok(FaceUtils.drawBoundingBoxes(sourceImage, detectionResponseR.getData()));
-        } catch (IOException e) {
-            throw new FaceException("导出图片失败", e);
-        }
-    }
-
     /**
      * 人脸检测
      * @param image
      * @return
      */
-    public R<DetectionResponse> detect(Image image){
+    @Override
+    public DetectedObjects detectCore(Image image){
         Predictor<NDList, NDList> pNetPredictor = null;
         Predictor<NDList, NDList> rNetPredictor = null;
         Predictor<NDList, NDList> oNetPredictor = null;
@@ -281,35 +152,33 @@ public class MtcnnFaceDetModel implements FaceDetModel{
             int w = image.getWidth();
             //第一阶段
             NDList outputPnet = PNetModel.firstStage(manager, pNetPredictor, image);
+
             if(CollectionUtils.isEmpty(outputPnet)){
-                return R.fail(R.Status.NO_FACE_DETECTED);
+                return DJLCommonUtils.buildEmptyDetectedObjects();
             }
             NDArray boxes = outputPnet.get(0);
             NDArray image_inds = outputPnet.get(1);
             NDArray imgs = outputPnet.get(2);
             if(DJLCommonUtils.isNDArrayEmpty(boxes) || DJLCommonUtils.isNDArrayEmpty(image_inds) || DJLCommonUtils.isNDArrayEmpty(imgs)){
-                return R.fail(R.Status.NO_FACE_DETECTED);
+                return DJLCommonUtils.buildEmptyDetectedObjects();
             }
             NDList pad = MtcnnUtils.pad(boxes, w, h);
             //第二阶段
-            NDList outputRnet = RNetModel.secondStage(manager, rNetPredictor, imgs,boxes,pad, image_inds);
+            NDList outputRnet = RNetModel.secondStage(manager, rNetPredictor, imgs, boxes, pad, image_inds);
             if(CollectionUtils.isEmpty(outputRnet)){
-                return R.fail(R.Status.NO_FACE_DETECTED);
+                return DJLCommonUtils.buildEmptyDetectedObjects();
             }
             NDArray image_indsFiltered = outputRnet.get(0);
             NDArray scoresFiltered = outputRnet.get(1);
             boxes = outputRnet.get(2);
             if(DJLCommonUtils.isNDArrayEmpty(boxes) || DJLCommonUtils.isNDArrayEmpty(image_indsFiltered) || DJLCommonUtils.isNDArrayEmpty(scoresFiltered)){
-                return R.fail(R.Status.NO_FACE_DETECTED);
+                return DJLCommonUtils.buildEmptyDetectedObjects();
             }
             //第三阶段
-            MtcnnBatchResult oNetResult = ONetModel.thirdStage(manager, oNetPredictor, imgs,boxes, w, h, scoresFiltered, image_indsFiltered);
-            DetectionResponse detectionResponse = convertToDetectionResponse(oNetResult);
-            if(Objects.isNull(detectionResponse)){
-                return R.fail(R.Status.NO_FACE_DETECTED);
-            }
-            return R.ok(detectionResponse);
+            MtcnnBatchResult oNetResult = ONetModel.thirdStage(manager, oNetPredictor, imgs, boxes, w, h, scoresFiltered, image_indsFiltered);
+            return FaceUtils.toDetectedObjects(oNetResult, w, h);
         } catch (Exception e) {
+            e.printStackTrace();
             throw new RuntimeException(e);
         } finally {
             if (pNetPredictor != null) {
@@ -354,50 +223,50 @@ public class MtcnnFaceDetModel implements FaceDetModel{
 
 
 
-    /**
-     * 转换为FaceDetectedResult
-     * @param mtcnnBatchResult
-     * @return
-     */
-    public static DetectionResponse convertToDetectionResponse(MtcnnBatchResult mtcnnBatchResult){
-        if(Objects.isNull(mtcnnBatchResult) || CollectionUtils.isEmpty(mtcnnBatchResult.boxes)
-                || CollectionUtils.isEmpty(mtcnnBatchResult.points)
-                || CollectionUtils.isEmpty(mtcnnBatchResult.probs)){
-            return null;
-        }
-        DetectionResponse detectionResponse = new DetectionResponse();
-        List<DetectionInfo> detectionInfoList = new ArrayList<DetectionInfo>();
-
-        NDArray boxes = mtcnnBatchResult.boxes.get(0);
-        NDArray probs = mtcnnBatchResult.probs.get(0);
-        NDArray points = mtcnnBatchResult.points.get(0);
-
-        if (DJLCommonUtils.isNDArrayEmpty(boxes) || DJLCommonUtils.isNDArrayEmpty(probs) || DJLCommonUtils.isNDArrayEmpty(points)){
-            return null;
-        }
-        long numBoxes = boxes.getShape().get(0);
-        for (int i = 0; i < numBoxes; i++) {
-            float[] boxCoords = boxes.get(i).toFloatArray(); // [x1, y1, x2, y2]
-            float score = probs.getFloat(i);
-            NDArray pointND = points.get(i); // shape [5,2]
-            float[] flatPoints = pointND.toFloatArray(); // 一维长度 10
-            List<Point> keyPoints = new ArrayList<Point>();
-            for (int p = 0; p < 5; p++) {
-                keyPoints.add(new Point(flatPoints[p * 2], flatPoints[p * 2 + 1]));
-            }
-            int x = Math.round(boxCoords[0]);
-            int y = Math.round(boxCoords[1]);
-            int w = Math.round(boxCoords[2] - boxCoords[0]);
-            int h = Math.round(boxCoords[3] - boxCoords[1]);
-
-            DetectionRectangle rectangle = new DetectionRectangle(x, y, w, h);
-            FaceInfo faceInfo = new FaceInfo(keyPoints);
-            DetectionInfo detectionInfo = new DetectionInfo(rectangle, score, faceInfo);
-            detectionInfoList.add(detectionInfo);
-        }
-        detectionResponse.setDetectionInfoList(detectionInfoList);
-        return detectionResponse;
-    }
+//    /**
+//     * 转换为FaceDetectedResult
+//     * @param mtcnnBatchResult
+//     * @return
+//     */
+//    public static DetectionResponse convertToDetectionResponse(MtcnnBatchResult mtcnnBatchResult){
+//        if(Objects.isNull(mtcnnBatchResult) || CollectionUtils.isEmpty(mtcnnBatchResult.boxes)
+//                || CollectionUtils.isEmpty(mtcnnBatchResult.points)
+//                || CollectionUtils.isEmpty(mtcnnBatchResult.probs)){
+//            return null;
+//        }
+//        DetectionResponse detectionResponse = new DetectionResponse();
+//        List<DetectionInfo> detectionInfoList = new ArrayList<DetectionInfo>();
+//
+//        NDArray boxes = mtcnnBatchResult.boxes.get(0);
+//        NDArray probs = mtcnnBatchResult.probs.get(0);
+//        NDArray points = mtcnnBatchResult.points.get(0);
+//
+//        if (DJLCommonUtils.isNDArrayEmpty(boxes) || DJLCommonUtils.isNDArrayEmpty(probs) || DJLCommonUtils.isNDArrayEmpty(points)){
+//            return null;
+//        }
+//        long numBoxes = boxes.getShape().get(0);
+//        for (int i = 0; i < numBoxes; i++) {
+//            float[] boxCoords = boxes.get(i).toFloatArray(); // [x1, y1, x2, y2]
+//            float score = probs.getFloat(i);
+//            NDArray pointND = points.get(i); // shape [5,2]
+//            float[] flatPoints = pointND.toFloatArray(); // 一维长度 10
+//            List<Point> keyPoints = new ArrayList<Point>();
+//            for (int p = 0; p < 5; p++) {
+//                keyPoints.add(new Point(flatPoints[p * 2], flatPoints[p * 2 + 1]));
+//            }
+//            int x = Math.round(boxCoords[0]);
+//            int y = Math.round(boxCoords[1]);
+//            int w = Math.round(boxCoords[2] - boxCoords[0]);
+//            int h = Math.round(boxCoords[3] - boxCoords[1]);
+//
+//            DetectionRectangle rectangle = new DetectionRectangle(x, y, w, h);
+//            FaceInfo faceInfo = new FaceInfo(keyPoints);
+//            DetectionInfo detectionInfo = new DetectionInfo(rectangle, score, faceInfo);
+//            detectionInfoList.add(detectionInfo);
+//        }
+//        detectionResponse.setDetectionInfoList(detectionInfoList);
+//        return detectionResponse;
+//    }
 
 
 
@@ -413,8 +282,22 @@ public class MtcnnFaceDetModel implements FaceDetModel{
         return onetPredictorPool;
     }
 
+
+    private boolean fromFactory = false;
+
+    @Override
+    public void setFromFactory(boolean fromFactory) {
+        this.fromFactory = fromFactory;
+    }
+    public boolean isFromFactory() {
+        return fromFactory;
+    }
+
     @Override
     public void close() {
+        if (fromFactory) {
+            FaceDetModelFactory.removeFromCache(config.getModelEnum());
+        }
         try {
             if (pnetPredictorPool != null) {
                 pnetPredictorPool.close();

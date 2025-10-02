@@ -4,9 +4,7 @@ import cn.smartjavaai.common.config.Config;
 import cn.smartjavaai.ocr.config.PlateDetModelConfig;
 import cn.smartjavaai.ocr.config.PlateRecModelConfig;
 import cn.smartjavaai.ocr.config.TableStructureConfig;
-import cn.smartjavaai.ocr.enums.PlateDetModelEnum;
-import cn.smartjavaai.ocr.enums.PlateRecModelEnum;
-import cn.smartjavaai.ocr.enums.TableStructureModelEnum;
+import cn.smartjavaai.ocr.enums.*;
 import cn.smartjavaai.ocr.exception.OcrException;
 import cn.smartjavaai.ocr.model.plate.CRNNPlateRecModel;
 import cn.smartjavaai.ocr.model.plate.PlateDetModel;
@@ -133,6 +131,7 @@ public class PlateModelFactory {
             throw new OcrException(e);
         }
         model.loadModel(config);
+        model.setFromFactory(true);
         return model;
     }
 
@@ -153,6 +152,7 @@ public class PlateModelFactory {
             throw new OcrException(e);
         }
         model.loadModel(config);
+        model.setFromFactory(true);
         return model;
     }
 
@@ -163,6 +163,46 @@ public class PlateModelFactory {
         registerDetModel(PlateDetModelEnum.YOLOV7, Yolov5PlateDetModel.class);
         registerRecModel(PlateRecModelEnum.PLATE_REC_CRNN, CRNNPlateRecModel.class);
         log.debug("缓存目录：{}", Config.getCachePath());
+    }
+
+    /**
+     * 关闭所有已加载的模型
+     */
+    public void closeAll() {
+        detModelMap.values().forEach(model -> {
+            try {
+                model.close();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
+        detModelMap.clear();
+
+        recModelMap.values().forEach(model -> {
+            try {
+                model.close();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
+        recModelMap.clear();
+
+    }
+
+    /**
+     * 移除缓存的检测模型
+     * @param modelEnum
+     */
+    public static void removeDetModelFromCache(PlateDetModelEnum modelEnum) {
+        detModelMap.remove(modelEnum);
+    }
+
+    /**
+     * 移除缓存的识别模型
+     * @param modelEnum
+     */
+    public static void removeRecModelFromCache(PlateRecModelEnum modelEnum) {
+        recModelMap.remove(modelEnum);
     }
 
 }

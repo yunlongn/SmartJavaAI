@@ -9,6 +9,7 @@ import cn.smartjavaai.speech.asr.audio.SmartAudioFactory;
 import cn.smartjavaai.speech.asr.config.AsrModelConfig;
 import cn.smartjavaai.speech.asr.entity.*;
 import cn.smartjavaai.speech.asr.exception.AsrException;
+import cn.smartjavaai.speech.asr.factory.SpeechRecognizerFactory;
 import cn.smartjavaai.speech.asr.pool.WhisperStatePool;
 import cn.smartjavaai.speech.utils.AudioUtils;
 import com.google.gson.JsonArray;
@@ -50,8 +51,11 @@ public class VoskRecognizer implements SpeechRecognizer{
 
     private Model model;
 
+    private AsrModelConfig config;
+
     @Override
     public void loadModel(AsrModelConfig config) {
+        this.config = config;
         if(StringUtils.isBlank(config.getModelPath())){
             throw new AsrException("modelPath is null");
         }
@@ -320,6 +324,9 @@ public class VoskRecognizer implements SpeechRecognizer{
 
     @Override
     public void close() throws Exception {
+        if (fromFactory) {
+            SpeechRecognizerFactory.removeFromCache(config.getModelEnum());
+        }
         if(model != null){
             model.close();
         }
@@ -339,4 +346,13 @@ public class VoskRecognizer implements SpeechRecognizer{
     }
 
 
+    private boolean fromFactory = false;
+
+    @Override
+    public void setFromFactory(boolean fromFactory) {
+        this.fromFactory = fromFactory;
+    }
+    public boolean isFromFactory() {
+        return fromFactory;
+    }
 }

@@ -12,6 +12,8 @@ import cn.smartjavaai.common.cv.SmartImageFactory;
 import cn.smartjavaai.common.entity.DetectionResponse;
 import cn.smartjavaai.common.entity.R;
 import cn.smartjavaai.common.pool.PredictorFactory;
+import cn.smartjavaai.common.utils.ImageUtils;
+import cn.smartjavaai.instanceseg.model.InstanceSegModelFactory;
 import cn.smartjavaai.obb.config.ObbDetModelConfig;
 import cn.smartjavaai.obb.criteria.ObbDetCriteriaFactory;
 import cn.smartjavaai.obb.entity.ObbResult;
@@ -125,8 +127,9 @@ public class CommonObbDetModel implements ObbDetModel {
 
     @Override
     public R<DetectionResponse> detectAndDraw(String imagePath, String outputPath) {
+        Image img = null;
         try {
-            Image img = SmartImageFactory.getInstance().fromFile(Paths.get(imagePath));
+            img = SmartImageFactory.getInstance().fromFile(Paths.get(imagePath));
             ObbResult obbResult = detectCore(img);
             if(Objects.isNull(obbResult) || CollectionUtils.isEmpty(obbResult.getRotatedBoxeList())){
                 return R.fail(R.Status.NO_OBJECT_DETECTED);
@@ -137,11 +140,16 @@ public class CommonObbDetModel implements ObbDetModel {
             return R.ok(detectionResponse);
         } catch (IOException e) {
             throw new ObbDetException(e);
+        } finally {
+            ImageUtils.releaseOpenCVMat(img);
         }
     }
 
     @Override
     public void close() throws Exception {
+        if (fromFactory) {
+            ObbDetModelFactory.removeFromCache(config.getModelEnum());
+        }
         try {
             if (predictorPool != null) {
                 predictorPool.close();
@@ -156,5 +164,15 @@ public class CommonObbDetModel implements ObbDetModel {
         } catch (Exception e) {
             log.warn("关闭 model 失败", e);
         }
+    }
+
+    private boolean fromFactory = false;
+
+    @Override
+    public void setFromFactory(boolean fromFactory) {
+        this.fromFactory = fromFactory;
+    }
+    public boolean isFromFactory() {
+        return fromFactory;
     }
 }

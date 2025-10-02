@@ -11,13 +11,15 @@ import ai.djl.repository.zoo.Criteria;
 import ai.djl.repository.zoo.ModelNotFoundException;
 import ai.djl.repository.zoo.ModelZoo;
 import ai.djl.repository.zoo.ZooModel;
+import cn.smartjavaai.common.cv.SmartImageFactory;
 import cn.smartjavaai.common.pool.PredictorFactory;
+import cn.smartjavaai.common.utils.BufferedImageUtils;
 import cn.smartjavaai.common.utils.FileUtils;
 import cn.smartjavaai.common.utils.ImageUtils;
-import cn.smartjavaai.common.utils.OpenCVUtils;
 import cn.smartjavaai.ocr.config.OcrDetModelConfig;
 import cn.smartjavaai.ocr.entity.OcrBox;
 import cn.smartjavaai.ocr.exception.OcrException;
+import cn.smartjavaai.ocr.factory.OcrModelFactory;
 import cn.smartjavaai.ocr.model.common.detect.criteria.OcrCommonDetCriterialFactory;
 import cn.smartjavaai.ocr.utils.OcrUtils;
 import lombok.extern.slf4j.Slf4j;
@@ -81,12 +83,12 @@ public class OcrCommonDetModelImpl implements OcrCommonDetModel{
         }
         Image img = null;
         try {
-            img = ImageFactory.getInstance().fromFile(Paths.get(imagePath));
+            img = SmartImageFactory.getInstance().fromFile(Paths.get(imagePath));
         } catch (IOException e) {
             throw new OcrException("无效的图片", e);
         }
         List<OcrBox> ocrBoxList = detect(img);
-        ((Mat)img.getWrappedImage()).release();
+        ImageUtils.releaseOpenCVMat(img);
         return ocrBoxList;
     }
 
@@ -103,16 +105,15 @@ public class OcrCommonDetModelImpl implements OcrCommonDetModel{
             throw new OcrException("图像文件不存在");
         }
         try {
-            Image img = ImageFactory.getInstance().fromFile(Paths.get(imagePath));
+            Image img = SmartImageFactory.getInstance().fromFile(Paths.get(imagePath));
             List<OcrBox> boxList = detect(img);
             if(Objects.isNull(boxList) || boxList.isEmpty()){
                 throw new OcrException("未检测到文字");
             }
-            OcrUtils.drawRect((Mat)img.getWrappedImage(), boxList);
-            Path output = Paths.get(outputPath);
-            log.debug("Saving to {}", output.toAbsolutePath().toString());
-            img.save(Files.newOutputStream(output), "png");
-            ((Mat) img.getWrappedImage()).release();
+            OcrUtils.drawOcrDetResult(img, boxList, 12);
+            //4通道保存jpg会有问题
+            ImageUtils.save(img, Paths.get(outputPath), "png");
+            ImageUtils.releaseOpenCVMat(img);
         } catch (IOException e) {
             throw new OcrException(e);
         }
@@ -121,12 +122,12 @@ public class OcrCommonDetModelImpl implements OcrCommonDetModel{
 
     @Override
     public List<OcrBox> detect(BufferedImage image) {
-        if(!ImageUtils.isImageValid(image)){
+        if(!BufferedImageUtils.isImageValid(image)){
             throw new OcrException("图像无效");
         }
-        Image img = ImageFactory.getInstance().fromImage(OpenCVUtils.image2Mat(image));
+        Image img = SmartImageFactory.getInstance().fromBufferedImage(image);
         List<OcrBox> ocrBoxList = detect(img);
-        ((Mat)img.getWrappedImage()).release();
+        ImageUtils.releaseOpenCVMat(img);
         return ocrBoxList;
     }
 
@@ -145,29 +146,30 @@ public class OcrCommonDetModelImpl implements OcrCommonDetModel{
 
     @Override
     public BufferedImage detectAndDraw(BufferedImage sourceImage) {
-        if(!ImageUtils.isImageValid(sourceImage)){
+        if(!BufferedImageUtils.isImageValid(sourceImage)){
             throw new OcrException("图像无效");
         }
-        Image img = ImageFactory.getInstance().fromImage(OpenCVUtils.image2Mat(sourceImage));
+        Image img = SmartImageFactory.getInstance().fromBufferedImage(sourceImage);
         List<OcrBox> ocrBoxList = detect(img);
         if(Objects.isNull(ocrBoxList) || ocrBoxList.isEmpty()){
             throw new OcrException("未检测到文字");
         }
-        OcrUtils.drawRect((Mat)img.getWrappedImage(), ocrBoxList);
-        try {
-            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-            // 调用 save 方法将 Image 写入字节流
-            img.save(outputStream, "png");
-            // 将字节流转换为 BufferedImage
-            byte[] imageBytes = outputStream.toByteArray();
-            return ImageIO.read(new ByteArrayInputStream(imageBytes));
-        } catch (IOException e) {
-            throw new OcrException("导出图片失败", e);
-        } finally {
-            if (img != null){
-                ((Mat) img.getWrappedImage()).release();
-            }
+        OcrUtils.drawOcrDetResult(img, ocrBoxList, 12);
+        BufferedImage bufferedImage = ImageUtils.toBufferedImage(img);
+        ImageUtils.releaseOpenCVMat(img);
+        return bufferedImage;
+
+    }
+
+    @Override
+    public Image detectAndDraw(Image sourceImage) {
+        List<OcrBox> ocrBoxList = detect(sourceImage);
+        if(Objects.isNull(ocrBoxList) || ocrBoxList.isEmpty()){
+            throw new OcrException("未检测到文字");
         }
+        Image img = ImageUtils.copy(sourceImage);
+        OcrUtils.drawOcrDetResult(img, ocrBoxList, 12);
+        return img;
     }
 
     @Override
@@ -175,13 +177,13 @@ public class OcrCommonDetModelImpl implements OcrCommonDetModel{
         List<Image> djlImageList = new ArrayList<>(imageList.size());
         try {
             for (BufferedImage bufferedImage : imageList) {
-                djlImageList.add(ImageFactory.getInstance().fromImage(OpenCVUtils.image2Mat(bufferedImage)));
+                djlImageList.add(SmartImageFactory.getInstance().fromBufferedImage(bufferedImage));
             }
             return batchDetectDJLImage(djlImageList);
         } catch (Exception e) {
             throw new OcrException(e);
         } finally {
-            djlImageList.forEach(image -> ((Mat)image.getWrappedImage()).release());
+            djlImageList.forEach(image -> ImageUtils.releaseOpenCVMat(image));
         }
     }
 
@@ -215,6 +217,10 @@ public class OcrCommonDetModelImpl implements OcrCommonDetModel{
         }
     }
 
+
+
+
+
     @Override
     public GenericObjectPool<Predictor<Image, NDList>> getPool() {
         return detPredictorPool;
@@ -222,6 +228,9 @@ public class OcrCommonDetModelImpl implements OcrCommonDetModel{
 
     @Override
     public void close() throws Exception {
+        if (fromFactory) {
+            OcrModelFactory.removeDetModelFromCache(config.getModelEnum());
+        }
         try {
             if (detPredictorPool != null) {
                 detPredictorPool.close();
@@ -236,6 +245,16 @@ public class OcrCommonDetModelImpl implements OcrCommonDetModel{
         } catch (Exception e) {
             log.warn("关闭 model 失败", e);
         }
+    }
+
+    private boolean fromFactory = false;
+
+    @Override
+    public void setFromFactory(boolean fromFactory) {
+        this.fromFactory = fromFactory;
+    }
+    public boolean isFromFactory() {
+        return fromFactory;
     }
 
 

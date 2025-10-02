@@ -1,9 +1,12 @@
 import ai.djl.Application;
+import ai.djl.modality.cv.Image;
+import ai.djl.modality.cv.ImageFactory;
 import ai.djl.repository.Artifact;
 import ai.djl.repository.MRL;
 import ai.djl.repository.zoo.ModelNotFoundException;
 import ai.djl.repository.zoo.ModelZoo;
 import ai.djl.util.JsonUtils;
+import cn.smartjavaai.common.cv.SmartImageFactory;
 import cn.smartjavaai.common.entity.DetectionResponse;
 import cn.smartjavaai.common.entity.R;
 import cn.smartjavaai.face.config.FaceDetConfig;
@@ -20,6 +23,8 @@ import cn.smartjavaai.face.utils.SimilarityUtil;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 
@@ -85,9 +90,18 @@ public class Test {
 //        }
 
 
-        FaceDetModel faceDetModel = getFaceDetModel();
-        R<Void> result = faceDetModel.detectAndDraw("/Users/wenjie/Downloads/facetest/00974.png", "/Users/wenjie/Downloads/xx333.png");
-        log.info("result:{}", result.isSuccess() + " msg:" + result.getMessage());
+//        FaceDetModel faceDetModel = getFaceDetModel();
+//        R<Void> result = faceDetModel.detectAndDraw("/Users/wenjie/Downloads/facetest/00974.png", "/Users/wenjie/Downloads/xx333.png");
+//        log.info("result:{}", result.isSuccess() + " msg:" + result.getMessage());
+
+        Image ime = ImageFactory.getInstance().fromFile(Paths.get("/Users/wenjie/Downloads/facetest/00974.png"));
+//        SmartImageFactory.setEngine(SmartImageFactory.Engine.OPENCV);
+        Image image = SmartImageFactory.getInstance().fromFile(Paths.get("/Users/wenjie/Downloads/facetest/00974.png"));
+//        image.save(Files.newOutputStream(Paths.get("/Users/wenjie/Downloads/xx333.png")), "png");
+//
+//
+        Image ime2 = ImageFactory.getInstance().fromFile(Paths.get("/Users/wenjie/Downloads/facetest/00974.png"));
+        image.getSubImage(0, 0, 100, 100);
     }
 
 

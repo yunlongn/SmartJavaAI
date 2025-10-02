@@ -12,20 +12,18 @@ import ai.djl.repository.zoo.ZooModel;
 import ai.djl.training.util.ProgressBar;
 import cn.smartjavaai.common.entity.*;
 import cn.smartjavaai.common.entity.face.FaceInfo;
-import cn.smartjavaai.common.enums.DeviceEnum;
 import cn.smartjavaai.common.entity.face.LivenessResult;
+import cn.smartjavaai.common.enums.DeviceEnum;
 import cn.smartjavaai.common.enums.face.LivenessStatus;
 import cn.smartjavaai.common.pool.PredictorFactory;
 import cn.smartjavaai.common.preprocess.BufferedImagePreprocessor;
-import cn.smartjavaai.common.utils.ArrayUtils;
-import cn.smartjavaai.common.utils.Base64ImageUtils;
-import cn.smartjavaai.common.utils.FileUtils;
-import cn.smartjavaai.common.utils.ImageUtils;
+import cn.smartjavaai.common.preprocess.DJLImagePreprocessor;
+import cn.smartjavaai.common.utils.*;
 import cn.smartjavaai.face.config.LivenessConfig;
 import cn.smartjavaai.face.constant.MiniVisionConstant;
 import cn.smartjavaai.face.exception.FaceException;
+import cn.smartjavaai.face.factory.LivenessModelFactory;
 import cn.smartjavaai.face.model.liveness.translator.MiniVisionTranslator;
-import cn.smartjavaai.common.utils.OpenCVUtils;
 import com.seeta.sdk.*;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -151,10 +149,7 @@ public class MiniVisionLivenessModel extends CommonLivenessModel{
 
 
     @Override
-    public R<LivenessResult> detect(BufferedImage image, DetectionRectangle faceDetectionRectangle) {
-        if(!ImageUtils.isImageValid(image)){
-            throw new FaceException("图像无效");
-        }
+    public R<LivenessResult> detect(Image image, DetectionRectangle faceDetectionRectangle) {
         Predictor<Image, float[]> predictor = null;
         Predictor<Image, float[]> sePredictor = null;
         try {
@@ -162,30 +157,27 @@ public class MiniVisionLivenessModel extends CommonLivenessModel{
             float[] seResult = null;
             if(Objects.nonNull(predictorPool)){
                 //预处理图片
-                BufferedImage processedImage = new BufferedImagePreprocessor(image, faceDetectionRectangle)
+                Image processedImage = new DJLImagePreprocessor(image, faceDetectionRectangle)
                         .setExtendRatio(2.7f)
                         .enableSquarePadding(true)
                         .enableScaling(true)
                         .setTargetSize(80)
                         .process();
                 predictor = predictorPool.borrowObject();
-                Image djlImage = ImageFactory.getInstance().fromImage(OpenCVUtils.image2Mat(processedImage));
-                result = predictor.predict(djlImage);
-                ((Mat)djlImage.getWrappedImage()).release();
-
+                result = predictor.predict(processedImage);
+                ImageUtils.releaseOpenCVMat(processedImage);
             }
             if(Objects.nonNull(sePredictorPool)){
                 //预处理图片
-                BufferedImage processedImage = new BufferedImagePreprocessor(image, faceDetectionRectangle)
+                Image processedImage = new DJLImagePreprocessor(image, faceDetectionRectangle)
                         .setExtendRatio(4)
                         .enableSquarePadding(true)
                         .enableScaling(true)
                         .setTargetSize(80)
                         .process();
-                Image djlImage = ImageFactory.getInstance().fromImage(OpenCVUtils.image2Mat(processedImage));
                 sePredictor = sePredictorPool.borrowObject();
-                seResult = sePredictor.predict(djlImage);
-                ((Mat)djlImage.getWrappedImage()).release();
+                seResult = sePredictor.predict(processedImage);
+                ImageUtils.releaseOpenCVMat(processedImage);
             }
             if(Objects.isNull(result) && Objects.isNull(seResult)){
                 throw new FaceException("活体检测错误");
@@ -195,15 +187,12 @@ public class MiniVisionLivenessModel extends CommonLivenessModel{
             BigDecimal score = Objects.isNull(result) ? BigDecimal.ZERO : BigDecimal.valueOf(result[maxIndex]);
             BigDecimal seScore = Objects.isNull(seResult) ? BigDecimal.ZERO : BigDecimal.valueOf(seResult[maxIndex]);
             BigDecimal avgSocre = score.add(seScore).divide(BigDecimal.valueOf(2), 2, RoundingMode.HALF_UP);
+            //活体
             if(maxIndex == 1){
-                if(avgSocre.floatValue() >= config.getRealityThreshold()){
-                    return R.ok(new LivenessResult(LivenessStatus.LIVE, avgSocre.floatValue()));
-                }else{
-                    float nonLiveScore = BigDecimal.ONE.subtract(avgSocre).floatValue();
-                    return R.ok(new LivenessResult(LivenessStatus.NON_LIVE, nonLiveScore));
-                }
-            }else{
-                return R.ok(new LivenessResult(LivenessStatus.NON_LIVE, avgSocre.floatValue()));
+                LivenessStatus livenessStatus = avgSocre.floatValue() > config.getRealityThreshold() ? LivenessStatus.LIVE : LivenessStatus.NON_LIVE;
+                return R.ok(new LivenessResult(livenessStatus, avgSocre.floatValue()));
+            }else{//非活体
+                return R.ok(new LivenessResult(LivenessStatus.NON_LIVE, BigDecimal.ONE.subtract(avgSocre).floatValue()));
             }
         } catch (Exception e) {
             throw new FaceException("活体检测错误", e);
@@ -245,6 +234,9 @@ public class MiniVisionLivenessModel extends CommonLivenessModel{
 
     @Override
     public void close() throws Exception {
+        if (fromFactory) {
+            LivenessModelFactory.removeFromCache(config.getModelEnum());
+        }
         try {
             if (predictorPool != null) {
                 predictorPool.close();
@@ -283,5 +275,15 @@ public class MiniVisionLivenessModel extends CommonLivenessModel{
         MINIFASNET_V2,
         MINIFASNET_V1_SE,
         FUSION // 融合模型
+    }
+
+    private boolean fromFactory = false;
+
+    @Override
+    public void setFromFactory(boolean fromFactory) {
+        this.fromFactory = fromFactory;
+    }
+    public boolean isFromFactory() {
+        return fromFactory;
     }
 }

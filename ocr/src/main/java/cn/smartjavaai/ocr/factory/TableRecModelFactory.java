@@ -103,6 +103,7 @@ public class TableRecModelFactory {
             throw new OcrException(e);
         }
         model.loadModel(config);
+        model.setFromFactory(true);
         return model;
     }
 
@@ -114,6 +115,28 @@ public class TableRecModelFactory {
         registerTableStructureModel(TableStructureModelEnum.SLANET, CommonTableStructureModel.class);
         registerTableStructureModel(TableStructureModelEnum.SLANET_PLUS, CommonTableStructureModel.class);
         log.debug("缓存目录：{}", Config.getCachePath());
+    }
+
+    /**
+     * 关闭所有已加载的模型
+     */
+    public void closeAll() {
+        tableStructureModelMap.values().forEach(model -> {
+            try {
+                model.close();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
+        tableStructureModelMap.clear();
+    }
+
+    /**
+     * 移除缓存的模型
+     * @param modelEnum
+     */
+    public static void removeFromCache(TableStructureModelEnum modelEnum) {
+        tableStructureModelMap.remove(modelEnum);
     }
 
 }

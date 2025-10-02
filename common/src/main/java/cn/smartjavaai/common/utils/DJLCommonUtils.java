@@ -1,10 +1,17 @@
 package cn.smartjavaai.common.utils;
 
+import ai.djl.modality.cv.output.BoundingBox;
+import ai.djl.modality.cv.output.DetectedObjects;
+import ai.djl.modality.cv.output.Point;
 import ai.djl.ndarray.NDArray;
 import cn.smartjavaai.common.entity.R;
+import org.opencv.core.CvType;
+import org.opencv.core.Mat;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -40,6 +47,115 @@ public class DJLCommonUtils {
      */
     public static boolean isNDArrayEmpty(NDArray ndArray){
         return Objects.isNull(ndArray) || ndArray.size() == 0;
+    }
+
+
+    /**
+     * float NDArray To float[][] Array
+     * @param ndArray
+     * @return
+     */
+    public static float[][] floatNDArrayToArray(NDArray ndArray) {
+        int rows = (int) (ndArray.getShape().get(0));
+        int cols = (int) (ndArray.getShape().get(1));
+        float[][] arr = new float[rows][cols];
+
+        float[] arrs = ndArray.toFloatArray();
+        for (int i = 0; i < rows; i++) {
+            for (int j = 0; j < cols; j++) {
+                arr[i][j] = arrs[i * cols + j];
+            }
+        }
+        return arr;
+    }
+
+
+    /**
+     * float NDArray To float[][] Array
+     * @param ndArray
+     * @param cvType
+     * @return
+     */
+    public static Mat floatNDArrayToMat(NDArray ndArray, int cvType) {
+        int rows = (int) (ndArray.getShape().get(0));
+        int cols = (int) (ndArray.getShape().get(1));
+        Mat mat = new Mat(rows, cols, cvType);
+
+        float[] arrs = ndArray.toFloatArray();
+        for (int i = 0; i < rows; i++) {
+            for (int j = 0; j < cols; j++) {
+                mat.put(i, j, arrs[i * cols + j]);
+            }
+        }
+        return mat;
+    }
+
+    /**
+     * float NDArray To Mat
+     * @param ndArray
+     * @return
+     */
+    public static Mat floatNDArrayToMat(NDArray ndArray) {
+        int rows = (int) (ndArray.getShape().get(0));
+        int cols = (int) (ndArray.getShape().get(1));
+        Mat mat = new Mat(rows, cols, CvType.CV_32F);
+
+        float[] arrs = ndArray.toFloatArray();
+        for (int i = 0; i < rows; i++) {
+            for (int j = 0; j < cols; j++) {
+                mat.put(i, j, arrs[i * cols + j]);
+            }
+        }
+
+        return mat;
+
+    }
+
+    /**
+     * uint8 NDArray To Mat
+     * @param ndArray
+     * @return
+     */
+    public static Mat uint8NDArrayToMat(NDArray ndArray) {
+        int rows = (int) (ndArray.getShape().get(0));
+        int cols = (int) (ndArray.getShape().get(1));
+        Mat mat = new Mat(rows, cols, CvType.CV_8U);
+
+        byte[] arrs = ndArray.toByteArray();
+
+        for (int i = 0; i < rows; i++) {
+            for (int j = 0; j < cols; j++) {
+                mat.put(i, j, arrs[i * cols + j]);
+            }
+        }
+        return mat;
+    }
+
+
+    /**
+     * List To Mat
+     * @param points
+     * @return
+     */
+    public static Mat toMat(List<Point> points) {
+        Mat mat = new Mat(points.size(), 2, CvType.CV_32F);
+        for (int i = 0; i < points.size(); i++) {
+            ai.djl.modality.cv.output.Point point = points.get(i);
+            mat.put(i, 0, (float) point.getX());
+            mat.put(i, 1, (float) point.getY());
+        }
+        return mat;
+    }
+
+    /**
+     * 构建一个空的 DetectedObjects 对象
+     * @return
+     */
+    public static DetectedObjects buildEmptyDetectedObjects(){
+        List<String> classNames = new ArrayList<>();
+        List<Double> probabilities = new ArrayList<>();
+        List<BoundingBox> boxes = new ArrayList<>();
+        return new DetectedObjects(classNames, probabilities, boxes);
     }
 
 

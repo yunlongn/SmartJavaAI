@@ -12,7 +12,6 @@ import cn.smartjavaai.face.config.LivenessConfig;
 import cn.smartjavaai.face.constant.FaceNetConstant;
 import cn.smartjavaai.face.enums.FaceRecModelEnum;
 import cn.smartjavaai.face.enums.LivenessModelEnum;
-import cn.smartjavaai.face.model.facerec.translator.FaceNetRecTranslator;
 import cn.smartjavaai.face.model.liveness.translator.IicFrTranslator;
 import org.apache.commons.lang3.StringUtils;
 

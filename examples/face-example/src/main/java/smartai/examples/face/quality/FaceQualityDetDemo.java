@@ -1,6 +1,8 @@
 package smartai.examples.face.quality;
 
+import ai.djl.modality.cv.Image;
 import cn.smartjavaai.common.config.Config;
+import cn.smartjavaai.common.cv.SmartImageFactory;
 import cn.smartjavaai.common.entity.DetectionInfo;
 import cn.smartjavaai.common.entity.DetectionResponse;
 import cn.smartjavaai.common.entity.R;
@@ -47,6 +49,8 @@ public class FaceQualityDetDemo {
 
     @BeforeClass
     public static void beforeAll() throws IOException {
+        //将图片处理的底层引擎切换为 OpenCV
+        SmartImageFactory.setEngine(SmartImageFactory.Engine.OPENCV);
         //修改缓存路径
 //        Config.setCachePath("/Users/xxx/smartjavaai_cache");
     }
@@ -62,7 +66,7 @@ public class FaceQualityDetDemo {
         QualityConfig config = new QualityConfig();
         config.setModelEnum(QualityModelEnum.SEETA_FACE6_MODEL);
         //需替换为实际模型存储路径
-        config.setModelPath("C:/Users/Administrator/Downloads/sf3.0_models/sf3.0_models");
+        config.setModelPath("C:/Users/DengWenJie/Downloads/sf3.0_models/sf3.0_models");
         config.setDevice(device);
         return FaceQualityModelFactory.getInstance().getModel(config);
     }
@@ -74,7 +78,7 @@ public class FaceQualityDetDemo {
      */
     public FaceDetModel getFaceDetModel() {
         //需替换为实际模型存储路径
-        String modelPath = "C:/Users/Administrator/Downloads/sf3.0_models/sf3.0_models";
+        String modelPath = "C:/Users/DengWenJie/Downloads/sf3.0_models/sf3.0_models";
         FaceDetConfig faceDetectModelConfig = new FaceDetConfig();
         faceDetectModelConfig.setModelEnum(FaceDetModelEnum.SEETA_FACE6_MODEL);
         faceDetectModelConfig.setModelPath(modelPath);
@@ -91,8 +95,9 @@ public class FaceQualityDetDemo {
         try {
             FaceQualityModel faceQualityModel = getFaceQualityModel();
             FaceDetModel faceDetModel = getFaceDetModel();
+            //创建Image对象，可以从文件、url、InputStream创建、BufferedImage、Base64创建，具体使用方法可以查看文档
+            Image image = SmartImageFactory.getInstance().fromFile("src/main/resources/iu_1.jpg");
             //人脸检测
-            BufferedImage image = ImageIO.read(new File(Paths.get("src/main/resources/iu_1.jpg").toAbsolutePath().toString()));
             R<DetectionResponse> detectionResponse = faceDetModel.detect(image);
             if(detectionResponse.isSuccess()){
                 log.info("人脸检测结果：{}", JSONObject.toJSONString(detectionResponse.getData()));
@@ -124,8 +129,9 @@ public class FaceQualityDetDemo {
         try {
             FaceQualityModel faceQualityModel = getFaceQualityModel();
             FaceDetModel faceDetModel = getFaceDetModel();
+            //创建Image对象，可以从文件、url、InputStream创建、BufferedImage、Base64创建，具体使用方法可以查看文档
+            Image image = SmartImageFactory.getInstance().fromFile("src/main/resources/iu_1.jpg");
             //人脸检测
-            BufferedImage image = ImageIO.read(new File(Paths.get("src/main/resources/iu_1.jpg").toAbsolutePath().toString()));
             R<DetectionResponse> detectionResponse = faceDetModel.detect(image);
             if(detectionResponse.isSuccess()){
                 log.info("人脸检测结果：{}", JSONObject.toJSONString(detectionResponse.getData()));
@@ -157,8 +163,8 @@ public class FaceQualityDetDemo {
         try {
             FaceQualityModel faceQualityModel = getFaceQualityModel();
             FaceDetModel faceDetModel = getFaceDetModel();
-            //人脸检测
-            BufferedImage image = ImageIO.read(new File(Paths.get("src/main/resources/iu_1.jpg").toAbsolutePath().toString()));
+            //创建Image对象，可以从文件、url、InputStream创建、BufferedImage、Base64创建，具体使用方法可以查看文档
+            Image image = SmartImageFactory.getInstance().fromFile("src/main/resources/iu_1.jpg");
             R<DetectionResponse> detectionResponse = faceDetModel.detect(image);
             if(detectionResponse.isSuccess()){
                 log.info("人脸检测结果：{}", JSONObject.toJSONString(detectionResponse.getData()));
@@ -190,8 +196,9 @@ public class FaceQualityDetDemo {
         try {
             FaceQualityModel faceQualityModel = getFaceQualityModel();
             FaceDetModel faceDetModel = getFaceDetModel();
+            //创建Image对象，可以从文件、url、InputStream创建、BufferedImage、Base64创建，具体使用方法可以查看文档
+            Image image = SmartImageFactory.getInstance().fromFile("src/main/resources/iu_1.jpg");
             //人脸检测
-            BufferedImage image = ImageIO.read(new File(Paths.get("src/main/resources/iu_1.jpg").toAbsolutePath().toString()));
             R<DetectionResponse> detectionResponse = faceDetModel.detect(image);
             if(detectionResponse.isSuccess()){
                 log.info("人脸检测结果：{}", JSONObject.toJSONString(detectionResponse.getData()));
@@ -224,8 +231,9 @@ public class FaceQualityDetDemo {
         try {
             FaceQualityModel faceQualityModel = getFaceQualityModel();
             FaceDetModel faceDetModel = getFaceDetModel();
+            //创建Image对象，可以从文件、url、InputStream创建、BufferedImage、Base64创建，具体使用方法可以查看文档
+            Image image = SmartImageFactory.getInstance().fromFile("src/main/resources/iu_1.jpg");
             //人脸检测
-            BufferedImage image = ImageIO.read(new File(Paths.get("src/main/resources/iu_1.jpg").toAbsolutePath().toString()));
             R<DetectionResponse> detectionResponse = faceDetModel.detect(image);
             if(detectionResponse.isSuccess()){
                 log.info("人脸检测结果：{}", JSONObject.toJSONString(detectionResponse.getData()));
@@ -258,8 +266,9 @@ public class FaceQualityDetDemo {
         try {
             FaceQualityModel faceQualityModel = getFaceQualityModel();
             FaceDetModel faceDetModel = getFaceDetModel();
+            //创建Image对象，可以从文件、url、InputStream创建、BufferedImage、Base64创建，具体使用方法可以查看文档
+            Image image = SmartImageFactory.getInstance().fromFile("src/main/resources/iu_1.jpg");
             //人脸检测
-            BufferedImage image = ImageIO.read(new File(Paths.get("src/main/resources/iu_1.jpg").toAbsolutePath().toString()));
             R<DetectionResponse> detectionResponse = faceDetModel.detect(image);
             if(detectionResponse.isSuccess()){
                 log.info("人脸检测结果：{}", JSONObject.toJSONString(detectionResponse.getData()));

@@ -2,6 +2,8 @@ package cn.smartjavaai.face.factory;
 
 import cn.smartjavaai.common.config.Config;
 import cn.smartjavaai.face.config.QualityConfig;
+import cn.smartjavaai.face.enums.FaceDetModelEnum;
+import cn.smartjavaai.face.enums.QualityModelEnum;
 import cn.smartjavaai.face.exception.FaceException;
 import cn.smartjavaai.face.model.quality.FaceQualityModel;
 import cn.smartjavaai.face.model.quality.Seetaface6QualityModel;
@@ -21,12 +23,12 @@ public class FaceQualityModelFactory {
     // 使用 volatile 和双重检查锁定来确保线程安全的单例模式
     private static volatile FaceQualityModelFactory instance;
 
-    private static final ConcurrentHashMap<String, FaceQualityModel> modelMap = new ConcurrentHashMap<>();
+    private static final ConcurrentHashMap<QualityModelEnum, FaceQualityModel> modelMap = new ConcurrentHashMap<>();
 
     /**
      * 模型注册表
      */
-    private static final Map<String, Class<? extends FaceQualityModel>> registry =
+    private static final Map<QualityModelEnum, Class<? extends FaceQualityModel>> registry =
             new ConcurrentHashMap<>();
 
 
@@ -45,11 +47,11 @@ public class FaceQualityModelFactory {
 
     /**
      * 注册模型
-     * @param name
+     * @param qualityModelEnum
      * @param clazz
      */
-    private static void registerModel(String name, Class<? extends FaceQualityModel> clazz) {
-        registry.put(name.toLowerCase(), clazz);
+    private static void registerModel(QualityModelEnum qualityModelEnum, Class<? extends FaceQualityModel> clazz) {
+        registry.put(qualityModelEnum, clazz);
     }
 
 
@@ -62,7 +64,7 @@ public class FaceQualityModelFactory {
         if(Objects.isNull(config) || Objects.isNull(config.getModelEnum())){
             throw new FaceException("未配置质量评估模型");
         }
-        return modelMap.computeIfAbsent(config.getModelEnum().name(), k -> {
+        return modelMap.computeIfAbsent(config.getModelEnum(), k -> {
             return createFaceModel(config);
         });
     }
@@ -73,7 +75,7 @@ public class FaceQualityModelFactory {
      * @return
      */
     private FaceQualityModel createFaceModel(QualityConfig config) {
-        Class<?> clazz = registry.get(config.getModelEnum().getModelClassName().toLowerCase());
+        Class<?> clazz = registry.get(config.getModelEnum());
         if(clazz == null){
             throw new FaceException("Unsupported algorithm");
         }
@@ -84,14 +86,37 @@ public class FaceQualityModelFactory {
             throw new FaceException(e);
         }
         model.loadModel(config);
+        model.setFromFactory(true);
         return model;
     }
 
 
     // 初始化默认算法
     static {
-        registerModel("seetaface6model", Seetaface6QualityModel.class);
+        registerModel(QualityModelEnum.SEETA_FACE6_MODEL, Seetaface6QualityModel.class);
         log.debug("缓存目录：{}", Config.getCachePath());
+    }
+
+    /**
+     * 关闭所有已加载的模型
+     */
+    public void closeAll() {
+        modelMap.values().forEach(model -> {
+            try {
+                model.close();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
+        modelMap.clear();
+    }
+
+    /**
+     * 移除缓存的模型
+     * @param modelEnum
+     */
+    public static void removeFromCache(QualityModelEnum modelEnum) {
+        modelMap.remove(modelEnum);
     }
 
 }

@@ -1,7 +1,6 @@
 package cn.smartjavaai.ocr.utils;
 
 import ai.djl.modality.cv.Image;
-import ai.djl.modality.cv.ImageFactory;
 import ai.djl.modality.cv.output.BoundingBox;
 import ai.djl.modality.cv.output.DetectedObjects;
 import ai.djl.modality.cv.output.Landmark;
@@ -10,16 +9,14 @@ import ai.djl.ndarray.NDArray;
 import ai.djl.ndarray.NDList;
 import ai.djl.ndarray.NDManager;
 import ai.djl.opencv.OpenCVImageFactory;
+import cn.smartjavaai.common.cv.SmartImageFactory;
 import cn.smartjavaai.common.entity.*;
 import cn.smartjavaai.common.entity.Point;
-import cn.smartjavaai.common.utils.ImageUtils;
-import cn.smartjavaai.common.utils.OpenCVUtils;
-import cn.smartjavaai.common.utils.PointUtils;
+import cn.smartjavaai.common.utils.*;
 import cn.smartjavaai.ocr.entity.*;
 import cn.smartjavaai.ocr.entity.RotatedBox;
 import cn.smartjavaai.ocr.enums.AngleEnum;
 import cn.smartjavaai.ocr.enums.PlateType;
-import cn.smartjavaai.ocr.opencv.OcrNDArrayUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.opencv.core.Mat;
@@ -28,7 +25,6 @@ import org.opencv.imgproc.Imgproc;
 
 import java.awt.*;
 import java.awt.image.BufferedImage;
-import java.math.BigDecimal;
 import java.util.*;
 import java.util.List;
 
@@ -77,33 +73,6 @@ public class OcrUtils {
     }
 
 
-
-
-    /**
-     * 图片旋转
-     *
-     * @param manager
-     * @param image
-     * @return
-     */
-    public static Image rotateImg(NDManager manager, Image image) {
-        NDArray rotated = NDImageUtils.rotate90(image.toNDArray(manager), 1);
-        return ImageFactory.getInstance().fromNDArray(rotated);
-    }
-
-    /**
-     * 逆时针旋转图片
-     *
-     * @param image
-     * @param times
-     * @return
-     */
-    public static Image rotateImg(Image image, int times) {
-        try (NDManager manager = NDManager.newBaseManager()) {
-            NDArray rotated = NDImageUtils.rotate90(image.toNDArray(manager), times);
-            return OpenCVImageFactory.getInstance().fromNDArray(rotated);
-        }
-    }
 
 
     /**
@@ -199,66 +168,21 @@ public class OcrUtils {
     /**
      * 透视变换 + 裁剪
      * @param srcMat
-     * @param landMarks
-     * @return
-     */
-    public static Image transformAndCrop(Mat srcMat, List<ai.djl.modality.cv.output.Point> landMarks){
-        if (landMarks == null || landMarks.size() != 4) {
-            throw new IllegalArgumentException("必须提供4个关键点");
-        }
-
-        // 步骤 1：排序为 左上、右上、右下、左下
-        List<ai.djl.modality.cv.output.Point> ordered = PointUtils.orderPoints(landMarks);
-
-        ai.djl.modality.cv.output.Point lt = ordered.get(0);
-        ai.djl.modality.cv.output.Point rt = ordered.get(1);
-        ai.djl.modality.cv.output.Point rb = ordered.get(2);
-        ai.djl.modality.cv.output.Point lb = ordered.get(3);
-
-        // 步骤 2：计算目标图像尺寸（宽、高）
-        int img_crop_width = (int) Math.max(
-                PointUtils.distance(lt, rt),
-                PointUtils.distance(rb, lb)
-        );
-        int img_crop_height = (int) Math.max(
-                PointUtils.distance(lt, lb),
-                PointUtils.distance(rt, rb)
-        );
-
-        // 步骤 3：构造目标坐标点
-        List<ai.djl.modality.cv.output.Point> dstPoints = Arrays.asList(
-                new ai.djl.modality.cv.output.Point(0, 0),
-                new ai.djl.modality.cv.output.Point(img_crop_width, 0),
-                new ai.djl.modality.cv.output.Point(img_crop_width, img_crop_height),
-                new ai.djl.modality.cv.output.Point(0, img_crop_height)
-        );
-
-        // 步骤 4：透视变换
-        Mat srcPoint2f = OcrNDArrayUtils.toMat(ordered);
-        Mat dstPoint2f = OcrNDArrayUtils.toMat(dstPoints);
-        Mat cvMat = OpenCVUtils.perspectiveTransform(srcMat, srcPoint2f, dstPoint2f);
-
-        // 步骤 5：转为 DJL Image + 裁剪
-        Image subImg = OpenCVImageFactory.getInstance().fromImage(cvMat);
-        subImg = subImg.getSubImage(0, 0, img_crop_width, img_crop_height);
-
-        // 释放资源
-        cvMat.release();
-        srcPoint2f.release();
-        dstPoint2f.release();
-
-        return subImg;
-    }
-
-
-
-    /**
-     * 透视变换+裁剪
-     * @param srcMat
      * @param box
      * @return
      */
     public static Image transformAndCrop(Mat srcMat, OcrBox box){
+        Mat subImg = transformAndCropToMat(srcMat, box);
+        return SmartImageFactory.getInstance().fromMat(subImg);
+    }
+
+    /**
+     * 透视变换 + 裁剪
+     * @param srcMat
+     * @param box
+     * @return
+     */
+    public static Mat transformAndCropToMat(Mat srcMat, OcrBox box){
         float[] pointsArr = box.toFloatArray();
         float[] lt = java.util.Arrays.copyOfRange(pointsArr, 0, 2);
         float[] rt = java.util.Arrays.copyOfRange(pointsArr, 2, 4);
@@ -276,18 +200,15 @@ public class OcrUtils {
         dstPoints.add(new ai.djl.modality.cv.output.Point(img_crop_width, 0));
         dstPoints.add(new ai.djl.modality.cv.output.Point(img_crop_width, img_crop_height));
         dstPoints.add(new ai.djl.modality.cv.output.Point(0, img_crop_height));
-        Mat srcPoint2f = OcrNDArrayUtils.toMat(srcPoints);
-        Mat dstPoint2f = OcrNDArrayUtils.toMat(dstPoints);
+        Mat srcPoint2f = DJLCommonUtils.toMat(srcPoints);
+        Mat dstPoint2f = DJLCommonUtils.toMat(dstPoints);
         //透视变换
         Mat cvMat = OpenCVUtils.perspectiveTransform(srcMat, srcPoint2f, dstPoint2f);
-        Image subImg = OpenCVImageFactory.getInstance().fromImage(cvMat);
-        //ImageUtils.saveImage(subImg, i + ".png", "build/output");
-        //变换后裁剪
-        subImg = subImg.getSubImage(0, 0, img_crop_width, img_crop_height);
-        cvMat.release();
         srcPoint2f.release();
         dstPoint2f.release();
-        return subImg;
+        Mat result = OpenCVUtils.getSubImage(cvMat, 0, 0, img_crop_width, img_crop_height);
+        cvMat.release();
+        return result;
     }
 
     /**
@@ -307,47 +228,97 @@ public class OcrUtils {
 
 
     /**
-     * 绘制文本框及文本
-     * @param image
-     * @param ocrInfo
+     * 将 OCR 结果转换为多边形标签列表
+     * @param ocrItemList OCR 识别结果
+     * @return PolygonLabel 列表
      */
-    public static void drawRectWithText(BufferedImage image, OcrInfo ocrInfo,  int fontSize) {
-        // 将绘制图像转换为Graphics2D
-        Graphics2D g = (Graphics2D) image.getGraphics();
-        try {
-            Font font = new Font("楷体", Font.PLAIN, fontSize);
-            g.setFont(font);
-            g.setColor(new Color(0, 0, 255));
-            // 声明画笔属性 ：粗 细（单位像素）末端无修饰 折线处呈尖角
-            BasicStroke bStroke = new BasicStroke(2, BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER);
-            g.setStroke(bStroke);
-            List<OcrItem> ocrItemList = ocrInfo.getOcrItemList();
-            if(CollectionUtils.isNotEmpty(ocrInfo.getLineList())){
-                ocrItemList = ocrInfo.flattenLines();
-            }
-            for(OcrItem item : ocrItemList){
-                OcrBox box = item.getOcrBox();
-                int[] xPoints = {
-                        (int)box.getTopLeft().getX(),
-                        (int)box.getTopRight().getX(),
-                        (int)box.getBottomRight().getX(),
-                        (int)box.getBottomLeft().getX(),
-                        (int)box.getTopLeft().getX()
-                };
-                int[] yPoints = {
-                        (int)box.getTopLeft().getY(),
-                        (int)box.getTopRight().getY(),
-                        (int)box.getBottomRight().getY(),
-                        (int)box.getBottomLeft().getY(),
-                        (int)box.getTopLeft().getY()
-                };
-                g.drawPolyline(xPoints, yPoints, 5);
-                g.drawString(item.getText(), xPoints[0], yPoints[0]);
-            }
-        } finally {
-            g.dispose();
+    public static List<PolygonLabel> toPolygonLabelList(List<OcrItem> ocrItemList) {
+        List<PolygonLabel> polygonLabelList = new ArrayList<>();
+        if (ocrItemList == null || ocrItemList.isEmpty()) {
+            return polygonLabelList;
         }
+        for (OcrItem item : ocrItemList) {
+            if (item.getOcrBox() == null) continue;
+            List<cn.smartjavaai.common.entity.Point> points = Arrays.asList(
+                    item.getOcrBox().getTopLeft(),
+                    item.getOcrBox().getTopRight(),
+                    item.getOcrBox().getBottomRight(),
+                    item.getOcrBox().getBottomLeft()
+            );
+            String text = null;
+            //角度
+            if(item.getAngle() != null){
+                text = item.getAngle().getValue();
+            }else{
+                text = item.getText();
+            }
+            PolygonLabel label = new PolygonLabel(points, text);
+            polygonLabelList.add(label);
+        }
+        return polygonLabelList;
     }
+
+
+    /**
+     * 将 OCR 结果转换为多边形标签列表
+     * @param boxList
+     * @return PolygonLabel 列表
+     */
+    public static List<PolygonLabel> ocrBoxtoPolygonLabelList(List<OcrBox> boxList) {
+        List<PolygonLabel> polygonLabelList = new ArrayList<>();
+        if (boxList == null || boxList.isEmpty()) {
+            return polygonLabelList;
+        }
+        for (OcrBox item : boxList) {
+            List<cn.smartjavaai.common.entity.Point> points = Arrays.asList(
+                    item.getTopLeft(),
+                    item.getTopRight(),
+                    item.getBottomRight(),
+                    item.getBottomLeft()
+            );
+            PolygonLabel label = new PolygonLabel(points);
+            polygonLabelList.add(label);
+        }
+        return polygonLabelList;
+    }
+
+
+    /**
+     * OCR 结果绘制
+     */
+    public static void drawOcrResult(BufferedImage image, OcrInfo ocrInfo, int fontSize) {
+        List<OcrItem> ocrItemList = ocrInfo.getOcrItemList();
+        if (CollectionUtils.isNotEmpty(ocrInfo.getLineList())) {
+            ocrItemList = ocrInfo.flattenLines();
+        }
+        List<PolygonLabel> polygonLabelList = toPolygonLabelList(ocrItemList);
+        BufferedImageUtils.drawPolygonWithText(image, polygonLabelList, fontSize);
+    }
+
+    /**
+     * OCR 结果绘制
+     */
+    public static void drawOcrResult(BufferedImage image, List<OcrItem> ocrItemList, int fontSize) {
+        List<PolygonLabel> polygonLabelList = toPolygonLabelList(ocrItemList);
+        BufferedImageUtils.drawPolygonWithText(image, polygonLabelList, fontSize);
+    }
+
+    /**
+     * OCR 结果绘制
+     */
+    public static void drawOcrDetResult(Image image, List<OcrBox> ocrBoxList, int fontSize) {
+        List<PolygonLabel> polygonLabelList = ocrBoxtoPolygonLabelList(ocrBoxList);
+        ImageUtils.drawPolygonWithText(image, polygonLabelList, fontSize);
+    }
+
+    /**
+     * OCR 结果绘制
+     */
+    public static void drawOcrResult(Image image, List<OcrItem> ocrItemList, int fontSize) {
+        List<PolygonLabel> polygonLabelList = toPolygonLabelList(ocrItemList);
+        ImageUtils.drawPolygonWithText(image, polygonLabelList, fontSize);
+    }
+
 
 
     /**
@@ -355,17 +326,18 @@ public class OcrUtils {
      * @param srcMat
      * @param itemList
      */
-    public static void drawRectWithText(Mat srcMat, List<OcrItem> itemList) {
-        for(OcrItem item : itemList){
-            OcrBox ocrBox = item.getOcrBox();
-            Imgproc.line(srcMat, ocrBox.getTopLeft().toCvPoint(), ocrBox.getTopRight().toCvPoint(), new Scalar(0, 255, 0), 1);
-            Imgproc.line(srcMat, ocrBox.getTopRight().toCvPoint(), ocrBox.getBottomRight().toCvPoint(), new Scalar(0, 255, 0),1);
-            Imgproc.line(srcMat, ocrBox.getBottomRight().toCvPoint(), ocrBox.getBottomLeft().toCvPoint(), new Scalar(0, 255, 0),1);
-            Imgproc.line(srcMat, ocrBox.getBottomLeft().toCvPoint(), ocrBox.getTopLeft().toCvPoint(), new Scalar(0, 255, 0), 1);
-            // 中文乱码
-            Imgproc.putText(srcMat, item.getAngle().getValue(), ocrBox.getTopLeft().toCvPoint(), Imgproc.FONT_HERSHEY_SCRIPT_SIMPLEX, 1.0, new Scalar(0, 255, 0), 1);
-        }
-    }
+//    public static void drawRectWithText(Mat srcMat, List<OcrItem> itemList) {
+//        for(OcrItem item : itemList){
+//            OcrBox ocrBox = item.getOcrBox();
+//            Imgproc.line(srcMat, ocrBox.getTopLeft().toCvPoint(), ocrBox.getTopRight().toCvPoint(), new Scalar(0, 255, 0), 1);
+//            Imgproc.line(srcMat, ocrBox.getTopRight().toCvPoint(), ocrBox.getBottomRight().toCvPoint(), new Scalar(0, 255, 0),1);
+//            Imgproc.line(srcMat, ocrBox.getBottomRight().toCvPoint(), ocrBox.getBottomLeft().toCvPoint(), new Scalar(0, 255, 0),1);
+//            Imgproc.line(srcMat, ocrBox.getBottomLeft().toCvPoint(), ocrBox.getTopLeft().toCvPoint(), new Scalar(0, 255, 0), 1);
+//            // 中文乱码
+//            Imgproc.putText(srcMat, item.getAngle().getValue(), ocrBox.getTopLeft().toCvPoint(), Imgproc.FONT_HERSHEY_SIMPLEX, 1.0, new Scalar(0, 255, 0), 1);
+//        }
+//    }
+
 
     public static List<PlateInfo> convertToPlateInfo(DetectedObjects detectedObjects, Image image) {
         List<PlateInfo> plateInfoList = new ArrayList<>();
@@ -414,7 +386,7 @@ public class OcrUtils {
             Imgproc.line(srcMat, ocrBox.getBottomRight().toCvPoint(), ocrBox.getBottomLeft().toCvPoint(), new Scalar(0, 0, 255),1);
             Imgproc.line(srcMat, ocrBox.getBottomLeft().toCvPoint(), ocrBox.getTopLeft().toCvPoint(), new Scalar(0, 0, 255), 1);
             // 中文乱码
-            ImageUtils.putTextWithBackground(srcMat, plateInfo.getPlateNumber() + " " + plateInfo.getPlateColor(), ocrBox.getTopLeft().toCvPoint(), new Scalar(255, 255, 255), new Scalar(0, 0, 0), 1);
+            OpenCVUtils.putTextWithBackground(srcMat, plateInfo.getPlateNumber() + " " + plateInfo.getPlateColor(), ocrBox.getTopLeft().toCvPoint(), new Scalar(255, 255, 255), new Scalar(0, 0, 0), 1);
         }
     }
 
@@ -424,33 +396,19 @@ public class OcrUtils {
     public static void drawPlateInfo(BufferedImage image, List<PlateInfo> plateInfoList) {
         // 将绘制图像转换为Graphics2D
         Graphics2D graphics = (Graphics2D) image.getGraphics();
-        try {
-            graphics.setColor(Color.RED);// 边框颜色
-            graphics.setStroke(new BasicStroke(2));   // 线宽2像素
-            graphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
-                    RenderingHints.VALUE_ANTIALIAS_ON); // 抗锯齿
-            int stroke = 2;
-            for(PlateInfo plateInfo : plateInfoList){
-                DetectionRectangle rectangle = plateInfo.getDetectionRectangle();
-                graphics.setColor(Color.RED);// 边框颜色
-                //绘制车牌框
-                graphics.drawRect(rectangle.getX(), rectangle.getY(), rectangle.getWidth(), rectangle.getHeight());
-                graphics.setColor(Color.BLACK);// 字体颜色
-                ImageUtils.drawText(graphics, plateInfo.getPlateNumber() + " " + plateInfo.getPlateColor(), rectangle.getX(), rectangle.getY(), stroke, 4);
-                OcrBox ocrBox = plateInfo.getBox();
-                //绘制关键点
-                graphics.setColor(Color.BLUE);
-                graphics.drawRect((int)ocrBox.getTopLeft().getX(), (int)ocrBox.getTopLeft().getY(), 2, 2);
-                graphics.setColor(Color.GREEN);
-                graphics.drawRect((int)ocrBox.getTopRight().getX(), (int)ocrBox.getTopRight().getY(), 2, 2);
-                graphics.setColor(Color.RED);
-                graphics.drawRect((int)ocrBox.getBottomLeft().getX(), (int)ocrBox.getBottomLeft().getY(), 2, 2);
-                graphics.setColor(Color.CYAN);
-                graphics.drawRect((int)ocrBox.getBottomRight().getX(), (int)ocrBox.getBottomRight().getY(), 2, 2);
-            }
-        } finally {
-            graphics.dispose();
+        for(PlateInfo plateInfo : plateInfoList){
+            DetectionRectangle rectangle = plateInfo.getDetectionRectangle();
+            OcrBox ocrBox = plateInfo.getBox();
+            String text = plateInfo.getPlateNumber() + " " + plateInfo.getPlateColor();
+            BufferedImageUtils.drawRectAndText(graphics, rectangle, text, Color.BLACK);
+            List<Point> keyPoints = new ArrayList<Point>();
+            keyPoints.add(ocrBox.getTopLeft());
+            keyPoints.add(ocrBox.getTopRight());
+            keyPoints.add(ocrBox.getBottomRight());
+            keyPoints.add(ocrBox.getBottomLeft());
+            BufferedImageUtils.drawKeyPoints(graphics, keyPoints, Color.GREEN);
         }
+        graphics.dispose();
     }
 
 

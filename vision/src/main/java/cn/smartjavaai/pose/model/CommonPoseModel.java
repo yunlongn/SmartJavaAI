@@ -14,6 +14,7 @@ import cn.smartjavaai.common.entity.R;
 import cn.smartjavaai.common.pool.PredictorFactory;
 import cn.smartjavaai.common.utils.ImageUtils;
 import cn.smartjavaai.obb.exception.ObbDetException;
+import cn.smartjavaai.obb.model.ObbDetModelFactory;
 import cn.smartjavaai.objectdetection.config.PersonDetModelConfig;
 import cn.smartjavaai.objectdetection.criteria.PersonDetCriteriaFactory;
 import cn.smartjavaai.objectdetection.exception.DetectionException;
@@ -121,6 +122,7 @@ public class CommonPoseModel implements PoseModel {
             }
             // 调用 save 方法将 Image 写入字节流
             img.save(Files.newOutputStream(Paths.get(outputPath)), "png");
+            ImageUtils.releaseOpenCVMat(img);
             return allJoints;
         } catch (IOException e) {
             throw new ObbDetException(e);
@@ -129,6 +131,9 @@ public class CommonPoseModel implements PoseModel {
 
     @Override
     public void close() throws Exception {
+        if (fromFactory) {
+            PoseDetModelFactory.removeFromCache(config.getModelEnum());
+        }
         try {
             if (predictorPool != null) {
                 predictorPool.close();
@@ -143,5 +148,15 @@ public class CommonPoseModel implements PoseModel {
         } catch (Exception e) {
             log.warn("关闭 model 失败", e);
         }
+    }
+
+    private boolean fromFactory = false;
+
+    @Override
+    public void setFromFactory(boolean fromFactory) {
+        this.fromFactory = fromFactory;
+    }
+    public boolean isFromFactory() {
+        return fromFactory;
     }
 }

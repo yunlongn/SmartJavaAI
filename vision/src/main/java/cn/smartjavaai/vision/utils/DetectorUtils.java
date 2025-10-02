@@ -60,13 +60,13 @@ public class DetectorUtils {
             DetectionRectangle rectangle = new DetectionRectangle(x, y, width, height);
             DetectionInfo detectionInfo = new DetectionInfo(rectangle, detection.getProbabilities().get(index).floatValue());
             //目标检测
-            if(box instanceof Rectangle){
-                ObjectDetInfo objectDetInfo = new ObjectDetInfo(className);
-                detectionInfo.setObjectDetInfo(objectDetInfo);
-            }else if(box instanceof Mask){
+            if(box instanceof Mask){
                 Mask mask = (Mask)box;
                 InstanceSegInfo instanceSegInfo = new InstanceSegInfo(className, mask.getProbDist());
                 detectionInfo.setInstanceSegInfo(instanceSegInfo);
+            }else if(box instanceof Rectangle){
+                ObjectDetInfo objectDetInfo = new ObjectDetInfo(className);
+                detectionInfo.setObjectDetInfo(objectDetInfo);
             }
             detectionInfoList.add(detectionInfo);
             index++;
@@ -106,9 +106,9 @@ public class DetectorUtils {
             Imgproc.line(srcMat, points.get(0).toCvPoint(), points.get(1).toCvPoint(), new Scalar(0, 255, 0), 1);
             Imgproc.line(srcMat, points.get(1).toCvPoint(), points.get(2).toCvPoint(), new Scalar(0, 255, 0),1);
             Imgproc.line(srcMat, points.get(2).toCvPoint(), points.get(3).toCvPoint(), new Scalar(0, 255, 0),1);
-            Imgproc.line(srcMat, points.get(3).toCvPoint(), points.get(1).toCvPoint(), new Scalar(0, 255, 0), 1);
+            Imgproc.line(srcMat, points.get(3).toCvPoint(), points.get(0).toCvPoint(), new Scalar(0, 255, 0), 1);
             // 中文乱码
-            Imgproc.putText(srcMat, box.className, points.get(0).toCvPoint(), Imgproc.FONT_HERSHEY_SCRIPT_SIMPLEX, 1.0, new Scalar(0, 255, 0), 1);
+            Imgproc.putText(srcMat, box.className, points.get(0).toCvPoint(), Imgproc.FONT_HERSHEY_SIMPLEX, 1.0, new Scalar(0, 255, 0), 1);
         }
     }
 

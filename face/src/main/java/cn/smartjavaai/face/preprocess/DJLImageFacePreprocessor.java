@@ -3,13 +3,14 @@ package cn.smartjavaai.face.preprocess;
 import ai.djl.modality.cv.Image;
 import ai.djl.ndarray.NDArray;
 import ai.djl.ndarray.NDManager;
-import ai.djl.opencv.OpenCVImageFactory;
+import cn.smartjavaai.common.cv.SmartImageFactory;
 import cn.smartjavaai.common.entity.DetectionRectangle;
 import cn.smartjavaai.common.utils.OpenCVUtils;
 import cn.smartjavaai.face.utils.FaceAlignUtils;
 import cn.smartjavaai.face.utils.FaceUtils;
 import org.opencv.core.Mat;
 
+import java.awt.image.BufferedImage;
 import java.util.Objects;
 
 /**
@@ -17,7 +18,7 @@ import java.util.Objects;
  * @author dwj
  * @date 2025/6/27
  */
-public class DJLImagePreprocessor {
+public class DJLImageFacePreprocessor {
 
     private Image image;
 
@@ -33,20 +34,20 @@ public class DJLImagePreprocessor {
     private int affineTargetWidth;
     private int affineTargetHeight;
 
-    public DJLImagePreprocessor(Image image, NDManager manager) {
+    public DJLImageFacePreprocessor(Image image, NDManager manager) {
         this.image = image;
         this.manager = manager;
     }
 
     // 启用裁剪
-    public DJLImagePreprocessor enableCrop(DetectionRectangle rect) {
+    public DJLImageFacePreprocessor enableCrop(DetectionRectangle rect) {
         this.enableCrop = true;
         this.cropRect = rect;
         return this;
     }
 
     // 启用仿射变换
-    public DJLImagePreprocessor enableAffine(double[][] keyPoints, int targetWidth, int targetHeight) {
+    public DJLImageFacePreprocessor enableAffine(double[][] keyPoints, int targetWidth, int targetHeight) {
         if(Objects.isNull(keyPoints)){
             throw new IllegalArgumentException("keyPoints must be not null");
         }
@@ -83,8 +84,11 @@ public class DJLImagePreprocessor {
         }
         // 5点仿射变换
         Mat affine_matrix = OpenCVUtils.toOpenCVMat(manager, srcPoints, dstPoints);
-        Mat mat = FaceAlignUtils.warpAffine((Mat) image.getWrappedImage(), affine_matrix, width, height);
-        Image alignedImg = OpenCVImageFactory.getInstance().fromImage(mat);
+        Object imageObj = image.getWrappedImage();
+        Mat src = image.getWrappedImage() instanceof Mat ? (Mat) imageObj : OpenCVUtils.image2Mat((BufferedImage) imageObj);
+        Mat mat = FaceAlignUtils.warpAffine(src, affine_matrix, width, height);
+        Image alignedImg = SmartImageFactory.getInstance().fromMat(mat);
+        affine_matrix.release();
         return alignedImg;
     }
 

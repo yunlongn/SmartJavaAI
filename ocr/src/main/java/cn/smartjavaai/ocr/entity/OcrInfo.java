@@ -1,5 +1,6 @@
 package cn.smartjavaai.ocr.entity;
 
+import ai.djl.modality.cv.Image;
 import lombok.Data;
 
 import java.util.ArrayList;
@@ -20,7 +21,7 @@ public class OcrInfo {
 
     private String fullText;
 
-    private String base64Img;
+    private transient Image drawnImage;
 
 
     public OcrInfo(List<List<OcrItem>> lineList, String fullText) {

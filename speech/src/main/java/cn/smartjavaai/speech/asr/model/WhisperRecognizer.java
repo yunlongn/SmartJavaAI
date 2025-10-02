@@ -12,6 +12,7 @@ import cn.smartjavaai.speech.asr.entity.AsrSegment;
 import cn.smartjavaai.speech.asr.entity.RecParams;
 import cn.smartjavaai.speech.asr.entity.WhisperParams;
 import cn.smartjavaai.speech.asr.exception.AsrException;
+import cn.smartjavaai.speech.asr.factory.SpeechRecognizerFactory;
 import cn.smartjavaai.speech.asr.pool.WhisperStatePool;
 import io.github.givimad.whisperjni.*;
 import lombok.extern.slf4j.Slf4j;
@@ -41,8 +42,11 @@ public class WhisperRecognizer implements SpeechRecognizer{
 
     private WhisperStatePool statePool;
 
+    private AsrModelConfig config;
+
     @Override
     public void loadModel(AsrModelConfig config) {
+        this.config = config;
         if(StringUtils.isBlank(config.getModelPath())){
             throw new AsrException("modelPath is null");
         }
@@ -185,6 +189,9 @@ public class WhisperRecognizer implements SpeechRecognizer{
 
     @Override
     public void close() throws Exception {
+        if (fromFactory) {
+            SpeechRecognizerFactory.removeFromCache(config.getModelEnum());
+        }
         if(statePool != null){
             statePool.close();
         }
@@ -215,5 +222,15 @@ public class WhisperRecognizer implements SpeechRecognizer{
                 16000,
                 false
         );
+    }
+
+    private boolean fromFactory = false;
+
+    @Override
+    public void setFromFactory(boolean fromFactory) {
+        this.fromFactory = fromFactory;
+    }
+    public boolean isFromFactory() {
+        return fromFactory;
     }
 }

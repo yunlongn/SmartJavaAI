@@ -3,8 +3,10 @@ package cn.smartjavaai.face.utils;
 import ai.djl.modality.cv.Image;
 import ai.djl.modality.cv.output.BoundingBox;
 import ai.djl.modality.cv.output.DetectedObjects;
+import ai.djl.modality.cv.output.Landmark;
 import ai.djl.ndarray.NDArray;
 import ai.djl.ndarray.NDManager;
+import ai.djl.ndarray.types.DataType;
 import cn.smartjavaai.common.entity.*;
 import cn.smartjavaai.common.entity.Point;
 import cn.smartjavaai.common.entity.face.FaceAttribute;
@@ -13,9 +15,12 @@ import cn.smartjavaai.common.entity.face.HeadPose;
 import cn.smartjavaai.common.entity.face.LivenessResult;
 import cn.smartjavaai.common.enums.face.EyeStatus;
 import cn.smartjavaai.common.enums.face.GenderType;
+import cn.smartjavaai.common.utils.BufferedImageUtils;
+import cn.smartjavaai.common.utils.Graphics2DUtils;
 import cn.smartjavaai.common.utils.ImageUtils;
 import cn.smartjavaai.common.enums.face.LivenessStatus;
 import cn.smartjavaai.face.exception.FaceException;
+import cn.smartjavaai.face.model.facedect.mtcnn.MtcnnBatchResult;
 import com.seeta.sdk.*;
 
 import javax.imageio.ImageIO;
@@ -158,101 +163,7 @@ public class FaceUtils {
         return new DetectionResponse(detectionInfoList);
     }
 
-    /**
-     * 绘制人脸框
-     * @param sourceImage
-     * @param detectionResponse
-     * @param savePath
-     * @throws IOException
-     */
-    public static void drawBoundingBoxes(BufferedImage sourceImage, DetectionResponse detectionResponse, String savePath) throws IOException {
-        if(!ImageUtils.isImageValid(sourceImage)){
-            throw new FaceException("图像无效");
-        }
-        if(Objects.isNull(detectionResponse) || Objects.isNull(detectionResponse.getDetectionInfoList()) || detectionResponse.getDetectionInfoList().isEmpty()){
-            throw new FaceException("无目标数据");
-        }
-        Graphics2D graphics = sourceImage.createGraphics();
-        graphics.setColor(Color.RED);// 边框颜色
-        graphics.setStroke(new BasicStroke(2));   // 线宽2像素
-        graphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
-                RenderingHints.VALUE_ANTIALIAS_ON); // 抗锯齿
-        int stroke = 2;
-        for(DetectionInfo detectionInfo : detectionResponse.getDetectionInfoList()){
-            DetectionRectangle rectangle = detectionInfo.getDetectionRectangle();
-            graphics.setColor(Color.RED);// 边框颜色
-            graphics.drawRect(rectangle.getX(), rectangle.getY(), rectangle.getWidth(),  rectangle.getHeight());
-            String className = "face";
-            if (detectionInfo.getScore() > 0){
-                int percent = (int) Math.round(detectionInfo.getScore() * 100);
-                className = "face " + percent + "%";
-            }
-            drawText(graphics, className , rectangle.getX(), rectangle.getY(), stroke, 4);
-            //绘制人脸关键点
-            if(detectionInfo.getFaceInfo() != null && detectionInfo.getFaceInfo().getKeyPoints() != null &&
-                !detectionInfo.getFaceInfo().getKeyPoints().isEmpty()){
-                drawLandmarks(graphics, detectionInfo.getFaceInfo().getKeyPoints());
-            }
-        }
-        graphics.dispose();
-        ImageIO.write(sourceImage, "png", new File(savePath));
-    }
 
-    /**
-     * 绘制人脸框
-     * @param sourceImage
-     * @param detectionResponse
-     * @throws IOException
-     */
-    public static BufferedImage drawBoundingBoxes(BufferedImage sourceImage, DetectionResponse detectionResponse) throws IOException {
-        if(!ImageUtils.isImageValid(sourceImage)){
-            throw new FaceException("图像无效");
-        }
-        if(Objects.isNull(detectionResponse) || Objects.isNull(detectionResponse.getDetectionInfoList()) || detectionResponse.getDetectionInfoList().isEmpty()){
-            throw new FaceException("无目标数据");
-        }
-        Graphics2D graphics = sourceImage.createGraphics();
-        graphics.setColor(Color.RED);// 边框颜色
-        graphics.setStroke(new BasicStroke(2));   // 线宽2像素
-        graphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
-                RenderingHints.VALUE_ANTIALIAS_ON); // 抗锯齿
-        int stroke = 2;
-        for(DetectionInfo detectionInfo : detectionResponse.getDetectionInfoList()){
-            DetectionRectangle rectangle = detectionInfo.getDetectionRectangle();
-            graphics.setColor(Color.RED);// 边框颜色
-            graphics.drawRect(rectangle.getX(), rectangle.getY(), rectangle.getWidth(),  rectangle.getHeight());
-            drawText(graphics, "face", rectangle.getX(), rectangle.getY(), stroke, 4);
-            //绘制人脸关键点
-            if(detectionInfo.getFaceInfo() != null && detectionInfo.getFaceInfo().getKeyPoints() != null &&
-                    !detectionInfo.getFaceInfo().getKeyPoints().isEmpty()){
-                drawLandmarks(graphics, detectionInfo.getFaceInfo().getKeyPoints());
-            }
-        }
-        graphics.dispose();
-        return sourceImage;
-    }
-
-    /**
-     * 绘制文字
-     * @param g
-     * @param text
-     * @param x
-     * @param y
-     * @param stroke
-     * @param padding
-     */
-    private static void drawText(Graphics2D g, String text, int x, int y, int stroke, int padding) {
-        FontMetrics metrics = g.getFontMetrics();
-        x += stroke / 2;
-        y += stroke / 2;
-        int width = metrics.stringWidth(text) + padding * 2 - stroke / 2;
-        int height = metrics.getHeight() + metrics.getDescent();
-        int ascent = metrics.getAscent();
-        java.awt.Rectangle background = new java.awt.Rectangle(x, y, width, height);
-        g.fill(background);
-        g.setPaint(Color.WHITE);
-        g.drawString(text, x + padding, y + ascent);
-    }
 
     /**
      * 修正检测框
@@ -306,28 +217,7 @@ public class FaceUtils {
         return pointsArray;
     }
 
-    /**
-     * 子图中人脸关键点坐标 - Coordinates of key points in the image
-     *
-     * @param pointFS
-     * @return
-     */
-    public static double[][] facePoints(SeetaPointF[] pointFS) {
-        //      图中关键点坐标 - Coordinates of key points in the image
-        //      1.  left_eye_x , left_eye_y
-        //      2.  right_eye_x , right_eye_y
-        //      3.  nose_x , nose_y
-        //      4.  left_mouth_x , left_mouth_y
-        //      5.  right_mouth_x , right_mouth_y
-        double[][] pointsArray = new double[5][2]; // 保存人脸关键点 - Save facial key points
-        int i = 0;
-        for (SeetaPointF point : pointFS) {
-            pointsArray[i][0] = point.getX();
-            pointsArray[i][1] = point.getY();
-            i++;
-        }
-        return pointsArray;
-    }
+
 
     /**
      * 512x512的目标点 - Target point of 512x512
@@ -386,180 +276,6 @@ public class FaceUtils {
         return points;
     }
 
-    /**
-     * bgr转图片
-     * @return 图片
-     */
-    public static BufferedImage toBufferedImage(SeetaImageData seetaImageData) {
-        int type = BufferedImage.TYPE_3BYTE_BGR;
-        BufferedImage image = new BufferedImage(seetaImageData.width, seetaImageData.height, type);
-        image.getRaster().setDataElements(0, 0, seetaImageData.width, seetaImageData.height, seetaImageData.data);
-        return image;
-    }
-
-    /**
-     * 绘制人脸关键点
-     * @param g
-     * @param keyPoints
-     */
-    private static void drawLandmarks(Graphics2D g, List<Point> keyPoints) {
-        g.setColor(new Color(246, 96, 0));
-        BasicStroke bStroke = new BasicStroke(4.0F, 0, 0);
-        g.setStroke(bStroke);
-        for (Point point : keyPoints){
-            g.drawRect((int)point.getX(), (int)point.getY(), 2, 2);
-        }
-    }
-
-
-    /**
-     * 将DetectionRectangle转换为SeetaRect
-     * @param detectionRectangle
-     * @return
-     */
-    public static SeetaRect convertToSeetaRect(DetectionRectangle detectionRectangle){
-        SeetaRect seetaRect = new SeetaRect();
-        seetaRect.x = detectionRectangle.getX();
-        seetaRect.y = detectionRectangle.getY();
-        seetaRect.width = detectionRectangle.getWidth();
-        seetaRect.height = detectionRectangle.getHeight();
-        return seetaRect;
-    }
-
-
-    /**
-     * 将PointList转换为SeetaPointF[]
-     * @param pointList
-     * @return
-     */
-    public static SeetaPointF[] convertToSeetaPointF(List<Point> pointList){
-        return pointList.stream()
-                .map(p -> {
-                    SeetaPointF sp = new SeetaPointF();
-                    sp.x = p.getX();
-                    sp.y = p.getY();
-                    return sp;
-                })
-                .toArray(SeetaPointF[]::new);
-    }
-
-    /**
-     * 将SeetaAntiSpoofing.Status转换为LivenessStatus
-     * @param status
-     * @return
-     */
-    public static LivenessStatus convertToLivenessStatus(FaceAntiSpoofing.Status status){
-        if(status == null){
-            return LivenessStatus.UNKNOWN;
-        }
-        switch (status) {
-            case REAL:
-                return LivenessStatus.LIVE;
-            case SPOOF:
-                return LivenessStatus.NON_LIVE;
-            case FUZZY:
-                return LivenessStatus.UNKNOWN;
-            case DETECTING:
-                return LivenessStatus.DETECTING;
-            default:
-                return LivenessStatus.UNKNOWN;  // 默认返回未知
-        }
-    }
-
-    /**
-     * 转为GenderType
-     * @param gender
-     * @return
-     */
-    public static GenderType convertToGenderType(GenderPredictor.GENDER gender){
-        if(gender == null){
-            return GenderType.UNKNOWN;
-        }
-        switch (gender) {
-            case MALE:
-                return GenderType.MALE;
-            case FEMALE:
-                return GenderType.FEMALE;
-            default:
-                return GenderType.UNKNOWN;  // 默认返回未知
-        }
-    }
-
-    /**
-     * 转为EyeStatus
-     * @param eyeState
-     * @return
-     */
-    public static EyeStatus convertToEyeStatus(EyeStateDetector.EYE_STATE eyeState){
-        if(eyeState == null){
-            return EyeStatus.UNKNOWN;
-        }
-        switch (eyeState) {
-            case EYE_OPEN:
-                return EyeStatus.OPEN;
-            case EYE_CLOSE:
-                return EyeStatus.CLOSED;
-            case EYE_RANDOM:
-                return EyeStatus.NON_EYE_REGION;
-            default:
-                return EyeStatus.UNKNOWN;  // 默认返回未知
-        }
-    }
-
-    public static DetectionResponse convertToFaceAttributeResponse(SeetaRect[] seetaResult, List<SeetaPointF[]> seetaPointFSList, List<FaceAttribute> faceAttributeList){
-        if(Objects.isNull(seetaResult) || seetaResult.length == 0){
-            return null;
-        }
-        List<DetectionInfo> detectionInfoList = new ArrayList<DetectionInfo>();
-        for(int i = 0; i < seetaResult.length; i++){
-            SeetaRect rect  = seetaResult[i];
-            DetectionRectangle rectangle = new DetectionRectangle(rect.x, rect.y, rect.width, rect.height);
-            FaceInfo faceInfo = new FaceInfo();
-            if(seetaPointFSList != null && seetaPointFSList.size() > 0){
-                SeetaPointF[] seetaPointFS = seetaPointFSList.get(i);
-                List<Point> keyPoints = Arrays.stream(seetaPointFS)
-                        .map(p -> new Point(p.x, p.y))
-                        .collect(Collectors.toList());
-                faceInfo.setKeyPoints(keyPoints);
-            }
-            if(faceAttributeList != null && faceAttributeList.size() > 0){
-                faceInfo.setFaceAttribute(faceAttributeList.get(i));
-            }
-            detectionInfoList.add(new DetectionInfo(rectangle, 0, faceInfo));
-        }
-        return new DetectionResponse(detectionInfoList);
-    }
-
-    /**
-     * 转换为FaceDetectedResult
-     * @param seetaResult
-     * @return
-     */
-    public static DetectionResponse convertToDetectionResponse(SeetaRect[] seetaResult, List<SeetaPointF[]> seetaPointFSList, List<LivenessStatus> livenessStatusList){
-        if(Objects.isNull(seetaResult) || seetaResult.length == 0){
-            return null;
-        }
-        DetectionResponse detectionResponse = new DetectionResponse();
-        List<DetectionInfo> detectionInfoList = new ArrayList<DetectionInfo>();
-        for(int i = 0; i < seetaResult.length; i++){
-            SeetaRect rect  = seetaResult[i];
-            SeetaPointF[] seetaPointFS = seetaPointFSList.get(i);
-            //过滤置信度
-            /*if(config.getConfidenceThreshold() > 0){
-                continue;
-            }*/
-            DetectionRectangle rectangle = new DetectionRectangle(rect.x, rect.y, rect.width, rect.height);
-            List<Point> keyPoints = Arrays.stream(seetaPointFS)
-                    .map(p -> new Point(p.x, p.y))
-                    .collect(Collectors.toList());
-            FaceInfo faceInfo = new FaceInfo(keyPoints);
-            faceInfo.setLivenessStatus(new LivenessResult(livenessStatusList.get(i)));
-            DetectionInfo detectionInfo = new DetectionInfo(rectangle, 0, faceInfo);
-            detectionInfoList.add(detectionInfo);
-        }
-        detectionResponse.setDetectionInfoList(detectionInfoList);
-        return detectionResponse;
-    }
 
     /**
      * 绘制人脸属性
@@ -569,7 +285,7 @@ public class FaceUtils {
      * @throws IOException
      */
     public static void drawBoxesWithFaceAttribute(BufferedImage sourceImage, DetectionResponse detectionResponse, String savePath) throws IOException {
-        if(!ImageUtils.isImageValid(sourceImage)){
+        if(!BufferedImageUtils.isImageValid(sourceImage)){
             throw new FaceException("图像无效");
         }
         if(Objects.isNull(detectionResponse) || Objects.isNull(detectionResponse.getDetectionInfoList()) || detectionResponse.getDetectionInfoList().isEmpty()){
@@ -589,7 +305,7 @@ public class FaceUtils {
             //绘制人脸关键点
             if(detectionInfo.getFaceInfo() != null && detectionInfo.getFaceInfo().getKeyPoints() != null &&
                     !detectionInfo.getFaceInfo().getKeyPoints().isEmpty()){
-                drawLandmarks(graphics, detectionInfo.getFaceInfo().getKeyPoints());
+                Graphics2DUtils.drawLandmarks(graphics, detectionInfo.getFaceInfo().getKeyPoints());
             }
             // 判断人脸框是否足够大
             if (rectangle.getHeight() > 60 && detectionInfo.getFaceInfo() != null && detectionInfo.getFaceInfo().getFaceAttribute() != null) {
@@ -638,7 +354,7 @@ public class FaceUtils {
                     lines.add("姿态: P=" + pitch + " Y=" + yaw + " R=" + roll);
                 }
                 if (!lines.isEmpty()) {
-                    drawMultilineTextWithBackground(graphics, lines, rectangle.getX(), rectangle.getY());  // 适当偏移
+                    Graphics2DUtils.drawMultilineTextWithBackground(graphics, lines, rectangle.getX(), rectangle.getY());  // 适当偏移
                 }
 
             }
@@ -647,27 +363,7 @@ public class FaceUtils {
         ImageIO.write(sourceImage, "png", new File(savePath));
     }
 
-    private static void drawMultilineTextWithBackground(Graphics2D g, List<String> lines, int x, int y) {
-        Font font = new Font("SansSerif", Font.PLAIN, 14);
-        g.setFont(font);
-        FontMetrics fm = g.getFontMetrics();
-        int lineHeight = fm.getHeight();
-        int maxWidth = lines.stream().mapToInt(fm::stringWidth).max().orElse(0);
 
-        int padding = 4;
-        int boxWidth = maxWidth + padding * 2;
-        int boxHeight = lineHeight * lines.size() + padding * 2;
-
-        // 背景矩形
-        g.setColor(new Color(0, 0, 0, 128));
-        g.fillRoundRect(x, y, boxWidth, boxHeight, 8, 8);
-
-        // 绘制每一行文字
-        g.setColor(Color.WHITE);
-        for (int i = 0; i < lines.size(); i++) {
-            g.drawString(lines.get(i), x + padding, y + padding + (i + 1) * lineHeight - 4);
-        }
-    }
 
     /**
      * 将 Milvus 查询返回的得分转换为 0~1 范围的相似度
@@ -689,6 +385,81 @@ public class FaceUtils {
             default:
                 throw new IllegalArgumentException("Unsupported metricType: " + metricType);
         }
+    }
+
+    /**
+     * 裁剪人脸
+     * @param image
+     * @param rectangle
+     * @return
+     */
+    public static Image cropFace(Image image, DetectionRectangle rectangle){
+        return image.getSubImage(rectangle.getX(), rectangle.getY(), rectangle.getWidth(), rectangle.getHeight());
+    }
+
+    /**
+     * 绘制人脸
+     * @param image
+     * @param rectangle
+     * @return
+     */
+//    public static Image drawFaceName(Image image, DetectionResponse detectionResponse){
+//
+//    }
+
+
+
+    /**
+     * 将 Mtcnn 批量结果转换为 DJL 的 DetectedObjects
+     * @param mtcnnBatchResult
+     * @param imageWidth
+     * @param imageHeight
+     * @return
+     */
+    public static DetectedObjects toDetectedObjects(MtcnnBatchResult mtcnnBatchResult, int imageWidth, int imageHeight) {
+        List<String> classNames = new ArrayList<>();
+        List<Double> probs = new ArrayList<>();
+        List<BoundingBox> boxes = new ArrayList<>();
+
+        NDArray boxesND = mtcnnBatchResult.boxes.get(0);
+        NDArray probsND = mtcnnBatchResult.probs.get(0);
+        NDArray pointsND = mtcnnBatchResult.points.get(0);
+        if(pointsND != null){
+            pointsND = pointsND.toType(DataType.FLOAT64, false);
+        }
+        if(boxesND == null || probsND == null || pointsND == null){
+            return new DetectedObjects(classNames, probs, boxes);
+        }
+        long numBoxes = boxesND.getShape().get(0);
+        for (int i = 0; i < numBoxes; i++) {
+            NDArray box = boxesND.get(i);  // [x1, y1, x2, y2]
+            NDArray prob = probsND.get(i);
+            NDArray pointND = pointsND.get(i); // shape [5,2]
+
+            float x1 = box.getFloat(0);
+            float y1 = box.getFloat(1);
+            float x2 = box.getFloat(2);
+            float y2 = box.getFloat(3);
+
+            // 转换为 DJL 的 Rectangle，需要归一化到 [0,1]
+            double x = x1 / imageWidth;
+            double y = y1 / imageHeight;
+            double w = (x2 - x1) / imageWidth;
+            double h = (y2 - y1) / imageHeight;
+
+            List<ai.djl.modality.cv.output.Point> keyPoints = new ArrayList<>();
+            double[] flatPoints = pointND.toDoubleArray(); // 一维长度 10
+            for (int p = 0; p < 5; p++) {
+                keyPoints.add(new ai.djl.modality.cv.output.Point(flatPoints[p * 2], flatPoints[p * 2 + 1]));
+            }
+            Landmark landmark =
+                    new Landmark(x, y, w, h, keyPoints);
+//            BoundingBox rect = new ai.djl.modality.cv.output.Rectangle(x, y, w, h);
+            classNames.add("Face");  // 默认类别是人脸
+            probs.add((double) prob.getFloat());
+            boxes.add(landmark);
+        }
+        return new DetectedObjects(classNames, probs, boxes);
     }
 
 

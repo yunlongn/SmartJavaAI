@@ -1,11 +1,14 @@
 package cn.smartjavaai.face.model.facerec;
 
 import ai.djl.engine.Engine;
+import ai.djl.modality.cv.Image;
+import cn.smartjavaai.common.cv.SmartImageFactory;
 import cn.smartjavaai.common.entity.DetectionInfo;
 import cn.smartjavaai.common.entity.DetectionResponse;
 import cn.smartjavaai.common.entity.R;
 import cn.smartjavaai.common.entity.face.FaceInfo;
 import cn.smartjavaai.common.enums.DeviceEnum;
+import cn.smartjavaai.common.utils.BufferedImageUtils;
 import cn.smartjavaai.common.utils.FileUtils;
 import cn.smartjavaai.common.utils.ImageUtils;
 import cn.smartjavaai.face.config.FaceRecConfig;
@@ -16,7 +19,10 @@ import cn.smartjavaai.face.entity.FaceSearchParams;
 import cn.smartjavaai.face.enums.FaceRecModelEnum;
 import cn.smartjavaai.face.enums.SimilarityType;
 import cn.smartjavaai.face.exception.FaceException;
+import cn.smartjavaai.face.factory.FaceDetModelFactory;
+import cn.smartjavaai.face.factory.FaceRecModelFactory;
 import cn.smartjavaai.face.utils.FaceUtils;
+import cn.smartjavaai.face.utils.Seetaface6Utils;
 import cn.smartjavaai.face.vector.config.MilvusConfig;
 import cn.smartjavaai.face.vector.config.SQLiteConfig;
 import cn.smartjavaai.face.vector.core.VectorDBClient;
@@ -29,6 +35,7 @@ import com.seeta.sdk.*;
 import cn.smartjavaai.face.seetaface.NativeLoader;
 import io.milvus.param.MetricType;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import javax.imageio.ImageIO;
@@ -213,7 +220,7 @@ public class SeetaFace6FaceRecModel implements FaceRecModel{
 
     @Override
     public R<Float> featureComparison(BufferedImage image1, BufferedImage image2) {
-        if(!ImageUtils.isImageValid(image1) || !ImageUtils.isImageValid(image2)){
+        if(!BufferedImageUtils.isImageValid(image1) || !BufferedImageUtils.isImageValid(image2)){
             return R.fail(R.Status.INVALID_IMAGE);
         }
         R<float[]> feature1 = extractTopFaceFeature(image1);
@@ -263,7 +270,7 @@ public class SeetaFace6FaceRecModel implements FaceRecModel{
 
     @Override
     public R<String> register(FaceRegisterInfo faceRegisterInfo, BufferedImage image) {
-        if(!ImageUtils.isImageValid(image)){
+        if(!BufferedImageUtils.isImageValid(image)){
             return R.fail(R.Status.INVALID_IMAGE);
         }
         //提取特征向量
@@ -376,7 +383,7 @@ public class SeetaFace6FaceRecModel implements FaceRecModel{
 
     @Override
     public R<DetectionResponse> search(BufferedImage image, FaceSearchParams params) {
-        if(!ImageUtils.isImageValid(image)){
+        if(!BufferedImageUtils.isImageValid(image)){
             return R.fail(R.Status.INVALID_IMAGE);
         }
         //提取所有人脸特征
@@ -385,13 +392,16 @@ public class SeetaFace6FaceRecModel implements FaceRecModel{
             return detectionResponse;
         }
         //设置默认值
-        float threshold = Objects.isNull(params.getThreshold()) ? FaceDetectConstant.SEETAFACE_DEFAULT_SIMILARITY_THRESHOLD : params.getThreshold();
+        float threshold = Objects.isNull(params.getThreshold()) ? config.getModelEnum().getThreshold() : params.getThreshold();
         int topK = Objects.isNull(params.getTopK()) ? 1 : params.getTopK();
         boolean normalize = Objects.isNull(params.getNormalizeSimilarity()) ? NORMALIZE_SIMILARITY : params.getNormalizeSimilarity();
         FaceSearchParams searchParams = new FaceSearchParams(topK, threshold, normalize);
         for (DetectionInfo detectionInfo : detectionResponse.getData().getDetectionInfoList()){
             if(Objects.nonNull(detectionInfo.getFaceInfo()) && Objects.nonNull(detectionInfo.getFaceInfo().getFeature())){
                 List<FaceSearchResult> searchResults = vectorDBClient.search(detectionInfo.getFaceInfo().getFeature(), searchParams);
+                if (CollectionUtils.isEmpty(searchResults)){
+                    return R.fail(1000, "未找到匹配结果");
+                }
                 detectionInfo.getFaceInfo().setFaceSearchResults(searchResults);
             }
         }
@@ -425,7 +435,7 @@ public class SeetaFace6FaceRecModel implements FaceRecModel{
             throw new FaceException("人脸查询参数为空");
         }
         //设置默认值
-        float threshold = Objects.isNull(params.getThreshold()) ? FaceDetectConstant.SEETAFACE_DEFAULT_SIMILARITY_THRESHOLD : params.getThreshold();
+        float threshold = Objects.isNull(params.getThreshold()) ? config.getModelEnum().getThreshold() : params.getThreshold();
         int topK = Objects.isNull(params.getTopK()) ? 1 : params.getTopK();
         boolean normalize = Objects.isNull(params.getNormalizeSimilarity()) ? NORMALIZE_SIMILARITY : params.getNormalizeSimilarity();
         FaceSearchParams searchParams = new FaceSearchParams(topK, threshold, normalize);
@@ -450,7 +460,7 @@ public class SeetaFace6FaceRecModel implements FaceRecModel{
 
     @Override
     public R<List<FaceSearchResult>> searchByTopFace(BufferedImage sourceImage, FaceSearchParams params) {
-        if(!ImageUtils.isImageValid(sourceImage)){
+        if(!BufferedImageUtils.isImageValid(sourceImage)){
             return R.fail(R.Status.INVALID_IMAGE);
         }
         //提取分数最高人脸特征
@@ -459,7 +469,7 @@ public class SeetaFace6FaceRecModel implements FaceRecModel{
             return R.fail(featureResponse.getCode(), featureResponse.getMessage());
         }
         //设置默认值
-        float threshold = Objects.isNull(params.getThreshold()) ? FaceDetectConstant.SEETAFACE_DEFAULT_SIMILARITY_THRESHOLD : params.getThreshold();
+        float threshold = Objects.isNull(params.getThreshold()) ? config.getModelEnum().getThreshold() : params.getThreshold();
         int topK = Objects.isNull(params.getTopK()) ? 1 : params.getTopK();
         boolean normalize = Objects.isNull(params.getNormalizeSimilarity()) ? NORMALIZE_SIMILARITY : params.getNormalizeSimilarity();
         FaceSearchParams searchParams = new FaceSearchParams(topK, threshold, normalize);
@@ -586,7 +596,7 @@ public class SeetaFace6FaceRecModel implements FaceRecModel{
 
     @Override
     public R<DetectionResponse> extractFeatures(BufferedImage image) {
-        if(!ImageUtils.isImageValid(image)){
+        if(!BufferedImageUtils.isImageValid(image)){
             return R.fail(R.Status.INVALID_IMAGE);
         }
         FaceDetector faceDetector = null;
@@ -594,7 +604,7 @@ public class SeetaFace6FaceRecModel implements FaceRecModel{
         FaceRecognizer faceRecognizer = null;
         try {
             SeetaImageData imageData = new SeetaImageData(image.getWidth(), image.getHeight(), 3);
-            imageData.data = ImageUtils.getMatrixBGR(image);
+            imageData.data = BufferedImageUtils.getMatrixBGR(image);
             faceRecognizer = faceRecognizerPool.borrowObject();
             //默认使用Seetaface6检测模型
             if(Objects.isNull(config.getDetectModel())){
@@ -637,7 +647,7 @@ public class SeetaFace6FaceRecModel implements FaceRecModel{
                     if(Objects.isNull(faceInfo) || Objects.isNull(faceInfo.getKeyPoints())){
                         return R.fail(R.Status.Unknown.getCode(), "未检测到人脸关键点");
                     }
-                    SeetaPointF[] pointFS = FaceUtils.convertToSeetaPointF(faceInfo.getKeyPoints());
+                    SeetaPointF[] pointFS = Seetaface6Utils.convertToSeetaPointF(faceInfo.getKeyPoints());
                     //CropFaceV2 + ExtractCroppedFace 已包含裁剪+人脸对齐
                     boolean isSuccess = faceRecognizer.Extract(imageData, pointFS, features);
                     if(!isSuccess){
@@ -679,12 +689,12 @@ public class SeetaFace6FaceRecModel implements FaceRecModel{
 
     @Override
     public R<float[]> extractTopFaceFeature(BufferedImage image) {
-        if(!ImageUtils.isImageValid(image)){
+        if(!BufferedImageUtils.isImageValid(image)){
             return R.fail(R.Status.INVALID_IMAGE);
         }
         float[] features = null;
         SeetaImageData imageData = new SeetaImageData(image.getWidth(), image.getHeight(), 3);
-        imageData.data = ImageUtils.getMatrixBGR(image);
+        imageData.data = BufferedImageUtils.getMatrixBGR(image);
         FaceDetector faceDetector = null;
         FaceLandmarker faceLandmarker = null;
         FaceRecognizer faceRecognizer = null;
@@ -712,7 +722,7 @@ public class SeetaFace6FaceRecModel implements FaceRecModel{
                     return R.fail(R.Status.NO_FACE_DETECTED);
                 }
                 DetectionInfo detectionInfo = detectResponse.getData().getDetectionInfoList().get(0);
-                pointFS = FaceUtils.convertToSeetaPointF(detectionInfo.getFaceInfo().getKeyPoints());
+                pointFS = Seetaface6Utils.convertToSeetaPointF(detectionInfo.getFaceInfo().getKeyPoints());
             }
             //提取特征
             features = new float[faceRecognizer.GetExtractFeatureSize()];
@@ -761,7 +771,7 @@ public class SeetaFace6FaceRecModel implements FaceRecModel{
         try {
             faceRecognizer = faceRecognizerPool.borrowObject();
             SeetaImageData imageData = new SeetaImageData(image.getWidth(), image.getHeight(), 3);
-            imageData.data = ImageUtils.getMatrixBGR(image);
+            imageData.data = BufferedImageUtils.getMatrixBGR(image);
             //提取特征
             float[] features = new float[faceRecognizer.GetExtractFeatureSize()];
             faceRecognizer.ExtractCroppedFace(imageData, features);
@@ -904,8 +914,264 @@ public class SeetaFace6FaceRecModel implements FaceRecModel{
         return R.ok(vectorDBClient.listFaces(pageNum, pageSize));
     }
 
+
+    @Override
+    public R<Float> featureComparison(Image image1, Image image2) {
+        R<float[]> feature1 = extractTopFaceFeature(image1);
+        if(!feature1.isSuccess()){
+            return R.fail(feature1.getCode(), feature1.getMessage());
+        }
+        R<float[]> feature2 = extractTopFaceFeature(image2);
+        if(!feature2.isSuccess()){
+            return R.fail(feature2.getCode(), feature2.getMessage());
+        }
+        return R.ok(calculSimilar(feature1.getData(), feature2.getData()));
+    }
+
+    @Override
+    public R<String> register(FaceRegisterInfo faceRegisterInfo, Image image) {
+        //提取特征向量
+        R<float[]> featureResponse = extractTopFaceFeature(image);
+        if(!featureResponse.isSuccess()){
+            return R.fail(featureResponse.getCode(), featureResponse.getMessage());
+        }
+        return register(faceRegisterInfo, featureResponse.getData());
+    }
+
+    @Override
+    public void upsertFace(FaceRegisterInfo faceRegisterInfo, Image image) {
+        if(vectorDBClient == null){
+            throw new VectorDBException("向量数据库未初始化成功");
+        }
+        if(Objects.isNull(faceRegisterInfo)){
+            throw new FaceException("注册信息为空");
+        }
+        if(StringUtils.isBlank(faceRegisterInfo.getId())){
+            throw new FaceException("注册信息中ID为空");
+        }
+        //提取最大人脸特征
+        R<float[]> featureResponse = extractTopFaceFeature(image);
+        if(!featureResponse.isSuccess()){
+            throw new FaceException(featureResponse.getMessage());
+        }
+        upsertFace(faceRegisterInfo, featureResponse.getData());
+    }
+
+    @Override
+    public R<DetectionResponse> search(Image image, FaceSearchParams params) {
+        //提取所有人脸特征
+        R<DetectionResponse> detectionResponse = extractFeatures(image);
+        if(!detectionResponse.isSuccess()){
+            return detectionResponse;
+        }
+        //设置默认值
+        float threshold = Objects.isNull(params.getThreshold()) ? config.getModelEnum().getThreshold() : params.getThreshold();
+        int topK = Objects.isNull(params.getTopK()) ? 1 : params.getTopK();
+        boolean normalize = Objects.isNull(params.getNormalizeSimilarity()) ? NORMALIZE_SIMILARITY : params.getNormalizeSimilarity();
+        FaceSearchParams searchParams = new FaceSearchParams(topK, threshold, normalize);
+        for (DetectionInfo detectionInfo : detectionResponse.getData().getDetectionInfoList()){
+            if(Objects.nonNull(detectionInfo.getFaceInfo()) && Objects.nonNull(detectionInfo.getFaceInfo().getFeature())){
+                List<FaceSearchResult> searchResults = vectorDBClient.search(detectionInfo.getFaceInfo().getFeature(), searchParams);
+                if (CollectionUtils.isEmpty(searchResults)){
+                    return R.fail(1000, "未找到匹配结果");
+                }
+                detectionInfo.getFaceInfo().setFaceSearchResults(searchResults);
+            }
+        }
+        return detectionResponse;
+    }
+
+    @Override
+    public R<List<FaceSearchResult>> searchByTopFace(Image image, FaceSearchParams params) {
+        //提取分数最高人脸特征
+        R<float[]> featureResponse = extractTopFaceFeature(image);
+        if(!featureResponse.isSuccess()){
+            return R.fail(featureResponse.getCode(), featureResponse.getMessage());
+        }
+        //设置默认值
+        float threshold = Objects.isNull(params.getThreshold()) ? config.getModelEnum().getThreshold() : params.getThreshold();
+        int topK = Objects.isNull(params.getTopK()) ? 1 : params.getTopK();
+        boolean normalize = Objects.isNull(params.getNormalizeSimilarity()) ? NORMALIZE_SIMILARITY : params.getNormalizeSimilarity();
+        FaceSearchParams searchParams = new FaceSearchParams(topK, threshold, normalize);
+        List<FaceSearchResult> searchResults = vectorDBClient.search(featureResponse.getData(), searchParams);
+        return R.ok(searchResults);
+    }
+
+    @Override
+    public R<DetectionResponse> extractFeatures(Image image) {
+        FaceDetector faceDetector = null;
+        FaceLandmarker faceLandmarker = null;
+        FaceRecognizer faceRecognizer = null;
+        try {
+            SeetaImageData imageData = new SeetaImageData(image.getWidth(), image.getHeight(), 3);
+            imageData.data = ImageUtils.getMatrixBGR(image);
+            faceRecognizer = faceRecognizerPool.borrowObject();
+            //默认使用Seetaface6检测模型
+            if(Objects.isNull(config.getDetectModel())){
+                List<float[]> featureList = new ArrayList<float[]>();
+                List<SeetaPointF[]> seetaPointFSList = new ArrayList<SeetaPointF[]>();
+                faceDetector = faceDetectorPool.borrowObject();
+                faceLandmarker = faceLandmarkerPool.borrowObject();
+                //检测人脸
+                SeetaRect[] seetaResult = faceDetector.Detect(imageData);
+                if(Objects.isNull(seetaResult) || seetaResult.length == 0){
+                    return R.fail(R.Status.NO_FACE_DETECTED);
+                }
+                for(SeetaRect seetaRect : seetaResult){
+                    //提取人脸的5点人脸标识
+                    SeetaPointF[] pointFS = new SeetaPointF[faceLandmarker.number()];
+                    faceLandmarker.mark(imageData, seetaRect, pointFS);
+                    //提取特征
+                    float[] features = new float[faceRecognizer.GetExtractFeatureSize()];
+                    //CropFaceV2 + ExtractCroppedFace 已包含裁剪+人脸对齐
+                    boolean isSuccess = faceRecognizer.Extract(imageData, pointFS, features);
+                    if(!isSuccess){
+                        return R.fail(R.Status.Unknown.getCode(), "人脸特征提取失败");
+                    }
+                    featureList.add(features);
+                    seetaPointFSList.add(pointFS);
+                }
+                return R.ok(FaceUtils.featuresConvertToResponse(seetaResult, seetaPointFSList, featureList));
+            }else{
+                R<DetectionResponse> detectResponse = config.getDetectModel().detect(image);
+                if(!detectResponse.isSuccess()){
+                    return detectResponse;
+                }
+                if(Objects.isNull(detectResponse.getData()) || Objects.isNull(detectResponse.getData().getDetectionInfoList()) || detectResponse.getData().getDetectionInfoList().isEmpty()){
+                    return R.fail(R.Status.NO_FACE_DETECTED);
+                }
+                for(DetectionInfo detectionInfo : detectResponse.getData().getDetectionInfoList()){
+                    //提取特征
+                    float[] features = new float[faceRecognizer.GetExtractFeatureSize()];
+                    FaceInfo faceInfo = detectionInfo.getFaceInfo();
+                    if(Objects.isNull(faceInfo) || Objects.isNull(faceInfo.getKeyPoints())){
+                        return R.fail(R.Status.Unknown.getCode(), "未检测到人脸关键点");
+                    }
+                    SeetaPointF[] pointFS = Seetaface6Utils.convertToSeetaPointF(faceInfo.getKeyPoints());
+                    //CropFaceV2 + ExtractCroppedFace 已包含裁剪+人脸对齐
+                    boolean isSuccess = faceRecognizer.Extract(imageData, pointFS, features);
+                    if(!isSuccess){
+                        return R.fail(R.Status.Unknown.getCode(), "人脸特征提取失败");
+                    }
+                    faceInfo.setFeature(features);
+                }
+                return detectResponse;
+            }
+        } catch (FaceException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new FaceException("人脸特征提取异常", e);
+        }finally {
+            if (faceDetector != null) {
+                try {
+                    faceDetectorPool.returnObject(faceDetector); //归还
+                } catch (Exception e) {
+                    log.warn("归还Predictor失败", e);
+                }
+            }
+            if (faceLandmarker != null) {
+                try {
+                    faceLandmarkerPool.returnObject(faceLandmarker); //归还
+                } catch (Exception e) {
+                    log.warn("归还Predictor失败", e);
+                }
+            }
+            if (faceRecognizer != null) {
+                try {
+                    faceRecognizerPool.returnObject(faceRecognizer); //归还
+                } catch (Exception e) {
+                    log.warn("归还Predictor失败", e);
+                }
+            }
+        }
+    }
+
+    @Override
+    public R<float[]> extractTopFaceFeature(Image image) {
+        float[] features = null;
+        SeetaImageData imageData = new SeetaImageData(image.getWidth(), image.getHeight(), 3);
+        imageData.data = ImageUtils.getMatrixBGR(image);
+        FaceDetector faceDetector = null;
+        FaceLandmarker faceLandmarker = null;
+        FaceRecognizer faceRecognizer = null;
+        try {
+            faceRecognizer = faceRecognizerPool.borrowObject();
+            //提取人脸的5点人脸标识
+            SeetaPointF[] pointFS = null;
+            //默认使用Seetaface6检测模型
+            if(Objects.isNull(config.getDetectModel())){
+                faceDetector = faceDetectorPool.borrowObject();
+                faceLandmarker = faceLandmarkerPool.borrowObject();
+                //检测人脸
+                SeetaRect[] seetaResult = faceDetector.Detect(imageData);
+                if(Objects.isNull(seetaResult) || seetaResult.length == 0){
+                    return R.fail(R.Status.NO_FACE_DETECTED);
+                }
+                pointFS = new SeetaPointF[faceLandmarker.number()];
+                faceLandmarker.mark(imageData, seetaResult[0], pointFS);
+            }else{
+                R<DetectionResponse> detectResponse = config.getDetectModel().detect(image);
+                if(!detectResponse.isSuccess()){
+                    return R.fail(detectResponse.getCode(), detectResponse.getMessage());
+                }
+                if(Objects.isNull(detectResponse.getData()) || Objects.isNull(detectResponse.getData().getDetectionInfoList()) || detectResponse.getData().getDetectionInfoList().isEmpty()){
+                    return R.fail(R.Status.NO_FACE_DETECTED);
+                }
+                DetectionInfo detectionInfo = detectResponse.getData().getDetectionInfoList().get(0);
+                pointFS = Seetaface6Utils.convertToSeetaPointF(detectionInfo.getFaceInfo().getKeyPoints());
+            }
+            //提取特征
+            features = new float[faceRecognizer.GetExtractFeatureSize()];
+            //CropFaceV2 + ExtractCroppedFace 已包含裁剪+人脸对齐
+            boolean isSuccess = faceRecognizer.Extract(imageData, pointFS, features);
+            if(!isSuccess){
+                return R.fail(R.Status.Unknown.getCode(),  "人脸特征提取失败");
+            }
+            return R.ok(features);
+        } catch (FaceException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new FaceException("目标检测错误", e);
+        }finally {
+            if (faceDetector != null) {
+                try {
+                    faceDetectorPool.returnObject(faceDetector); //归还
+                } catch (Exception e) {
+                    log.warn("归还Predictor失败", e);
+                }
+            }
+            if (faceLandmarker != null) {
+                try {
+                    faceLandmarkerPool.returnObject(faceLandmarker); //归还
+                } catch (Exception e) {
+                    log.warn("归还Predictor失败", e);
+                }
+            }
+            if (faceRecognizer != null) {
+                try {
+                    faceRecognizerPool.returnObject(faceRecognizer); //归还
+                } catch (Exception e) {
+                    log.warn("归还Predictor失败", e);
+                }
+            }
+        }
+    }
+
+
+    @Override
+    public Image drawSearchResult(Image image, FaceSearchParams params, String displayField) {
+        R<DetectionResponse> detectionResponse = search(image, params);
+        Image drawImage = ImageUtils.copy(image);
+        BufferedImage bufferedImage = ImageUtils.toBufferedImage(drawImage);
+        BufferedImageUtils.drawFaceSearchResult(bufferedImage, detectionResponse.getData(), displayField);
+        return SmartImageFactory.getInstance().fromBufferedImage(bufferedImage);
+    }
+
     @Override
     public void close() throws Exception {
+        if (fromFactory) {
+            FaceRecModelFactory.removeFromCache(config.getModelEnum());
+        }
         if(Objects.nonNull(faceDetectorPool)){
             faceDetectorPool.close();
         }
@@ -922,6 +1188,9 @@ public class SeetaFace6FaceRecModel implements FaceRecModel{
             vectorDBClient.close();
         }
     }
+
+
+
 
     @Override
     public boolean isLoadFaceCompleted() {
@@ -943,5 +1212,16 @@ public class SeetaFace6FaceRecModel implements FaceRecModel{
 
     public FaceDatabasePool getFaceDatabasePool() {
         return faceDatabasePool;
+    }
+
+
+    private boolean fromFactory = false;
+
+    @Override
+    public void setFromFactory(boolean fromFactory) {
+        this.fromFactory = fromFactory;
+    }
+    public boolean isFromFactory() {
+        return fromFactory;
     }
 }

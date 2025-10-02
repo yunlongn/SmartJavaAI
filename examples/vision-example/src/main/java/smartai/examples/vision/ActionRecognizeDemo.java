@@ -32,6 +32,8 @@ public class ActionRecognizeDemo {
 
     @BeforeClass
     public static void beforeAll() throws IOException {
+        //将图片处理的底层引擎切换为 OpenCV
+        SmartImageFactory.setEngine(SmartImageFactory.Engine.OPENCV);
         //修改缓存路径
 //        Config.setCachePath("/Users/xxx/smartjavaai_cache");
     }

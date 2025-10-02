@@ -4,7 +4,6 @@ import ai.djl.MalformedModelException;
 import ai.djl.engine.Engine;
 import ai.djl.inference.Predictor;
 import ai.djl.modality.cv.Image;
-import ai.djl.modality.cv.ImageFactory;
 import ai.djl.modality.cv.output.BoundingBox;
 import ai.djl.modality.cv.output.DetectedObjects;
 import ai.djl.repository.zoo.Criteria;
@@ -13,19 +12,18 @@ import ai.djl.repository.zoo.ModelZoo;
 import ai.djl.repository.zoo.ZooModel;
 import cn.hutool.core.lang.UUID;
 import cn.hutool.core.lang.generator.UUIDGenerator;
+import cn.smartjavaai.common.cv.SmartImageFactory;
 import cn.smartjavaai.common.entity.DetectionRectangle;
 import cn.smartjavaai.common.entity.R;
 import cn.smartjavaai.common.pool.PredictorFactory;
-import cn.smartjavaai.common.utils.Base64ImageUtils;
-import cn.smartjavaai.common.utils.FileUtils;
-import cn.smartjavaai.common.utils.ImageUtils;
-import cn.smartjavaai.common.utils.OpenCVUtils;
+import cn.smartjavaai.common.utils.*;
 import cn.smartjavaai.ocr.config.PlateDetModelConfig;
 import cn.smartjavaai.ocr.config.PlateRecModelConfig;
 import cn.smartjavaai.ocr.entity.PlateInfo;
 import cn.smartjavaai.ocr.entity.PlateResult;
 import cn.smartjavaai.ocr.enums.PlateType;
 import cn.smartjavaai.ocr.exception.OcrException;
+import cn.smartjavaai.ocr.factory.PlateModelFactory;
 import cn.smartjavaai.ocr.model.plate.criteria.PlateDetCriterialFactory;
 import cn.smartjavaai.ocr.model.plate.criteria.PlateRecCriterialFactory;
 import cn.smartjavaai.ocr.utils.OcrUtils;
@@ -97,13 +95,13 @@ public class CRNNPlateRecModel implements PlateRecModel{
         }
         Image img = null;
         try {
-            img = ImageFactory.getInstance().fromFile(Paths.get(imagePath));
+            img = SmartImageFactory.getInstance().fromFile(Paths.get(imagePath));
             R<List<PlateInfo>> plateResult = recognize(img);
             return plateResult;
         } catch (IOException e) {
             throw new OcrException("无效的图片", e);
         } finally {
-            ((Mat)img.getWrappedImage()).release();
+            ImageUtils.releaseOpenCVMat(img);
         }
     }
 
@@ -118,12 +116,12 @@ public class CRNNPlateRecModel implements PlateRecModel{
 
     @Override
     public R<List<PlateInfo>> recognize(BufferedImage image) {
-        if(!ImageUtils.isImageValid(image)){
+        if(!BufferedImageUtils.isImageValid(image)){
             return R.fail(R.Status.INVALID_IMAGE);
         }
-        Image img = ImageFactory.getInstance().fromImage(OpenCVUtils.image2Mat(image));
+        Image img = SmartImageFactory.getInstance().fromBufferedImage(image);
         R<List<PlateInfo>> plateResult = recognize(img);
-        ((Mat)img.getWrappedImage()).release();
+        ImageUtils.releaseOpenCVMat(img);
         return plateResult;
     }
 
@@ -140,7 +138,7 @@ public class CRNNPlateRecModel implements PlateRecModel{
         if(Objects.isNull(config.getPlateDetModel())){
             return R.fail(R.Status.PARAM_ERROR.getCode(), "未指定车牌检测模型");
         }
-        DetectedObjects detectedObjects = config.getPlateDetModel().detect(image);
+        DetectedObjects detectedObjects = config.getPlateDetModel().detectCore(image);
         if(Objects.isNull(detectedObjects) || detectedObjects.getNumberOfObjects() == 0){
             return R.fail(R.Status.NO_OBJECT_DETECTED);
         }
@@ -151,23 +149,26 @@ public class CRNNPlateRecModel implements PlateRecModel{
             for (PlateInfo plateInfo : plateInfoList){
                 DetectionRectangle detectionRectangle = plateInfo.getDetectionRectangle();
 //                Image subImage = image.getSubImage(detectionRectangle.getX(), detectionRectangle.getY(), detectionRectangle.getWidth(), detectionRectangle.getHeight());
+                Mat imageMat = ImageUtils.toMat(image);
                 //透视变换
-                Image subImage = OcrUtils.transformAndCrop((Mat)image.getWrappedImage(), plateInfo.getBox());
+                Mat subMat = OcrUtils.transformAndCropToMat(imageMat, plateInfo.getBox());
                 //双层车牌
                 if(plateInfo.getPlateType() == PlateType.DOUBLE){
-                    Mat mergeImage = getSplitMerge((Mat)subImage.getWrappedImage());
-                    subImage = ImageFactory.getInstance().fromImage(mergeImage);
+                    subMat = getSplitMerge(subMat);
                 }
+                Image subImage = SmartImageFactory.getInstance().fromMat(subMat);
                 PlateResult plateResult = predictor.predict(subImage);
                 if(Objects.nonNull(plateResult)){
                     plateInfo.setPlateNumber(plateResult.getPlateNo());
                     plateInfo.setPlateColor(plateResult.getPlateColor());
                 }
+                ImageUtils.releaseOpenCVMat(subImage);
             }
            return R.ok(plateInfoList);
         } catch (Exception e) {
             throw new OcrException("车牌识别错误", e);
         }finally {
+
             if (predictor != null) {
                 try {
                     recPredictorPool.returnObject(predictor); //归还
@@ -247,14 +248,12 @@ public class CRNNPlateRecModel implements PlateRecModel{
         }
         Image img = null;
         try {
-            img = ImageFactory.getInstance().fromInputStream(inputStream);
+            img = SmartImageFactory.getInstance().fromInputStream(inputStream);
             return recognize(img);
         } catch (IOException e) {
             throw new OcrException("无效图片输入流", e);
         } finally {
-            if (img != null){
-                ((Mat)img.getWrappedImage()).release();
-            }
+            ImageUtils.releaseOpenCVMat(img);
         }
     }
 
@@ -265,7 +264,7 @@ public class CRNNPlateRecModel implements PlateRecModel{
         }
         Image img = null;
         try {
-            img = ImageFactory.getInstance().fromFile(Paths.get(imagePath));
+            img = SmartImageFactory.getInstance().fromFile(Paths.get(imagePath));
             R<List<PlateInfo>> plateResult = recognize(img);
             if(!plateResult.isSuccess()){
                 return R.fail(plateResult.getCode(), plateResult.getMessage());
@@ -273,22 +272,20 @@ public class CRNNPlateRecModel implements PlateRecModel{
             if(CollectionUtils.isEmpty(plateResult.getData())){
                 return R.fail(R.Status.NO_OBJECT_DETECTED);
             }
-            BufferedImage bufferedImage = OpenCVUtils.mat2Image((Mat)img.getWrappedImage());
+            BufferedImage bufferedImage = ImageUtils.toBufferedImage(img);
             OcrUtils.drawPlateInfo(bufferedImage, plateResult.getData());
             ImageIO.write(bufferedImage, "png", new File(outputPath));
             return R.ok();
         } catch (IOException e) {
             throw new OcrException(e);
         } finally {
-            if (img != null){
-                ((Mat)img.getWrappedImage()).release();
-            }
+            ImageUtils.releaseOpenCVMat(img);
         }
     }
 
     @Override
     public R<BufferedImage> recognizeAndDraw(BufferedImage sourceImage) {
-        if(!ImageUtils.isImageValid(sourceImage)){
+        if(!BufferedImageUtils.isImageValid(sourceImage)){
             return R.fail(R.Status.INVALID_IMAGE);
         }
         try {
@@ -306,6 +303,25 @@ public class CRNNPlateRecModel implements PlateRecModel{
         }
     }
 
+    @Override
+    public R<Image> recognizeAndDraw(Image image) {
+        try {
+            R<List<PlateInfo>> plateResult = recognize(image);
+            if(!plateResult.isSuccess()){
+                return R.fail(plateResult.getCode(), plateResult.getMessage());
+            }
+            if(CollectionUtils.isEmpty(plateResult.getData())){
+                return R.fail(R.Status.NO_OBJECT_DETECTED);
+            }
+            //opencv中文乱码，使用BufferedImage
+            BufferedImage sourceImage = ImageUtils.toBufferedImage(image);
+            OcrUtils.drawPlateInfo(sourceImage, plateResult.getData());
+            Image drawImage = SmartImageFactory.getInstance().fromBufferedImage(sourceImage);
+            return R.ok(drawImage);
+        } catch (Exception e) {
+            throw new OcrException("导出图片失败", e);
+        }
+    }
 
     @Override
     public GenericObjectPool<Predictor<Image, PlateResult>> getPool() {
@@ -314,6 +330,9 @@ public class CRNNPlateRecModel implements PlateRecModel{
 
     @Override
     public void close() throws Exception {
+        if (fromFactory) {
+            PlateModelFactory.removeRecModelFromCache(config.getModelEnum());
+        }
         try {
             if (recPredictorPool != null) {
                 recPredictorPool.close();
@@ -328,5 +347,15 @@ public class CRNNPlateRecModel implements PlateRecModel{
         } catch (Exception e) {
             log.warn("关闭 model 失败", e);
         }
+    }
+
+    private boolean fromFactory = false;
+
+    @Override
+    public void setFromFactory(boolean fromFactory) {
+        this.fromFactory = fromFactory;
+    }
+    public boolean isFromFactory() {
+        return fromFactory;
     }
 }

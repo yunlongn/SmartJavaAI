@@ -3,6 +3,7 @@ package cn.smartjavaai.face.factory;
 import cn.smartjavaai.common.config.Config;
 import cn.smartjavaai.face.config.FaceDetConfig;
 import cn.smartjavaai.face.constant.FaceDetectConstant;
+import cn.smartjavaai.face.enums.FaceAttributeModelEnum;
 import cn.smartjavaai.face.enums.FaceDetModelEnum;
 import cn.smartjavaai.face.exception.FaceException;
 import cn.smartjavaai.face.model.facedect.CommonFaceDetModel;
@@ -93,16 +94,17 @@ public class FaceDetModelFactory {
     private FaceDetModel createFaceDetModel(FaceDetConfig config) {
         Class<?> clazz = registry.get(config.getModelEnum());
         if(clazz == null){
-            throw new FaceException("Unsupported algorithm");
+            throw new FaceException("Unsupported model");
         }
-        FaceDetModel algorithm = null;
+        FaceDetModel model = null;
         try {
-            algorithm = (FaceDetModel) clazz.newInstance();
+            model = (FaceDetModel) clazz.newInstance();
         } catch (InstantiationException | IllegalAccessException e) {
             throw new FaceException(e);
         }
-        algorithm.loadModel(config);
-        return algorithm;
+        model.loadModel(config);
+        model.setFromFactory(true);
+        return model;
     }
 
 
@@ -131,6 +133,28 @@ public class FaceDetModelFactory {
         registerAlgorithm(FaceDetModelEnum.YOLOV5_FACE_320, CommonFaceDetModel.class);
         registerAlgorithm(FaceDetModelEnum.MTCNN, MtcnnFaceDetModel.class);
         log.debug("缓存目录：{}", Config.getCachePath());
+    }
+
+    /**
+     * 关闭所有已加载的模型
+     */
+    public void closeAll() {
+        modelMap.values().forEach(model -> {
+            try {
+                model.close();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
+        modelMap.clear();
+    }
+
+    /**
+     * 移除缓存的模型
+     * @param modelEnum
+     */
+    public static void removeFromCache(FaceDetModelEnum modelEnum) {
+        modelMap.remove(modelEnum);
     }
 
 }

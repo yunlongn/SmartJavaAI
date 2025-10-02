@@ -76,6 +76,7 @@ public class PoseDetModelFactory {
             throw new DetectionException(e);
         }
         model.loadModel(config);
+        model.setFromFactory(true);
         return model;
     }
 
@@ -98,6 +99,20 @@ public class PoseDetModelFactory {
         modelMap.remove(modelEnum);
     }
 
+
+    /**
+     * 关闭所有已加载的模型
+     */
+    public void closeAll() {
+        modelMap.values().forEach(model -> {
+            try {
+                model.close();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
+        modelMap.clear();
+    }
 
     // 初始化默认算法
     static {

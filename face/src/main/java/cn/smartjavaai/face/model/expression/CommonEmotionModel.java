@@ -1,47 +1,33 @@
 package cn.smartjavaai.face.model.expression;
 
-import ai.djl.Device;
 import ai.djl.MalformedModelException;
 import ai.djl.engine.Engine;
 import ai.djl.inference.Predictor;
 import ai.djl.modality.Classifications;
 import ai.djl.modality.cv.Image;
-import ai.djl.modality.cv.ImageFactory;
 import ai.djl.ndarray.NDManager;
 import ai.djl.repository.zoo.Criteria;
 import ai.djl.repository.zoo.ModelNotFoundException;
 import ai.djl.repository.zoo.ZooModel;
-import ai.djl.training.util.ProgressBar;
+import cn.smartjavaai.common.cv.SmartImageFactory;
 import cn.smartjavaai.common.entity.*;
 import cn.smartjavaai.common.entity.face.ExpressionResult;
 import cn.smartjavaai.common.entity.face.FaceInfo;
-import cn.smartjavaai.common.entity.face.LivenessResult;
-import cn.smartjavaai.common.enums.DeviceEnum;
 import cn.smartjavaai.common.enums.face.FacialExpression;
 import cn.smartjavaai.common.pool.PredictorFactory;
-import cn.smartjavaai.common.utils.Base64ImageUtils;
-import cn.smartjavaai.common.utils.FileUtils;
-import cn.smartjavaai.common.utils.ImageUtils;
-import cn.smartjavaai.common.utils.OpenCVUtils;
+import cn.smartjavaai.common.utils.*;
 import cn.smartjavaai.face.config.FaceExpressionConfig;
 import cn.smartjavaai.face.exception.FaceException;
+import cn.smartjavaai.face.factory.ExpressionModelFactory;
 import cn.smartjavaai.face.model.expression.criterial.EmotionCriteriaFactory;
-import cn.smartjavaai.face.model.expression.translator.DenseNetEmotionTranslator;
-import cn.smartjavaai.face.preprocess.DJLImagePreprocessor;
+import cn.smartjavaai.face.preprocess.DJLImageFacePreprocessor;
 import cn.smartjavaai.face.utils.FaceUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.pool2.ObjectPool;
 import org.apache.commons.pool2.impl.GenericObjectPool;
-import org.opencv.core.Mat;
-import org.opencv.face.Face;
 
-import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
-import java.io.ByteArrayInputStream;
-import java.io.File;
 import java.io.IOException;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -68,6 +54,9 @@ public class CommonEmotionModel implements ExpressionModel{
         if(StringUtils.isBlank(config.getModelPath())){
             throw new FaceException("modelPath为空");
         }
+        if(Objects.isNull(config.getDetectModel())){
+            throw new FaceException("未指定人脸检测模型");
+        }
 
         this.config = config;
 
@@ -92,7 +81,7 @@ public class CommonEmotionModel implements ExpressionModel{
         Predictor<Image, Classifications> predictor = null;
         try (NDManager manager = model.getNDManager().newSubManager()){
             predictor = predictorPool.borrowObject();
-            DJLImagePreprocessor imagePreprocessor = new DJLImagePreprocessor(image, manager);
+            DJLImageFacePreprocessor imagePreprocessor = new DJLImageFacePreprocessor(image, manager);
             Image faceImg = image;
             if(config.isAlign()){
                 //仿射变换
@@ -131,40 +120,24 @@ public class CommonEmotionModel implements ExpressionModel{
         if(!FileUtils.isFileExists(imagePath)){
             return R.fail(R.Status.FILE_NOT_FOUND);
         }
-        // 将图片路径转换为 BufferedImage
-        BufferedImage image = null;
+        Image image = null;
         try {
-            image = ImageIO.read(new File(Paths.get(imagePath).toAbsolutePath().toString()));
+            image = SmartImageFactory.getInstance().fromFile(imagePath);
+            R<DetectionResponse> detectionResponseR = detect(image);
+            return detectionResponseR;
         } catch (IOException e) {
             throw new FaceException("无效图片路径", e);
+        }finally {
+            ImageUtils.releaseOpenCVMat(image);
         }
-        return detect(image);
     }
 
     @Override
     public R<DetectionResponse> detect(BufferedImage image) {
-        if(Objects.isNull(config.getDetectModel())){
-            return R.fail(R.Status.PARAM_ERROR.getCode(), "未指定检测模型");
-        }
-        R<DetectionResponse> faceDetectionResponse = config.getDetectModel().detect(image);
-        if(Objects.isNull(faceDetectionResponse.getData()) || Objects.isNull(faceDetectionResponse.getData().getDetectionInfoList()) || faceDetectionResponse.getData().getDetectionInfoList().isEmpty()){
-            return R.fail(R.Status.NO_FACE_DETECTED);
-        }
-        Image djlImage = ImageFactory.getInstance().fromImage(OpenCVUtils.image2Mat(image));
-        for(DetectionInfo detectionInfo : faceDetectionResponse.getData().getDetectionInfoList()){
-            FaceInfo faceInfo = detectionInfo.getFaceInfo();
-            if(Objects.isNull(faceInfo) || Objects.isNull(faceInfo.getKeyPoints())){
-                return R.fail(R.Status.Unknown.getCode(), "未检测到人脸关键点");
-            }
-            Classifications classifications = detectCore(djlImage, detectionInfo.getDetectionRectangle(), faceInfo.getKeyPoints());
-            Classifications.Classification bestClass = classifications.best();
-            FacialExpression expression = FacialExpression.fromLabel(bestClass.getClassName());
-            ExpressionResult result = new ExpressionResult(expression, (float)bestClass.getProbability());
-            result.setClassifications(classifications);
-            faceInfo.setExpressionResult(result);
-        }
-        ((Mat)djlImage.getWrappedImage()).release();
-        return faceDetectionResponse;
+        Image imageDjl = SmartImageFactory.getInstance().fromBufferedImage(image);
+        R<DetectionResponse> detectionResponseR = detect(imageDjl);
+        ImageUtils.releaseOpenCVMat(imageDjl);
+        return detectionResponseR;
     }
 
     @Override
@@ -172,11 +145,15 @@ public class CommonEmotionModel implements ExpressionModel{
         if(Objects.isNull(imageData)){
             return R.fail(R.Status.INVALID_IMAGE);
         }
+        Image imageDjl = null;
         try {
-            return detect(ImageIO.read(new ByteArrayInputStream(imageData)));
+            imageDjl = SmartImageFactory.getInstance().fromBytes(imageData);
         } catch (IOException e) {
-            throw new FaceException("错误的图像", e);
+            throw new RuntimeException(e);
         }
+        R<DetectionResponse> detectionResponseR = detect(imageDjl);
+        ImageUtils.releaseOpenCVMat(imageDjl);
+        return detectionResponseR;
     }
 
     @Override
@@ -184,8 +161,16 @@ public class CommonEmotionModel implements ExpressionModel{
         if(StringUtils.isBlank(base64Image)){
             return R.fail(R.Status.INVALID_IMAGE);
         }
-        byte[] imageData = Base64ImageUtils.base64ToImage(base64Image);
-        return detect(imageData);
+        Image image = null;
+        try {
+            image = SmartImageFactory.getInstance().fromBase64(base64Image);
+            R<DetectionResponse> detectionResponseR = detect(image);
+            return detectionResponseR;
+        } catch (IOException e) {
+            throw new FaceException("无效图片", e);
+        }finally {
+            ImageUtils.releaseOpenCVMat(image);
+        }
     }
 
     @Override
@@ -193,14 +178,16 @@ public class CommonEmotionModel implements ExpressionModel{
         if(!FileUtils.isFileExists(imagePath)){
             return R.fail(R.Status.FILE_NOT_FOUND);
         }
-        // 将图片路径转换为 BufferedImage
-        BufferedImage image = null;
+        Image image = null;
         try {
-            image = ImageIO.read(new File(Paths.get(imagePath).toAbsolutePath().toString()));
+            image = SmartImageFactory.getInstance().fromFile(imagePath);
+            R<List<ExpressionResult>> detectionResponseR = detect(image, faceDetectionResponse);
+            return detectionResponseR;
         } catch (IOException e) {
             throw new FaceException("无效图片路径", e);
+        }finally {
+            ImageUtils.releaseOpenCVMat(image);
         }
-        return detect(image, faceDetectionResponse);
     }
 
     @Override
@@ -208,37 +195,23 @@ public class CommonEmotionModel implements ExpressionModel{
         if(Objects.isNull(imageData)){
             return R.fail(R.Status.INVALID_IMAGE);
         }
+        Image imageDjl = null;
         try {
-            return detect(ImageIO.read(new ByteArrayInputStream(imageData)), faceDetectionResponse);
+            imageDjl = SmartImageFactory.getInstance().fromBytes(imageData);
         } catch (IOException e) {
-            throw new FaceException("错误的图像", e);
+            throw new RuntimeException(e);
         }
+        R<List<ExpressionResult>> detectionResponseR = detect(imageDjl, faceDetectionResponse);
+        ImageUtils.releaseOpenCVMat(imageDjl);
+        return detectionResponseR;
     }
 
     @Override
     public R<List<ExpressionResult>> detect(BufferedImage image, DetectionResponse faceDetectionResponse) {
-        if(!ImageUtils.isImageValid(image)){
-            R.fail(R.Status.INVALID_IMAGE);
-        }
-        if(Objects.isNull(faceDetectionResponse) || Objects.isNull(faceDetectionResponse.getDetectionInfoList()) || faceDetectionResponse.getDetectionInfoList().isEmpty()){
-            R.fail(R.Status.NO_FACE_DETECTED);
-        }
-        Image djlImage = ImageFactory.getInstance().fromImage(OpenCVUtils.image2Mat(image));
-        List<ExpressionResult> expressionResults = new ArrayList<>();
-        for(DetectionInfo detectionInfo : faceDetectionResponse.getDetectionInfoList()){
-            FaceInfo faceInfo = detectionInfo.getFaceInfo();
-            if(Objects.isNull(faceInfo) || Objects.isNull(faceInfo.getKeyPoints())){
-                return R.fail(R.Status.Unknown.getCode(), "未检测到人脸关键点");
-            }
-            Classifications classifications = detectCore(djlImage, detectionInfo.getDetectionRectangle(), faceInfo.getKeyPoints());
-            Classifications.Classification bestClass = classifications.best();
-            FacialExpression expression = FacialExpression.fromLabel(bestClass.getClassName());
-            ExpressionResult result = new ExpressionResult(expression, (float)bestClass.getProbability());
-            result.setClassifications(classifications);
-            expressionResults.add(result);
-        }
-        ((Mat)djlImage.getWrappedImage()).release();
-        return R.ok(expressionResults);
+        Image imageDjl = SmartImageFactory.getInstance().fromBufferedImage(image);
+        R<List<ExpressionResult>> detectionResponseR = detect(imageDjl, faceDetectionResponse);
+        ImageUtils.releaseOpenCVMat(imageDjl);
+        return detectionResponseR;
     }
 
     @Override
@@ -246,8 +219,16 @@ public class CommonEmotionModel implements ExpressionModel{
         if(StringUtils.isBlank(base64Image)){
             return R.fail(R.Status.INVALID_IMAGE);
         }
-        byte[] imageData = Base64ImageUtils.base64ToImage(base64Image);
-        return detect(imageData, faceDetectionResponse);
+        Image image = null;
+        try {
+            image = SmartImageFactory.getInstance().fromBase64(base64Image);
+            R<List<ExpressionResult>> detectionResponseR = detect(image, faceDetectionResponse);
+            return detectionResponseR;
+        } catch (IOException e) {
+            throw new FaceException("无效图片", e);
+        }finally {
+            ImageUtils.releaseOpenCVMat(image);
+        }
     }
 
     @Override
@@ -255,14 +236,16 @@ public class CommonEmotionModel implements ExpressionModel{
         if(!FileUtils.isFileExists(imagePath)){
             return R.fail(R.Status.FILE_NOT_FOUND);
         }
-        // 将图片路径转换为 BufferedImage
-        BufferedImage image = null;
+        Image image = null;
         try {
-            image = ImageIO.read(new File(Paths.get(imagePath).toAbsolutePath().toString()));
+            image = SmartImageFactory.getInstance().fromFile(imagePath);
+            R<ExpressionResult> detectionResponseR = detect(image, faceDetectionRectangle, keyPoints);
+            return detectionResponseR;
         } catch (IOException e) {
             throw new FaceException("无效图片路径", e);
+        }finally {
+            ImageUtils.releaseOpenCVMat(image);
         }
-        return detect(image, faceDetectionRectangle, keyPoints);
     }
 
     @Override
@@ -270,26 +253,26 @@ public class CommonEmotionModel implements ExpressionModel{
         if(Objects.isNull(imageData)){
             return R.fail(R.Status.INVALID_IMAGE);
         }
+        Image imageDjl = null;
         try {
-            return detect(ImageIO.read(new ByteArrayInputStream(imageData)), faceDetectionRectangle, keyPoints);
+            imageDjl = SmartImageFactory.getInstance().fromBytes(imageData);
         } catch (IOException e) {
-            throw new FaceException("错误的图像", e);
+            throw new RuntimeException(e);
         }
+        R<ExpressionResult> detectionResponseR = detect(imageDjl, faceDetectionRectangle, keyPoints);
+        ImageUtils.releaseOpenCVMat(imageDjl);
+        return detectionResponseR;
     }
 
     @Override
     public R<ExpressionResult> detect(BufferedImage image, DetectionRectangle faceDetectionRectangle, List<Point> keyPoints) {
-        if(!ImageUtils.isImageValid(image)){
+        if(!BufferedImageUtils.isImageValid(image)){
             return R.fail(R.Status.INVALID_IMAGE);
         }
-        Image djlImage = ImageFactory.getInstance().fromImage(OpenCVUtils.image2Mat(image));
-        Classifications classifications = detectCore(djlImage, faceDetectionRectangle, keyPoints);
-        Classifications.Classification bestClass = classifications.best();
-        FacialExpression expression = FacialExpression.fromLabel(bestClass.getClassName());
-        ExpressionResult result = new ExpressionResult(expression, (float)bestClass.getProbability());
-        result.setClassifications(classifications);
-        ((Mat)djlImage.getWrappedImage()).release();
-        return R.ok(result);
+        Image imageDjl = SmartImageFactory.getInstance().fromBufferedImage(image);
+        R<ExpressionResult> detectionResponseR = detect(imageDjl, faceDetectionRectangle, keyPoints);
+        ImageUtils.releaseOpenCVMat(imageDjl);
+        return detectionResponseR;
 
     }
 
@@ -298,15 +281,134 @@ public class CommonEmotionModel implements ExpressionModel{
         if(StringUtils.isBlank(base64Image)){
             return R.fail(R.Status.INVALID_IMAGE);
         }
-        byte[] imageData = Base64ImageUtils.base64ToImage(base64Image);
-        return detect(imageData, faceDetectionRectangle, keyPoints);
+        Image image = null;
+        try {
+            image = SmartImageFactory.getInstance().fromBase64(base64Image);
+            R<ExpressionResult> detectionResponseR = detect(image, faceDetectionRectangle, keyPoints);
+            return detectionResponseR;
+        } catch (IOException e) {
+            throw new FaceException("无效图片", e);
+        }finally {
+            ImageUtils.releaseOpenCVMat(image);
+        }
     }
 
     @Override
     public R<ExpressionResult> detectTopFace(BufferedImage image) {
+        Image imageDjl = SmartImageFactory.getInstance().fromBufferedImage(image);
+        R<ExpressionResult> detectionResponseR = detectTopFace(imageDjl);
+        ImageUtils.releaseOpenCVMat(imageDjl);
+        return detectionResponseR;
+    }
+
+    @Override
+    public R<ExpressionResult> detectTopFace(String imagePath) {
+        if(!FileUtils.isFileExists(imagePath)){
+            return R.fail(R.Status.FILE_NOT_FOUND);
+        }
+        Image image = null;
+        try {
+            image = SmartImageFactory.getInstance().fromFile(imagePath);
+            R<ExpressionResult> detectionResponseR = detectTopFace(image);
+            return detectionResponseR;
+        } catch (IOException e) {
+            throw new FaceException("无效图片路径", e);
+        }finally {
+            ImageUtils.releaseOpenCVMat(image);
+        }
+    }
+
+    @Override
+    public R<ExpressionResult> detectTopFace(byte[] imageData) {
+        if(Objects.isNull(imageData)){
+            return R.fail(R.Status.INVALID_IMAGE);
+        }
+        Image imageDjl = null;
+        try {
+            imageDjl = SmartImageFactory.getInstance().fromBytes(imageData);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        R<ExpressionResult> detectionResponseR = detectTopFace(imageDjl);
+        ImageUtils.releaseOpenCVMat(imageDjl);
+        return detectionResponseR;
+    }
+
+    @Override
+    public R<ExpressionResult> detectTopFaceBase64(String base64Image) {
+        if(StringUtils.isBlank(base64Image)){
+            return R.fail(R.Status.INVALID_IMAGE);
+        }
+        Image image = null;
+        try {
+            image = SmartImageFactory.getInstance().fromBase64(base64Image);
+            R<ExpressionResult> detectionResponseR = detectTopFace(image);
+            return detectionResponseR;
+        } catch (IOException e) {
+            throw new FaceException("无效图片", e);
+        }finally {
+            ImageUtils.releaseOpenCVMat(image);
+        }
+    }
+
+
+    @Override
+    public R<DetectionResponse> detect(Image image) {
         if(Objects.isNull(config.getDetectModel())){
             return R.fail(R.Status.PARAM_ERROR.getCode(), "未指定检测模型");
         }
+        R<DetectionResponse> faceDetectionResponse = config.getDetectModel().detect(image);
+        if(Objects.isNull(faceDetectionResponse.getData()) || Objects.isNull(faceDetectionResponse.getData().getDetectionInfoList()) || faceDetectionResponse.getData().getDetectionInfoList().isEmpty()){
+            return R.fail(R.Status.NO_FACE_DETECTED);
+        }
+        for(DetectionInfo detectionInfo : faceDetectionResponse.getData().getDetectionInfoList()){
+            FaceInfo faceInfo = detectionInfo.getFaceInfo();
+            if(Objects.isNull(faceInfo) || Objects.isNull(faceInfo.getKeyPoints())){
+                return R.fail(R.Status.Unknown.getCode(), "未检测到人脸关键点");
+            }
+            Classifications classifications = detectCore(image, detectionInfo.getDetectionRectangle(), faceInfo.getKeyPoints());
+            Classifications.Classification bestClass = classifications.best();
+            FacialExpression expression = FacialExpression.fromLabel(bestClass.getClassName());
+            ExpressionResult result = new ExpressionResult(expression, (float)bestClass.getProbability());
+            result.setClassifications(classifications);
+            faceInfo.setExpressionResult(result);
+        }
+        return faceDetectionResponse;
+    }
+
+    @Override
+    public R<List<ExpressionResult>> detect(Image image, DetectionResponse faceDetectionResponse) {
+        if(Objects.isNull(faceDetectionResponse) || Objects.isNull(faceDetectionResponse.getDetectionInfoList()) || faceDetectionResponse.getDetectionInfoList().isEmpty()){
+            R.fail(R.Status.NO_FACE_DETECTED);
+        }
+        List<ExpressionResult> expressionResults = new ArrayList<>();
+        for(DetectionInfo detectionInfo : faceDetectionResponse.getDetectionInfoList()){
+            FaceInfo faceInfo = detectionInfo.getFaceInfo();
+            if(Objects.isNull(faceInfo) || Objects.isNull(faceInfo.getKeyPoints())){
+                return R.fail(R.Status.Unknown.getCode(), "未检测到人脸关键点");
+            }
+            Classifications classifications = detectCore(image, detectionInfo.getDetectionRectangle(), faceInfo.getKeyPoints());
+            Classifications.Classification bestClass = classifications.best();
+            FacialExpression expression = FacialExpression.fromLabel(bestClass.getClassName());
+            ExpressionResult result = new ExpressionResult(expression, (float)bestClass.getProbability());
+            result.setClassifications(classifications);
+            expressionResults.add(result);
+        }
+        return R.ok(expressionResults);
+    }
+
+    @Override
+    public R<ExpressionResult> detect(Image image, DetectionRectangle faceDetectionRectangle, List<Point> keyPoints) {
+        Classifications classifications = detectCore(image, faceDetectionRectangle, keyPoints);
+        Classifications.Classification bestClass = classifications.best();
+        FacialExpression expression = FacialExpression.fromLabel(bestClass.getClassName());
+        ExpressionResult result = new ExpressionResult(expression, (float)bestClass.getProbability());
+        result.setClassifications(classifications);
+        return R.ok(result);
+    }
+
+    @Override
+    public R<ExpressionResult> detectTopFace(Image image) {
         R<DetectionResponse> faceDetectionResponse = config.getDetectModel().detect(image);
         if(Objects.isNull(faceDetectionResponse.getData()) || Objects.isNull(faceDetectionResponse.getData().getDetectionInfoList()) || faceDetectionResponse.getData().getDetectionInfoList().isEmpty()){
             return R.fail(R.Status.NO_FACE_DETECTED);
@@ -320,48 +422,25 @@ public class CommonEmotionModel implements ExpressionModel{
     }
 
     @Override
-    public R<ExpressionResult> detectTopFace(String imagePath) {
-        if(!FileUtils.isFileExists(imagePath)){
-            return R.fail(R.Status.FILE_NOT_FOUND);
-        }
-        // 将图片路径转换为 BufferedImage
-        BufferedImage image = null;
-        try {
-            image = ImageIO.read(new File(Paths.get(imagePath).toAbsolutePath().toString()));
-        } catch (IOException e) {
-            throw new FaceException("无效图片路径", e);
-        }
-        return detectTopFace(image);
-    }
-
-    @Override
-    public R<ExpressionResult> detectTopFace(byte[] imageData) {
-        if(Objects.isNull(imageData)){
-            return R.fail(R.Status.INVALID_IMAGE);
-        }
-        try {
-            return detectTopFace(ImageIO.read(new ByteArrayInputStream(imageData)));
-        } catch (IOException e) {
-            throw new FaceException("错误的图像", e);
-        }
-    }
-
-    @Override
-    public R<ExpressionResult> detectTopFaceBase64(String base64Image) {
-        if(StringUtils.isBlank(base64Image)){
-            return R.fail(R.Status.INVALID_IMAGE);
-        }
-        byte[] imageData = Base64ImageUtils.base64ToImage(base64Image);
-        return detectTopFace(imageData);
-    }
-
-    @Override
     public GenericObjectPool<Predictor<Image, Classifications>> getPool() {
         return predictorPool;
     }
 
+    private boolean fromFactory = false;
+
+    @Override
+    public void setFromFactory(boolean fromFactory) {
+        this.fromFactory = fromFactory;
+    }
+    public boolean isFromFactory() {
+        return fromFactory;
+    }
+
     @Override
     public void close() {
+        if (fromFactory) {
+            ExpressionModelFactory.removeFromCache(config.getModelEnum());
+        }
         try {
             if (predictorPool != null) {
                 predictorPool.close();

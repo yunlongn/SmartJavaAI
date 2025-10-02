@@ -90,6 +90,7 @@ public class TranslationModelFactory {
             throw new TranslationException(e);
         }
         model.loadModel(config);
+        model.setFromFactory(true);
         return model;
     }
 
@@ -100,6 +101,28 @@ public class TranslationModelFactory {
         registerCommonDetModel(TranslationModeEnum.OPUS_MT_EN_ZH, OpusMtModel.class);
         registerCommonDetModel(TranslationModeEnum.OPUS_MT_ZH_EN, OpusMtModel.class);
         log.debug("缓存目录：{}", Config.getCachePath());
+    }
+
+    /**
+     * 关闭所有已加载的模型
+     */
+    public void closeAll() {
+        modelMap.values().forEach(model -> {
+            try {
+                model.close();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
+        modelMap.clear();
+    }
+
+    /**
+     * 移除缓存的模型
+     * @param modelEnum
+     */
+    public static void removeFromCache(TranslationModeEnum modelEnum) {
+        modelMap.remove(modelEnum);
     }
 
 }

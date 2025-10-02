@@ -9,6 +9,7 @@ import ai.djl.modality.cv.output.Mask;
 import ai.djl.modality.cv.output.Rectangle;
 import cn.hutool.core.date.LocalDateTimeUtil;
 import cn.hutool.core.lang.UUID;
+import cn.smartjavaai.common.cv.SmartImageFactory;
 import cn.smartjavaai.common.entity.*;
 import cn.smartjavaai.common.enums.VideoSourceType;
 import cn.smartjavaai.common.utils.ImageUtils;
@@ -230,7 +231,7 @@ public class StreamDetector implements AutoCloseable{
             mat = converterToMat.convert(frame);
             if (mat == null) return;
 
-            Image image = ImageFactory.getInstance().fromImage(mat);
+            Image image = SmartImageFactory.getInstance().fromMat(mat);
             DetectedObjects detectedObjects = predictor.predict(image);
 //            log.info("内部检测结果：{}", detectedObjects.toString());
             DetectionResponse detectionResponse = DetectorUtils.convertToDetectionResponse(detectedObjects, image);

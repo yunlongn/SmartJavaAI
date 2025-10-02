@@ -41,6 +41,8 @@ public class InstanceSegDemo {
 
     @BeforeClass
     public static void beforeAll() throws IOException {
+        //将图片处理的底层引擎切换为 OpenCV
+        SmartImageFactory.setEngine(SmartImageFactory.Engine.OPENCV);
         //修改缓存路径
 //        Config.setCachePath("/Users/xxx/smartjavaai_cache");
     }
@@ -119,7 +121,7 @@ public class InstanceSegDemo {
             if(result.isSuccess()){
                 log.info("实例分割结果：{}", JSONObject.toJSONString(result.getData()));
                 //保存图片
-                ImageUtils.saveImage(result.getData().getDrawnImage(), "dog_bike_car_detected.png", "output");
+                ImageUtils.save(result.getData().getDrawnImage(), "dog_bike_car_detected2.png", "output");
             }else{
                 log.info("实例分割失败：{}", result.getMessage());
             }

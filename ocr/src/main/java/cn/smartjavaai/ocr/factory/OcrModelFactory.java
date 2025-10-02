@@ -158,6 +158,7 @@ public class OcrModelFactory {
             throw new OcrException(e);
         }
         model.loadModel(config);
+        model.setFromFactory(true);
         return model;
     }
 
@@ -179,6 +180,7 @@ public class OcrModelFactory {
             throw new OcrException(e);
         }
         model.loadModel(config);
+        model.setFromFactory(true);
         return model;
     }
 
@@ -199,6 +201,7 @@ public class OcrModelFactory {
             throw new OcrException(e);
         }
         model.loadModel(config);
+        model.setFromFactory(true);
         return model;
     }
 
@@ -218,6 +221,63 @@ public class OcrModelFactory {
         registerDirectionModel(DirectionModelEnum.PP_LCNET_X0_25, PPOCRMobileV2ClsModel.class);
         registerDirectionModel(DirectionModelEnum.PP_LCNET_X1_0, PPOCRMobileV2ClsModel.class);
         log.debug("缓存目录：{}", Config.getCachePath());
+    }
+
+
+    /**
+     * 关闭所有已加载的模型
+     */
+    public void closeAll() {
+        commonDetModelMap.values().forEach(model -> {
+            try {
+                model.close();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
+        commonDetModelMap.clear();
+
+        commonRecModelMap.values().forEach(model -> {
+            try {
+                model.close();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
+        commonRecModelMap.clear();
+
+        directionModelMap.values().forEach(model -> {
+            try {
+                model.close();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
+        directionModelMap.clear();
+    }
+
+    /**
+     * 移除缓存的检测模型
+     * @param modelEnum
+     */
+    public static void removeDetModelFromCache(CommonDetModelEnum modelEnum) {
+        commonDetModelMap.remove(modelEnum);
+    }
+
+    /**
+     * 移除缓存的识别模型
+     * @param modelEnum
+     */
+    public static void removeRecModelFromCache(CommonRecModelEnum modelEnum) {
+        commonRecModelMap.remove(modelEnum);
+    }
+
+    /**
+     * 移除缓存的方向分类模型
+     * @param modelEnum
+     */
+    public static void removeDirectionModelFromCache(DirectionModelEnum modelEnum) {
+        directionModelMap.remove(modelEnum);
     }
 
 }

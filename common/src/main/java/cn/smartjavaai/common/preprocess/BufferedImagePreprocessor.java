@@ -10,7 +10,7 @@ import java.awt.image.BufferedImage;
  * @author dwj
  * @date 2025/6/27
  */
-public class BufferedImagePreprocessor {
+public class BufferedImagePreprocessor implements ImagePreprocessor<BufferedImage>{
 
     private BufferedImage image;
     private DetectionRectangle rect;

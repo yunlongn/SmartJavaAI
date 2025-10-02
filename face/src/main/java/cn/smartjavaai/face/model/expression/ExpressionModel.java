@@ -35,6 +35,7 @@ public interface ExpressionModel extends AutoCloseable{
      * @param imagePath 图片路径
      * @return
      */
+    @Deprecated
     default R<DetectionResponse> detect(String imagePath){
         throw new UnsupportedOperationException("默认不支持该功能");
     }
@@ -44,6 +45,7 @@ public interface ExpressionModel extends AutoCloseable{
      * @param image BufferedImage
      * @return
      */
+    @Deprecated
     default R<DetectionResponse> detect(BufferedImage image){
         throw new UnsupportedOperationException("默认不支持该功能");
     }
@@ -53,6 +55,7 @@ public interface ExpressionModel extends AutoCloseable{
      * @param imageData 图片字节流
      * @return
      */
+    @Deprecated
     default R<DetectionResponse> detect(byte[] imageData){
         throw new UnsupportedOperationException("默认不支持该功能");
     }
@@ -63,6 +66,7 @@ public interface ExpressionModel extends AutoCloseable{
      * @param base64Image
      * @return
      */
+    @Deprecated
     default R<DetectionResponse> detectBase64(String base64Image){
         throw new UnsupportedOperationException("默认不支持该功能");
     }
@@ -74,6 +78,7 @@ public interface ExpressionModel extends AutoCloseable{
      * @param faceDetectionResponse 人脸检测结果
      * @return
      */
+    @Deprecated
     default R<List<ExpressionResult>> detect(String imagePath, DetectionResponse faceDetectionResponse){
         throw new UnsupportedOperationException("默认不支持该功能");
     }
@@ -85,6 +90,7 @@ public interface ExpressionModel extends AutoCloseable{
      * @param faceDetectionResponse 人脸检测结果
      * @return
      */
+    @Deprecated
     default R<List<ExpressionResult>> detect(byte[] imageData,DetectionResponse faceDetectionResponse){
         throw new UnsupportedOperationException("默认不支持该功能");
     }
@@ -95,6 +101,7 @@ public interface ExpressionModel extends AutoCloseable{
      * @param faceDetectionResponse 人脸检测结果
      * @return
      */
+    @Deprecated
     default R<List<ExpressionResult>> detect(BufferedImage image,DetectionResponse faceDetectionResponse){
         throw new UnsupportedOperationException("默认不支持该功能");
     }
@@ -105,6 +112,7 @@ public interface ExpressionModel extends AutoCloseable{
      * @param faceDetectionResponse 人脸检测结果
      * @return
      */
+    @Deprecated
     default R<List<ExpressionResult>> detectBase64(String base64Image,DetectionResponse faceDetectionResponse){
         throw new UnsupportedOperationException("默认不支持该功能");
     }
@@ -116,6 +124,7 @@ public interface ExpressionModel extends AutoCloseable{
      * @param faceDetectionRectangle 人脸检测结果-人脸框
      * @return
      */
+    @Deprecated
     default R<ExpressionResult> detect(String imagePath, DetectionRectangle faceDetectionRectangle, List<Point> keyPoints){
         throw new UnsupportedOperationException("默认不支持该功能");
     }
@@ -127,6 +136,7 @@ public interface ExpressionModel extends AutoCloseable{
      * @param faceDetectionRectangle 人脸检测结果-人脸框
      * @return
      */
+    @Deprecated
     default R<ExpressionResult> detect(byte[] imageData, DetectionRectangle faceDetectionRectangle, List<Point> keyPoints){
         throw new UnsupportedOperationException("默认不支持该功能");
     }
@@ -140,6 +150,7 @@ public interface ExpressionModel extends AutoCloseable{
      * @param faceDetectionRectangle 人脸检测结果-人脸框
      * @return
      */
+    @Deprecated
     default R<ExpressionResult> detect(BufferedImage image, DetectionRectangle faceDetectionRectangle, List<Point> keyPoints){
         throw new UnsupportedOperationException("默认不支持该功能");
     }
@@ -150,6 +161,7 @@ public interface ExpressionModel extends AutoCloseable{
      * @param faceDetectionRectangle 人脸检测结果-人脸框
      * @return
      */
+    @Deprecated
     default R<ExpressionResult> detectBase64(String base64Image, DetectionRectangle faceDetectionRectangle, List<Point> keyPoints){
         throw new UnsupportedOperationException("默认不支持该功能");
     }
@@ -160,6 +172,7 @@ public interface ExpressionModel extends AutoCloseable{
      * @param image
      * @return
      */
+    @Deprecated
     default R<ExpressionResult> detectTopFace(BufferedImage image){
         throw new UnsupportedOperationException("默认不支持该功能");
     }
@@ -170,6 +183,7 @@ public interface ExpressionModel extends AutoCloseable{
      * @param imagePath
      * @return
      */
+    @Deprecated
     default R<ExpressionResult> detectTopFace(String imagePath){
         throw new UnsupportedOperationException("默认不支持该功能");
     }
@@ -179,6 +193,7 @@ public interface ExpressionModel extends AutoCloseable{
      * @param imageData
      * @return
      */
+    @Deprecated
     default R<ExpressionResult> detectTopFace(byte[] imageData){
         throw new UnsupportedOperationException("默认不支持该功能");
     }
@@ -189,13 +204,57 @@ public interface ExpressionModel extends AutoCloseable{
      * @param base64Image
      * @return
      */
+    @Deprecated
     default R<ExpressionResult> detectTopFaceBase64(String base64Image){
+        throw new UnsupportedOperationException("默认不支持该功能");
+    }
+
+    /**
+     * 表情识别(多人脸)
+     * @param image
+     * @return
+     */
+    default R<DetectionResponse> detect(Image image){
+        throw new UnsupportedOperationException("默认不支持该功能");
+    }
+
+
+    /**
+     * 表情识别(多人脸)
+     * @param image
+     * @param faceDetectionResponse 人脸检测结果
+     * @return
+     */
+    default R<List<ExpressionResult>> detect(Image image, DetectionResponse faceDetectionResponse){
+        throw new UnsupportedOperationException("默认不支持该功能");
+    }
+
+    /**
+     * 表情识别(单人脸)
+     * @param image
+     * @param faceDetectionRectangle 人脸检测结果-人脸框
+     * @return
+     */
+    default R<ExpressionResult> detect(Image image, DetectionRectangle faceDetectionRectangle, List<Point> keyPoints){
+        throw new UnsupportedOperationException("默认不支持该功能");
+    }
+
+    /**
+     * 表情识别(分数最高人脸)
+     * @param image
+     * @return
+     */
+    default R<ExpressionResult> detectTopFace(Image image){
         throw new UnsupportedOperationException("默认不支持该功能");
     }
 
 
 
     default GenericObjectPool<Predictor<Image, Classifications>> getPool(){
+        throw new UnsupportedOperationException("默认不支持该功能");
+    }
+
+    default void setFromFactory(boolean fromFactory){
         throw new UnsupportedOperationException("默认不支持该功能");
     }
 

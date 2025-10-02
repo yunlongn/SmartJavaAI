@@ -33,6 +33,8 @@ public class PoseDetDemo {
 
     @BeforeClass
     public static void beforeAll() throws IOException {
+        //将图片处理的底层引擎切换为 OpenCV
+        SmartImageFactory.setEngine(SmartImageFactory.Engine.OPENCV);
         //修改缓存路径
 //        Config.setCachePath("/Users/xxx/smartjavaai_cache");
     }
@@ -105,7 +107,7 @@ public class PoseDetDemo {
             //可以根据后续业务场景使用detectedImage
             Image drawImage = detectorModel.detectAndDraw(image);
             //保存图片
-            ImageUtils.saveImage(drawImage, "pose_detected.png", "output");
+            ImageUtils.save(drawImage, "pose_detected2.png", "output");
         } catch (Exception e) {
             e.printStackTrace();
         }

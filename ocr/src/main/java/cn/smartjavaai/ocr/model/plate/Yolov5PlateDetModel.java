@@ -4,7 +4,6 @@ import ai.djl.MalformedModelException;
 import ai.djl.engine.Engine;
 import ai.djl.inference.Predictor;
 import ai.djl.modality.cv.Image;
-import ai.djl.modality.cv.ImageFactory;
 import ai.djl.modality.cv.output.DetectedObjects;
 import ai.djl.ndarray.NDList;
 import ai.djl.ndarray.NDManager;
@@ -12,17 +11,17 @@ import ai.djl.repository.zoo.Criteria;
 import ai.djl.repository.zoo.ModelNotFoundException;
 import ai.djl.repository.zoo.ModelZoo;
 import ai.djl.repository.zoo.ZooModel;
+import cn.smartjavaai.common.cv.SmartImageFactory;
 import cn.smartjavaai.common.entity.R;
 import cn.smartjavaai.common.pool.PredictorFactory;
-import cn.smartjavaai.common.utils.Base64ImageUtils;
-import cn.smartjavaai.common.utils.FileUtils;
-import cn.smartjavaai.common.utils.ImageUtils;
-import cn.smartjavaai.common.utils.OpenCVUtils;
+import cn.smartjavaai.common.utils.*;
 import cn.smartjavaai.ocr.config.OcrDetModelConfig;
 import cn.smartjavaai.ocr.config.PlateDetModelConfig;
 import cn.smartjavaai.ocr.entity.OcrBox;
 import cn.smartjavaai.ocr.entity.PlateInfo;
 import cn.smartjavaai.ocr.exception.OcrException;
+import cn.smartjavaai.ocr.factory.OcrModelFactory;
+import cn.smartjavaai.ocr.factory.PlateModelFactory;
 import cn.smartjavaai.ocr.model.common.detect.criteria.OcrCommonDetCriterialFactory;
 import cn.smartjavaai.ocr.model.plate.criteria.PlateDetCriterialFactory;
 import cn.smartjavaai.ocr.utils.OcrUtils;
@@ -90,17 +89,15 @@ public class Yolov5PlateDetModel implements PlateDetModel{
         }
         Image img = null;
         try {
-            img = ImageFactory.getInstance().fromFile(Paths.get(imagePath));
+            img = SmartImageFactory.getInstance().fromFile(Paths.get(imagePath));
+            R<List<PlateInfo>> plateInfoList = detect(img);
+            return plateInfoList;
         } catch (IOException e) {
             throw new OcrException("无效的图片", e);
+        } finally {
+            ImageUtils.releaseOpenCVMat(img);
         }
-        DetectedObjects detectedObjects = detect(img);
-        if (Objects.isNull(detectedObjects) || detectedObjects.getNumberOfObjects() == 0){
-            return R.fail(R.Status.NO_OBJECT_DETECTED);
-        }
-        List<PlateInfo> plateInfoList = OcrUtils.convertToPlateInfo(detectedObjects, img);
-        ((Mat)img.getWrappedImage()).release();
-        return R.ok(plateInfoList);
+
     }
 
     @Override
@@ -114,17 +111,13 @@ public class Yolov5PlateDetModel implements PlateDetModel{
 
     @Override
     public R<List<PlateInfo>> detect(BufferedImage image) {
-        if(!ImageUtils.isImageValid(image)){
+        if(!BufferedImageUtils.isImageValid(image)){
             return R.fail(R.Status.INVALID_IMAGE);
         }
-        Image img = ImageFactory.getInstance().fromImage(OpenCVUtils.image2Mat(image));
-        DetectedObjects detectedObjects = detect(img);
-        if (Objects.isNull(detectedObjects) || detectedObjects.getNumberOfObjects() == 0){
-            return R.fail(R.Status.NO_OBJECT_DETECTED);
-        }
-        List<PlateInfo> plateInfoList = OcrUtils.convertToPlateInfo(detectedObjects, img);
-        ((Mat)img.getWrappedImage()).release();
-        return R.ok(plateInfoList);
+        Image img = SmartImageFactory.getInstance().fromBufferedImage(image);
+        R<List<PlateInfo>> plateInfoList = detect(img);
+        ImageUtils.releaseOpenCVMat(img);
+        return plateInfoList;
     }
 
     @Override
@@ -136,7 +129,7 @@ public class Yolov5PlateDetModel implements PlateDetModel{
     }
 
     @Override
-    public DetectedObjects detect(Image image) {
+    public DetectedObjects detectCore(Image image) {
         Predictor<Image, DetectedObjects> predictor = null;
         try {
             predictor = detPredictorPool.borrowObject();
@@ -164,14 +157,15 @@ public class Yolov5PlateDetModel implements PlateDetModel{
         if(Objects.isNull(inputStream)){
             return R.fail(R.Status.INVALID_IMAGE);
         }
+        Image img = null;
         try {
-            Image img = ImageFactory.getInstance().fromInputStream(inputStream);
-            DetectedObjects detection = detect(img);
-            List<PlateInfo> plateInfoList = OcrUtils.convertToPlateInfo(detection, img);
-            ((Mat)img.getWrappedImage()).release();
-            return R.ok(plateInfoList);
+            img = SmartImageFactory.getInstance().fromInputStream(inputStream);
+            R<List<PlateInfo>> plateInfoList = detect(img);
+            return plateInfoList;
         } catch (IOException e) {
             throw new OcrException("无效图片输入流", e);
+        } finally {
+            ImageUtils.releaseOpenCVMat(img);
         }
     }
 
@@ -181,8 +175,8 @@ public class Yolov5PlateDetModel implements PlateDetModel{
             return R.fail(R.Status.FILE_NOT_FOUND);
         }
         try {
-            Image img = ImageFactory.getInstance().fromFile(Paths.get(imagePath));
-            DetectedObjects detectedObjects = detect(img);
+            Image img = SmartImageFactory.getInstance().fromFile(Paths.get(imagePath));
+            DetectedObjects detectedObjects = detectCore(img);
             if(Objects.isNull(detectedObjects) || detectedObjects.getNumberOfObjects() == 0){
                 return R.fail(R.Status.NO_FACE_DETECTED);
             }
@@ -198,11 +192,11 @@ public class Yolov5PlateDetModel implements PlateDetModel{
 
     @Override
     public R<BufferedImage> detectAndDraw(BufferedImage sourceImage) {
-        if(!ImageUtils.isImageValid(sourceImage)){
+        if(!BufferedImageUtils.isImageValid(sourceImage)){
             return R.fail(R.Status.INVALID_IMAGE);
         }
-        Image img = ImageFactory.getInstance().fromImage(OpenCVUtils.image2Mat(sourceImage));
-        DetectedObjects detectedObjects = detect(img);
+        Image img = SmartImageFactory.getInstance().fromBufferedImage(sourceImage);
+        DetectedObjects detectedObjects = detectCore(img);
         if(Objects.isNull(detectedObjects) || detectedObjects.getNumberOfObjects() == 0){
             return R.fail(R.Status.NO_FACE_DETECTED);
         }
@@ -220,12 +214,36 @@ public class Yolov5PlateDetModel implements PlateDetModel{
     }
 
     @Override
+    public R<List<PlateInfo>> detect(Image image) {
+        DetectedObjects detectedObjects = detectCore(image);
+        if (Objects.isNull(detectedObjects) || detectedObjects.getNumberOfObjects() == 0){
+            return R.fail(R.Status.NO_OBJECT_DETECTED);
+        }
+        List<PlateInfo> plateInfoList = OcrUtils.convertToPlateInfo(detectedObjects, image);
+        return R.ok(plateInfoList);
+    }
+
+    @Override
+    public Image detectAndDraw(Image image) {
+        DetectedObjects detectedObjects = detectCore(image);
+        if (Objects.isNull(detectedObjects) || detectedObjects.getNumberOfObjects() == 0){
+            throw new OcrException("未检测到车牌");
+        }
+        Image img = ImageUtils.copy(image);
+        img.drawBoundingBoxes(detectedObjects);
+        return img;
+    }
+
+    @Override
     public GenericObjectPool<Predictor<Image, DetectedObjects>> getPool() {
         return detPredictorPool;
     }
 
     @Override
     public void close() throws Exception {
+        if (fromFactory) {
+            PlateModelFactory.removeDetModelFromCache(config.getModelEnum());
+        }
         try {
             if (detPredictorPool != null) {
                 detPredictorPool.close();
@@ -240,5 +258,15 @@ public class Yolov5PlateDetModel implements PlateDetModel{
         } catch (Exception e) {
             log.warn("关闭 model 失败", e);
         }
+    }
+
+    private boolean fromFactory = false;
+
+    @Override
+    public void setFromFactory(boolean fromFactory) {
+        this.fromFactory = fromFactory;
+    }
+    public boolean isFromFactory() {
+        return fromFactory;
     }
 }

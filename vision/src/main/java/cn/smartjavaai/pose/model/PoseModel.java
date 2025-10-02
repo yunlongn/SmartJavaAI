@@ -49,5 +49,8 @@ public interface PoseModel extends AutoCloseable{
         throw new UnsupportedOperationException("默认不支持该功能");
     }
 
+    default void setFromFactory(boolean fromFactory){
+        throw new UnsupportedOperationException("默认不支持该功能");
+    }
 
 }

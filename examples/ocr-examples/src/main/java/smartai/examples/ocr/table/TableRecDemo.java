@@ -3,6 +3,7 @@ package smartai.examples.ocr.table;
 import ai.djl.modality.cv.Image;
 import cn.hutool.core.io.FileUtil;
 import cn.smartjavaai.common.config.Config;
+import cn.smartjavaai.common.cv.SmartImageFactory;
 import cn.smartjavaai.common.entity.R;
 import cn.smartjavaai.common.enums.DeviceEnum;
 import cn.smartjavaai.common.utils.ImageUtils;
@@ -47,6 +48,7 @@ public class TableRecDemo {
 
     @BeforeClass
     public static void beforeAll() throws IOException {
+        SmartImageFactory.setEngine(SmartImageFactory.Engine.OPENCV);
         //修改缓存路径
 //        Config.setCachePath("/Users/xxx/smartjavaai_cache");
     }
@@ -79,7 +81,6 @@ public class TableRecDemo {
         config.setModelEnum(CommonDetModelEnum.PP_OCR_V5_MOBILE_DET_MODEL);
         //指定模型位置，需要更改为自己的模型路径（下载地址请查看文档）
         config.setDetModelPath("/Users/wenjie/Documents/develop/model/ocr/PP-OCRv5_mobile_det_infer/PP-OCRv5_mobile_det_infer.onnx");
-//        config.setDetModelPath("/Users/xxx/Documents/develop/model/ocr/PP-OCRv5_server_det_infer/PP-OCRv5_server_det.onnx");
         config.setDevice(device);
         return OcrModelFactory.getInstance().getDetModel(config);
     }
@@ -115,45 +116,6 @@ public class TableRecDemo {
 
 
 
-    /**
-     * 表格识别
-     * 仅支持简单表格
-     * 流程：表格结构识别 -> 文本检测 -> 文本识别 -> 合成html table
-     * 注意事项：
-     * 1、批量检测时，模型应统一放在外层 try 中使用，避免重复加载，自动释放资源更安全。
-     * 2、模型文件需要放在单独文件夹
-     */
-    @Test
-    public void recognize(){
-        try {
-            TableStructureModel tableStructureModel = getTableStructureModel();
-            OcrCommonDetModel detModel = getDetectionModel();
-            OcrCommonRecModel recModel = getRecModel();
-            OcrDirectionModel directionModel = getDirectionModel();
-            //创建表格识别器
-            TableRecognizer tableRecognizer = TableRecognizer.builder()
-                    .withStructureModel(tableStructureModel)
-                    .withTextDetModel(detModel)
-//                .withDirectionModel(getDirectionModel()) //如果表格中存在旋转的文字，可以使用方向分类模型
-                    .withTextRecModel(recModel).build();
-            String imagePath = "src/main/resources/table/table_ch1.png";
-            BufferedImage image = ImageIO.read(new File(Paths.get(imagePath).toAbsolutePath().toString()));
-            R<TableStructureResult> result = tableRecognizer.recognize(image);
-            if(result.isSuccess()){
-                log.info("result: {}", result.getData().getHtml());
-                //导出html内容到文件
-                Path outputPath = Paths.get("output/table_ch2_result.html");
-                FileUtil.writeUtf8String(result.getData().getHtml(), outputPath.toAbsolutePath().toString());
-                //绘制表格结构
-                tableRecognizer.drawTable(result.getData(), image, "output/table_ch2_result.jpg");
-                //导出excel，如果导出失败，可能是因为表格结果识别的结果是错乱的
-                tableRecognizer.exportExcel(result.getData().getHtml(), "output/table_ch2_result.xls");
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
 
     /**
      * 表格识别
@@ -177,7 +139,8 @@ public class TableRecDemo {
 //                .withDirectionModel(getDirectionModel()) //如果表格中存在旋转的文字，可以使用方向分类模型
                     .withTextRecModel(recModel).build();
             String imagePath = "src/main/resources/table/table_ch1.png";
-            BufferedImage image = ImageIO.read(new File(Paths.get(imagePath).toAbsolutePath().toString()));
+            //创建Image对象，可以从文件、url、InputStream创建、BufferedImage、Base64创建，具体使用方法可以查看文档
+            Image image = SmartImageFactory.getInstance().fromFile(imagePath);
             R<TableStructureResult> result = tableRecognizer.recognize(image);
             if(result.isSuccess()){
                 log.info("result: {}", result.getData().getHtml());
@@ -185,8 +148,8 @@ public class TableRecDemo {
                 Path outputPath = Paths.get("output/table_ch2_result.html");
                 FileUtil.writeUtf8String(result.getData().getHtml(), outputPath.toAbsolutePath().toString());
                 //绘制表格结构
-                BufferedImage resultImage = tableRecognizer.drawTable(result.getData(), image);
-                ImageUtils.saveImage(resultImage, "output/table_ch2_result.jpg");
+                Image resultImage = tableRecognizer.drawTable(result.getData(), image);
+                ImageUtils.save(resultImage, "output/table_ch2_result.jpg");
                 //导出excel，如果导出失败，可能是因为表格结果识别的结果是错乱的
                 try (OutputStream out = Files.newOutputStream(Paths.get("output/table_ch2_result2.xls"))) {
                     tableRecognizer.exportExcel(result.getData().getHtml(), out);

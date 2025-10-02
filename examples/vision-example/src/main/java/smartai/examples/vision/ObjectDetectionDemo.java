@@ -5,6 +5,7 @@ import ai.djl.modality.cv.ImageFactory;
 import ai.djl.util.JsonUtils;
 import cn.hutool.core.date.LocalDateTimeUtil;
 import cn.hutool.core.lang.UUID;
+import cn.smartjavaai.common.cv.SmartImageFactory;
 import cn.smartjavaai.common.entity.DetectionInfo;
 import cn.smartjavaai.common.entity.DetectionRectangle;
 import cn.smartjavaai.common.entity.DetectionResponse;
@@ -56,6 +57,8 @@ public class ObjectDetectionDemo {
 
     @BeforeClass
     public static void beforeAll() throws IOException {
+        //将图片处理的底层引擎切换为 OpenCV
+        SmartImageFactory.setEngine(SmartImageFactory.Engine.OPENCV);
         //修改缓存路径
 //        Config.setCachePath("/Users/xxx/smartjavaai_cache");
     }
@@ -90,7 +93,9 @@ public class ObjectDetectionDemo {
     public void objectDetection(){
         try {
             DetectorModel detectorModel = getModel();
-            DetectionResponse detectionResponse = detectorModel.detect("src/main/resources/object_detection.jpg");
+            //创建Image对象，可以从文件、url、InputStream创建、BufferedImage、Base64创建，具体使用方法可以查看文档
+            Image image = SmartImageFactory.getInstance().fromFile("src/main/resources/object_detection.jpg");
+            DetectionResponse detectionResponse = detectorModel.detect(image);
             log.info("目标检测结果：{}", JSONObject.toJSONString(detectionResponse));
         } catch (Exception e) {
             e.printStackTrace();
@@ -118,10 +123,14 @@ public class ObjectDetectionDemo {
         try {
             DetectorModel detectorModel = getModel();
             String imagePath = "src/main/resources/object_detection.jpg";
-            BufferedImage image = ImageIO.read(new File(Paths.get(imagePath).toAbsolutePath().toString()));
+            //创建Image对象，可以从文件、url、InputStream创建、BufferedImage、Base64创建，具体使用方法可以查看文档
+            Image image = SmartImageFactory.getInstance().fromFile(imagePath);
             //可以根据后续业务场景使用detectedImage
-            BufferedImage detectedImage = detectorModel.detectAndDraw(image);
-            Assert.assertNotNull("detectedImage null", detectedImage);
+            DetectionResponse detectionResponse = detectorModel.detectAndDraw(image);
+            log.info("目标检测结果：{}", JSONObject.toJSONString(detectionResponse));
+            if(detectionResponse != null && detectionResponse.getDrawnImage() != null){
+                ImageUtils.save(detectionResponse.getDrawnImage(), "output/object_detection_detected2.png");
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -181,9 +190,9 @@ public class ObjectDetectionDemo {
             config.setTopK(100);
             config.setDevice(device);
             DetectorModel detectorModel = ObjectDetectionModelFactory.getInstance().getModel(config);
-            DetectionResponse detectionResponse = detectorModel.detect("src/main/resources/dog_bike_car.jpg");
-            //检测并保存绘制结果
-            detectorModel.detectAndDraw("src/main/resources/dog_bike_car.jpg", "output/dog_bike_car_detect.jpg");
+            //创建Image对象，可以从文件、url、InputStream创建、BufferedImage、Base64创建，具体使用方法可以查看文档
+            Image image = SmartImageFactory.getInstance().fromFile("src/main/resources/dog_bike_car.jpg");
+            DetectionResponse detectionResponse = detectorModel.detect(image);
             log.info("目标检测结果：{}", JSONObject.toJSONString(detectionResponse));
         } catch (Exception e) {
             e.printStackTrace();
@@ -218,11 +227,11 @@ public class ObjectDetectionDemo {
                         log.info("时间：" + LocalDateTimeUtil.now().toString());
                         log.info("检测结果：{}", JsonUtils.toJson(detectionInfoList));
                         //绘制检测结果
-                        OpenCVUtils.drawRectAndText(image, detectionInfoList);
+                        ImageUtils.drawRectAndText(image, detectionInfoList);
                         //保存图片
-                        ImageUtils.saveImage(image, "test"+ UUID.fastUUID().toString() +".png","/Users/wenjie/Downloads");
+                        ImageUtils.save(image, "test"+ UUID.fastUUID().toString() +".png","/Users/wenjie/Downloads");
                         if (image != null){
-                            ((Mat)image.getWrappedImage()).release();
+                            ImageUtils.releaseOpenCVMat(image);
                         }
                     }
 
@@ -268,9 +277,12 @@ public class ObjectDetectionDemo {
                         log.info("时间：" + LocalDateTimeUtil.now().toString());
                         log.info("检测结果：{}", JsonUtils.toJson(detectionInfoList));
                         //绘制检测结果
-                        OpenCVUtils.drawRectAndText(image, detectionInfoList);
+                        ImageUtils.drawRectAndText(image, detectionInfoList);
                         //保存图片
-                        ImageUtils.saveImage(image, "test"+ UUID.fastUUID().toString() +".png","/Users/wenjie/Downloads");
+                        ImageUtils.save(image, "test"+ UUID.fastUUID().toString() +".png","/Users/wenjie/Downloads");
+                        if (image != null){
+                            ImageUtils.releaseOpenCVMat(image);
+                        }
                     }
 
                     @Override
@@ -316,9 +328,12 @@ public class ObjectDetectionDemo {
                         log.info("时间：" + LocalDateTimeUtil.now().toString());
                         log.info("检测结果：{}", JsonUtils.toJson(detectionInfoList));
                         //绘制检测结果
-                        OpenCVUtils.drawRectAndText(image, detectionInfoList);
+                        ImageUtils.drawRectAndText(image, detectionInfoList);
                         //保存图片
-                        ImageUtils.saveImage(image, "test"+ UUID.fastUUID().toString() +".png","/Users/wenjie/Downloads");
+                        ImageUtils.save(image, "test"+ UUID.fastUUID().toString() +".png","/Users/wenjie/Downloads");
+                        if (image != null){
+                            ImageUtils.releaseOpenCVMat(image);
+                        }
                     }
 
                     @Override
@@ -385,7 +400,7 @@ public class ObjectDetectionDemo {
                 JOptionPane.showConfirmDialog(null, "Failed to capture image from WebCam.");
             }
             ViewerFrame frame = new ViewerFrame(width, height);
-            ImageFactory factory = ImageFactory.getInstance();
+            SmartImageFactory factory = SmartImageFactory.getInstance();
             Size size = new Size(width, height);
 
             while (capture.isOpened()) {
@@ -394,9 +409,8 @@ public class ObjectDetectionDemo {
                 }
                 Mat resizeImage = new Mat();
                 Imgproc.resize(image, resizeImage, size);
-                Image img = factory.fromImage(resizeImage);
-                BufferedImage bufferedImage = OpenCVUtils.mat2Image(resizeImage);
-                DetectionResponse detectedResult = detectorModel.detect(bufferedImage);
+                Image img = factory.fromMat(resizeImage);
+                DetectionResponse detectedResult = detectorModel.detect(img);
                 if (Objects.isNull(detectedResult) || Objects.isNull(detectedResult.getDetectionInfoList()) || detectedResult.getDetectionInfoList().size() == 0){
                     log.debug("未检测到物体");
                     continue;
@@ -404,11 +418,10 @@ public class ObjectDetectionDemo {
                 for(DetectionInfo detectionInfo : detectedResult.getDetectionInfoList()){
                     DetectionRectangle detectionRectangle = detectionInfo.getDetectionRectangle();
                     String text = detectionInfo.getObjectDetInfo().getClassName();
-                    ImageUtils.drawImageRectWithText(bufferedImage, detectionRectangle, text, Color.RED);
+                    ImageUtils.drawRectAndText(img, detectionRectangle, text);
                 }
-                frame.showImage(bufferedImage);
+                frame.showImage(ImageUtils.toBufferedImage(img));
             }
-
             capture.release();
             System.exit(0);
         } catch (Exception e) {

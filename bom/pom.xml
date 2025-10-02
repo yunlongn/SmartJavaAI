@@ -6,12 +6,12 @@
     <parent>
         <groupId>cn.smartjavaai</groupId>
         <artifactId>smartjavaai-parent</artifactId>
-        <version>1.0.24</version>
+        <version>1.0.25</version>
     </parent>
 
-    <version>1.0.24</version>
+    <version>1.0.25</version>
     <artifactId>bom</artifactId>
-    <name>sbom</name>
+    <name>bom</name>
     <description>统一版本管理的 BOM 包，同时支持 import 和全量依赖</description>
 
     <properties>

@@ -1,12 +1,15 @@
 package cn.smartjavaai.face.model.attribute;
 
 import ai.djl.engine.Engine;
+import ai.djl.modality.cv.Image;
 import cn.smartjavaai.common.entity.*;
+import cn.smartjavaai.common.entity.Point;
 import cn.smartjavaai.common.entity.face.FaceAttribute;
 import cn.smartjavaai.common.entity.face.FaceInfo;
 import cn.smartjavaai.common.entity.face.HeadPose;
 import cn.smartjavaai.common.enums.DeviceEnum;
 import cn.smartjavaai.common.enums.face.EyeStatus;
+import cn.smartjavaai.common.utils.BufferedImageUtils;
 import cn.smartjavaai.common.utils.FileUtils;
 import cn.smartjavaai.common.utils.ImageUtils;
 import cn.smartjavaai.common.utils.PoolUtils;
@@ -14,8 +17,10 @@ import cn.smartjavaai.face.config.FaceAttributeConfig;
 import cn.smartjavaai.common.enums.face.GenderType;
 import cn.smartjavaai.face.context.PredictorContext;
 import cn.smartjavaai.face.exception.FaceException;
+import cn.smartjavaai.face.factory.FaceAttributeModelFactory;
 import cn.smartjavaai.face.seetaface.NativeLoader;
 import cn.smartjavaai.face.utils.FaceUtils;
+import cn.smartjavaai.face.utils.Seetaface6Utils;
 import com.seeta.pool.*;
 import com.seeta.sdk.*;
 import lombok.extern.slf4j.Slf4j;
@@ -150,7 +155,7 @@ public class Seetaface6FaceAttributeModel implements FaceAttributeModel {
 
     @Override
     public DetectionResponse detect(BufferedImage image) {
-        if(!ImageUtils.isImageValid(image)){
+        if(!BufferedImageUtils.isImageValid(image)){
             throw new FaceException("图像无效");
         }
         //创建推力器上下文
@@ -168,7 +173,7 @@ public class Seetaface6FaceAttributeModel implements FaceAttributeModel {
             predictorContext.eyeStateDetector = config.isEnableEyeStatus() ? eyeStateDetectorPool.borrowObject() : null;
             predictorContext.poseEstimator = config.isEnableHeadPose() ? poseEstimatorPool.borrowObject() : null;
             SeetaImageData imageData = new SeetaImageData(image.getWidth(), image.getHeight(), 3);
-            imageData.data = ImageUtils.getMatrixBGR(image);
+            imageData.data = BufferedImageUtils.getMatrixBGR(image);
             //检测人脸
             SeetaRect[] seetaResult = detectPredictor.Detect(imageData);
             if(Objects.isNull(seetaResult)){
@@ -182,7 +187,7 @@ public class Seetaface6FaceAttributeModel implements FaceAttributeModel {
                 FaceAttribute faceAttribute = detect(imageData, seetaRect, landmarks, predictorContext);
                 faceAttributeList.add(faceAttribute);
             }
-            return FaceUtils.convertToFaceAttributeResponse(seetaResult, seetaPointFSList, faceAttributeList);
+            return Seetaface6Utils.convertToFaceAttributeResponse(seetaResult, seetaPointFSList, faceAttributeList);
         } catch (Exception e) {
             throw new FaceException("人脸属性检测错误", e);
         } finally {
@@ -212,15 +217,15 @@ public class Seetaface6FaceAttributeModel implements FaceAttributeModel {
         if (config.isEnableGender()){
             GenderPredictor.GENDER[] gender = new GenderPredictor.GENDER[1];
             boolean isSuccess = predictorContext.genderPredictor.PredictGenderWithCrop(imageData, landmarks, gender);
-            genderType = isSuccess ? FaceUtils.convertToGenderType(gender[0]) : GenderType.UNKNOWN;
+            genderType = isSuccess ? Seetaface6Utils.convertToGenderType(gender[0]) : GenderType.UNKNOWN;
         }
         //眼睛状态检测
         EyeStatus leftEyeStatus = null;
         EyeStatus rightEyeStatus = null;
         if (config.isEnableEyeStatus()){
             EyeStateDetector.EYE_STATE[] eyeState  = predictorContext.eyeStateDetector.detect(imageData, landmarks);
-            leftEyeStatus = FaceUtils.convertToEyeStatus(eyeState[0]);
-            rightEyeStatus = FaceUtils.convertToEyeStatus(eyeState[1]);
+            leftEyeStatus = Seetaface6Utils.convertToEyeStatus(eyeState[0]);
+            rightEyeStatus = Seetaface6Utils.convertToEyeStatus(eyeState[1]);
         }
         //年龄检测
         Integer age = 0;
@@ -278,7 +283,7 @@ public class Seetaface6FaceAttributeModel implements FaceAttributeModel {
 
     @Override
     public List<FaceAttribute> detect(BufferedImage image, DetectionResponse faceDetectionResponse) {
-        if(!ImageUtils.isImageValid(image)){
+        if(!BufferedImageUtils.isImageValid(image)){
             throw new FaceException("图像无效");
         }
         if(Objects.isNull(faceDetectionResponse) || Objects.isNull(faceDetectionResponse.getDetectionInfoList()) || faceDetectionResponse.getDetectionInfoList().isEmpty()){
@@ -297,8 +302,8 @@ public class Seetaface6FaceAttributeModel implements FaceAttributeModel {
             predictorContext.poseEstimator = config.isEnableHeadPose() ? poseEstimatorPool.borrowObject() : null;
             for(DetectionInfo detectionInfo : faceDetectionResponse.getDetectionInfoList()){
                 SeetaImageData imageData = new SeetaImageData(image.getWidth(), image.getHeight(), 3);
-                imageData.data = ImageUtils.getMatrixBGR(image);
-                SeetaRect seetaRect = FaceUtils.convertToSeetaRect(detectionInfo.getDetectionRectangle());
+                imageData.data = BufferedImageUtils.getMatrixBGR(image);
+                SeetaRect seetaRect = Seetaface6Utils.convertToSeetaRect(detectionInfo.getDetectionRectangle());
                 SeetaPointF[] landmarks = null;
                 FaceInfo faceInfo = detectionInfo.getFaceInfo();
                 //如果没有人脸标识，则提取人脸标识
@@ -307,7 +312,7 @@ public class Seetaface6FaceAttributeModel implements FaceAttributeModel {
                     landmarks = new SeetaPointF[faceLandmarker.number()];
                     faceLandmarker.mark(imageData, seetaRect, landmarks);
                 }else{
-                    landmarks = FaceUtils.convertToSeetaPointF(faceInfo.getKeyPoints());
+                    landmarks = Seetaface6Utils.convertToSeetaPointF(faceInfo.getKeyPoints());
                 }
                 //人脸属性检测
                 FaceAttribute faceAttribute = detect(imageData, seetaRect, landmarks, predictorContext);
@@ -365,7 +370,7 @@ public class Seetaface6FaceAttributeModel implements FaceAttributeModel {
 
     @Override
     public FaceAttribute detect(BufferedImage image, DetectionRectangle faceDetectionRectangle, List<Point> keyPoints) {
-        if(!ImageUtils.isImageValid(image)){
+        if(!BufferedImageUtils.isImageValid(image)){
             throw new FaceException("图像无效");
         }
         if(Objects.isNull(faceDetectionRectangle)){
@@ -380,13 +385,13 @@ public class Seetaface6FaceAttributeModel implements FaceAttributeModel {
             predictorContext.eyeStateDetector = config.isEnableEyeStatus() ? eyeStateDetectorPool.borrowObject() : null;
             predictorContext.poseEstimator = config.isEnableHeadPose() ? poseEstimatorPool.borrowObject() : null;
             SeetaImageData imageData = new SeetaImageData(image.getWidth(), image.getHeight(), 3);
-            imageData.data = ImageUtils.getMatrixBGR(image);
-            SeetaRect seetaRect = FaceUtils.convertToSeetaRect(faceDetectionRectangle);
+            imageData.data = BufferedImageUtils.getMatrixBGR(image);
+            SeetaRect seetaRect = Seetaface6Utils.convertToSeetaRect(faceDetectionRectangle);
             SeetaPointF[] landmarks = null;
             if(keyPoints == null || keyPoints.isEmpty()){
                 throw new FaceException("人脸关键点keyPoints为空");
             }
-            landmarks = FaceUtils.convertToSeetaPointF(keyPoints);
+            landmarks = Seetaface6Utils.convertToSeetaPointF(keyPoints);
             //人脸属性检测
             FaceAttribute faceAttribute = detect(imageData, seetaRect, landmarks, predictorContext);
             return faceAttribute;
@@ -431,10 +436,196 @@ public class Seetaface6FaceAttributeModel implements FaceAttributeModel {
 
     @Override
     public FaceAttribute detectTopFace(BufferedImage image) {
-        if(!ImageUtils.isImageValid(image)){
+        if(!BufferedImageUtils.isImageValid(image)){
             throw new FaceException("图像无效");
         }
 
+        FaceLandmarker faceLandmarker = null;
+        FaceDetector detectPredictor = null;
+        //创建推力器上下文
+        PredictorContext predictorContext = new PredictorContext();
+        try {
+            detectPredictor = faceDetectorPool.borrowObject();
+            faceLandmarker = faceLandmarkerPool.borrowObject();
+            predictorContext.genderPredictor = config.isEnableGender() ? genderPredictorPool.borrowObject() : null;
+            predictorContext.agePredictor = config.isEnableAge() ? agePredictorPool.borrowObject() : null;
+            predictorContext.maskDetector = config.isEnableMask() ? maskDetectorPool.borrowObject() : null;
+            predictorContext.eyeStateDetector = config.isEnableEyeStatus() ? eyeStateDetectorPool.borrowObject() : null;
+            predictorContext.poseEstimator = config.isEnableHeadPose() ? poseEstimatorPool.borrowObject() : null;
+            SeetaImageData imageData = new SeetaImageData(image.getWidth(), image.getHeight(), 3);
+            imageData.data = BufferedImageUtils.getMatrixBGR(image);
+            //检测人脸
+            SeetaRect[] seetaResult = detectPredictor.Detect(imageData);
+            if(Objects.isNull(seetaResult)){
+                throw new FaceException("无人脸数据");
+            }
+            SeetaPointF[] landmarks = new SeetaPointF[faceLandmarker.number()];
+            faceLandmarker.mark(imageData, seetaResult[0], landmarks);
+            //人脸属性检测
+            FaceAttribute faceAttribute = detect(imageData, seetaResult[0], landmarks, predictorContext);
+            return faceAttribute;
+        } catch (Exception e) {
+            throw new FaceException("活体检测错误", e);
+        } finally {
+            if (detectPredictor != null) {
+                try {
+                    faceDetectorPool.returnObject(detectPredictor);
+                } catch (Exception e) {
+                    log.warn("归还Predictor失败", e);
+                }
+            }
+
+            if (faceLandmarker != null) {
+                try {
+                    faceLandmarkerPool.returnObject(faceLandmarker);
+                } catch (Exception e) {
+                    log.warn("归还Predictor失败", e);
+                }
+            }
+            PoolUtils.returnToPool(genderPredictorPool, predictorContext.genderPredictor);
+            PoolUtils.returnToPool(agePredictorPool, predictorContext.agePredictor);
+            PoolUtils.returnToPool(maskDetectorPool, predictorContext.maskDetector);
+            PoolUtils.returnToPool(eyeStateDetectorPool, predictorContext.eyeStateDetector);
+            PoolUtils.returnToPool(poseEstimatorPool, predictorContext.poseEstimator);
+        }
+    }
+
+    @Override
+    public DetectionResponse detect(Image image) {
+        //创建推力器上下文
+        PredictorContext predictorContext = new PredictorContext();
+        FaceLandmarker faceLandmarker = null;
+        FaceDetector detectPredictor = null;
+        List<SeetaPointF[]> seetaPointFSList = new ArrayList<SeetaPointF[]>();
+        List<FaceAttribute> faceAttributeList = new ArrayList<FaceAttribute>();
+        try {
+            detectPredictor = faceDetectorPool.borrowObject();
+            faceLandmarker = faceLandmarkerPool.borrowObject();
+            predictorContext.genderPredictor = config.isEnableGender() ? genderPredictorPool.borrowObject() : null;
+            predictorContext.agePredictor = config.isEnableAge() ? agePredictorPool.borrowObject() : null;
+            predictorContext.maskDetector = config.isEnableMask() ? maskDetectorPool.borrowObject() : null;
+            predictorContext.eyeStateDetector = config.isEnableEyeStatus() ? eyeStateDetectorPool.borrowObject() : null;
+            predictorContext.poseEstimator = config.isEnableHeadPose() ? poseEstimatorPool.borrowObject() : null;
+            SeetaImageData imageData = new SeetaImageData(image.getWidth(), image.getHeight(), 3);
+            imageData.data = ImageUtils.getMatrixBGR(image);
+            //检测人脸
+            SeetaRect[] seetaResult = detectPredictor.Detect(imageData);
+            if(Objects.isNull(seetaResult)){
+                throw new FaceException("无人脸数据");
+            }
+            for(SeetaRect seetaRect : seetaResult){
+                SeetaPointF[] landmarks = new SeetaPointF[faceLandmarker.number()];
+                faceLandmarker.mark(imageData, seetaRect, landmarks);
+                seetaPointFSList.add(landmarks);
+                //人脸属性检测
+                FaceAttribute faceAttribute = detect(imageData, seetaRect, landmarks, predictorContext);
+                faceAttributeList.add(faceAttribute);
+            }
+            return Seetaface6Utils.convertToFaceAttributeResponse(seetaResult, seetaPointFSList, faceAttributeList);
+        } catch (Exception e) {
+            throw new FaceException("人脸属性检测错误", e);
+        } finally {
+            // 统一归还所有 Predictor 到池
+            PoolUtils.returnToPool(faceDetectorPool, detectPredictor);
+            PoolUtils.returnToPool(faceLandmarkerPool, faceLandmarker);
+            PoolUtils.returnToPool(genderPredictorPool, predictorContext.genderPredictor);
+            PoolUtils.returnToPool(agePredictorPool, predictorContext.agePredictor);
+            PoolUtils.returnToPool(maskDetectorPool, predictorContext.maskDetector);
+            PoolUtils.returnToPool(eyeStateDetectorPool, predictorContext.eyeStateDetector);
+            PoolUtils.returnToPool(poseEstimatorPool, predictorContext.poseEstimator);
+        }
+    }
+
+    @Override
+    public List<FaceAttribute> detect(Image image, DetectionResponse faceDetectionResponse) {
+        if(Objects.isNull(faceDetectionResponse) || Objects.isNull(faceDetectionResponse.getDetectionInfoList()) || faceDetectionResponse.getDetectionInfoList().isEmpty()){
+            throw new FaceException("无人脸数据");
+        }
+        //创建推力器上下文
+        PredictorContext predictorContext = new PredictorContext();
+        FaceLandmarker faceLandmarker = null;
+        List<FaceAttribute> faceAttributeList = new ArrayList<FaceAttribute>();
+        try {
+            faceLandmarker = faceLandmarkerPool.borrowObject();
+            predictorContext.genderPredictor = config.isEnableGender() ? genderPredictorPool.borrowObject() : null;
+            predictorContext.agePredictor = config.isEnableAge() ? agePredictorPool.borrowObject() : null;
+            predictorContext.maskDetector = config.isEnableMask() ? maskDetectorPool.borrowObject() : null;
+            predictorContext.eyeStateDetector = config.isEnableEyeStatus() ? eyeStateDetectorPool.borrowObject() : null;
+            predictorContext.poseEstimator = config.isEnableHeadPose() ? poseEstimatorPool.borrowObject() : null;
+            for(DetectionInfo detectionInfo : faceDetectionResponse.getDetectionInfoList()){
+                SeetaImageData imageData = new SeetaImageData(image.getWidth(), image.getHeight(), 3);
+                imageData.data = ImageUtils.getMatrixBGR(image);
+                SeetaRect seetaRect = Seetaface6Utils.convertToSeetaRect(detectionInfo.getDetectionRectangle());
+                SeetaPointF[] landmarks = null;
+                FaceInfo faceInfo = detectionInfo.getFaceInfo();
+                //如果没有人脸标识，则提取人脸标识
+                if(faceInfo == null || faceInfo.getKeyPoints() == null || faceInfo.getKeyPoints().isEmpty()){
+                    //提取人脸的5点人脸标识
+                    landmarks = new SeetaPointF[faceLandmarker.number()];
+                    faceLandmarker.mark(imageData, seetaRect, landmarks);
+                }else{
+                    landmarks = Seetaface6Utils.convertToSeetaPointF(faceInfo.getKeyPoints());
+                }
+                //人脸属性检测
+                FaceAttribute faceAttribute = detect(imageData, seetaRect, landmarks, predictorContext);
+                faceAttributeList.add(faceAttribute);
+            }
+        } catch (Exception e) {
+            throw new FaceException("活体检测错误", e);
+        } finally {
+            if (faceLandmarker != null) {
+                try {
+                    faceLandmarkerPool.returnObject(faceLandmarker);
+                } catch (Exception e) {
+                    log.warn("归还Predictor失败", e);
+                }
+            }
+            PoolUtils.returnToPool(genderPredictorPool, predictorContext.genderPredictor);
+            PoolUtils.returnToPool(agePredictorPool, predictorContext.agePredictor);
+            PoolUtils.returnToPool(maskDetectorPool, predictorContext.maskDetector);
+            PoolUtils.returnToPool(eyeStateDetectorPool, predictorContext.eyeStateDetector);
+            PoolUtils.returnToPool(poseEstimatorPool, predictorContext.poseEstimator);
+        }
+        return faceAttributeList;
+    }
+
+    @Override
+    public FaceAttribute detect(Image image, DetectionRectangle faceDetectionRectangle, List<Point> keyPoints) {
+        if(Objects.isNull(faceDetectionRectangle)){
+            throw new FaceException("无人脸数据");
+        }
+        //创建推力器上下文
+        PredictorContext predictorContext = new PredictorContext();
+        try {
+            predictorContext.genderPredictor = config.isEnableGender() ? genderPredictorPool.borrowObject() : null;
+            predictorContext.agePredictor = config.isEnableAge() ? agePredictorPool.borrowObject() : null;
+            predictorContext.maskDetector = config.isEnableMask() ? maskDetectorPool.borrowObject() : null;
+            predictorContext.eyeStateDetector = config.isEnableEyeStatus() ? eyeStateDetectorPool.borrowObject() : null;
+            predictorContext.poseEstimator = config.isEnableHeadPose() ? poseEstimatorPool.borrowObject() : null;
+            SeetaImageData imageData = new SeetaImageData(image.getWidth(), image.getHeight(), 3);
+            imageData.data = ImageUtils.getMatrixBGR(image);
+            SeetaRect seetaRect = Seetaface6Utils.convertToSeetaRect(faceDetectionRectangle);
+            SeetaPointF[] landmarks = null;
+            if(keyPoints == null || keyPoints.isEmpty()){
+                throw new FaceException("人脸关键点keyPoints为空");
+            }
+            landmarks = Seetaface6Utils.convertToSeetaPointF(keyPoints);
+            //人脸属性检测
+            FaceAttribute faceAttribute = detect(imageData, seetaRect, landmarks, predictorContext);
+            return faceAttribute;
+        } catch (Exception e) {
+            throw new FaceException("活体检测错误", e);
+        } finally {
+            PoolUtils.returnToPool(genderPredictorPool, predictorContext.genderPredictor);
+            PoolUtils.returnToPool(agePredictorPool, predictorContext.agePredictor);
+            PoolUtils.returnToPool(maskDetectorPool, predictorContext.maskDetector);
+            PoolUtils.returnToPool(eyeStateDetectorPool, predictorContext.eyeStateDetector);
+            PoolUtils.returnToPool(poseEstimatorPool, predictorContext.poseEstimator);
+        }
+    }
+
+    @Override
+    public FaceAttribute detectTopFace(Image image) {
         FaceLandmarker faceLandmarker = null;
         FaceDetector detectPredictor = null;
         //创建推力器上下文
@@ -485,7 +676,6 @@ public class Seetaface6FaceAttributeModel implements FaceAttributeModel {
         }
     }
 
-
     public FaceDetectorPool getFaceDetectorPool() {
         return faceDetectorPool;
     }
@@ -514,8 +704,20 @@ public class Seetaface6FaceAttributeModel implements FaceAttributeModel {
         return poseEstimatorPool;
     }
 
+    private boolean fromFactory = false;
+
+    public void setFromFactory(boolean fromFactory) {
+        this.fromFactory = fromFactory;
+    }
+    public boolean isFromFactory() {
+        return fromFactory;
+    }
+
     @Override
     public void close() throws Exception {
+        if (fromFactory) {
+            FaceAttributeModelFactory.removeFromCache(config.getModelEnum());
+        }
         if(Objects.nonNull(faceDetectorPool)){
             faceDetectorPool.close();
         }

@@ -1,8 +1,12 @@
 package cn.smartjavaai.face.model.quality;
 
 import ai.djl.engine.Engine;
+import ai.djl.modality.cv.Image;
+import cn.smartjavaai.common.cv.SmartImageFactory;
 import cn.smartjavaai.common.entity.*;
+import cn.smartjavaai.common.entity.face.ExpressionResult;
 import cn.smartjavaai.common.enums.DeviceEnum;
+import cn.smartjavaai.common.utils.BufferedImageUtils;
 import cn.smartjavaai.common.utils.FileUtils;
 import cn.smartjavaai.common.utils.ImageUtils;
 import cn.smartjavaai.common.utils.PoolUtils;
@@ -11,9 +15,12 @@ import cn.smartjavaai.face.entity.FaceQualityResult;
 import cn.smartjavaai.face.entity.FaceQualitySummary;
 import cn.smartjavaai.face.enums.QualityGrade;
 import cn.smartjavaai.face.exception.FaceException;
+import cn.smartjavaai.face.factory.FaceQualityModelFactory;
+import cn.smartjavaai.face.factory.LivenessModelFactory;
 import cn.smartjavaai.face.seetaface.ClarityDLResult;
 import cn.smartjavaai.face.seetaface.NativeLoader;
 import cn.smartjavaai.face.utils.FaceUtils;
+import cn.smartjavaai.face.utils.Seetaface6Utils;
 import com.seeta.pool.*;
 import com.seeta.sdk.*;
 import lombok.extern.slf4j.Slf4j;
@@ -98,42 +105,10 @@ public class Seetaface6QualityModel implements FaceQualityModel {
 
     @Override
     public R<FaceQualityResult> evaluateBrightness(BufferedImage image, DetectionRectangle rectangle, List<Point> keyPoints) {
-        //参数检查
-        if(!ImageUtils.isImageValid(image)){
-            return R.fail(R.Status.INVALID_IMAGE);
-        }
-        if(Objects.isNull(rectangle)){
-            return R.fail(R.Status.PARAM_ERROR.getCode(), "rectangle为空");
-        }
-        if(Objects.isNull(keyPoints) || keyPoints.isEmpty()){
-            return R.fail(R.Status.PARAM_ERROR.getCode(), "keyPoints为空");
-        }
-        QualityOfBrightness qualityOfBrightness = null;
-        try {
-            if(Objects.isNull(this.qualityOfBrightnessPool)){
-                this.qualityOfBrightnessPool = new QualityOfBrightnessPool(new SeetaConfSetting());
-                qualityOfBrightnessPool.setMaxTotal(predictorPoolSize);
-            }
-            qualityOfBrightness = qualityOfBrightnessPool.borrowObject();
-            SeetaImageData imageData = new SeetaImageData(image.getWidth(), image.getHeight(), 3);
-            imageData.data = ImageUtils.getMatrixBGR(image);
-            SeetaRect seetaRect = FaceUtils.convertToSeetaRect(rectangle);
-            SeetaPointF[] pointFS = FaceUtils.convertToSeetaPointF(keyPoints);
-            float[] scores = new float[1];
-            QualityOfBrightness.QualityLevel level = qualityOfBrightness.check(imageData, seetaRect, pointFS, scores);
-            FaceQualityResult result = new FaceQualityResult(scores[0], QualityGrade.valueOf(level.name()));
-            return R.ok(result);
-        } catch (Exception e) {
-            throw new FaceException("亮度评估错误", e);
-        } finally {
-            if (qualityOfBrightness != null) {
-                try {
-                    qualityOfBrightnessPool.returnObject(qualityOfBrightness);
-                } catch (Exception e) {
-                    log.warn("归还Predictor失败", e);
-                }
-            }
-        }
+        Image imageDjl = SmartImageFactory.getInstance().fromBufferedImage(image);
+        R<FaceQualityResult> detectionResponseR = evaluateBrightness(imageDjl, rectangle, keyPoints);
+        ImageUtils.releaseOpenCVMat(imageDjl);
+        return detectionResponseR;
     }
 
     @Override
@@ -141,14 +116,16 @@ public class Seetaface6QualityModel implements FaceQualityModel {
         if(!FileUtils.isFileExists(imagePath)){
             return R.fail(R.Status.FILE_NOT_FOUND);
         }
-        // 将图片路径转换为 BufferedImage
-        BufferedImage image = null;
+        Image image = null;
         try {
-            image = ImageIO.read(new File(Paths.get(imagePath).toAbsolutePath().toString()));
+            image = SmartImageFactory.getInstance().fromFile(imagePath);
+            R<FaceQualityResult> detectionResponseR = evaluateBrightness(image, rectangle, keyPoints);
+            return detectionResponseR;
         } catch (IOException e) {
             throw new FaceException("无效图片路径", e);
+        }finally {
+            ImageUtils.releaseOpenCVMat(image);
         }
-        return evaluateBrightness(image, rectangle, keyPoints);
     }
 
     @Override
@@ -156,51 +133,23 @@ public class Seetaface6QualityModel implements FaceQualityModel {
         if(Objects.isNull(imageData)){
             return R.fail(R.Status.INVALID_IMAGE);
         }
+        Image imageDjl = null;
         try {
-            return evaluateBrightness(ImageIO.read(new ByteArrayInputStream(imageData)), rectangle, keyPoints);
+            imageDjl = SmartImageFactory.getInstance().fromBytes(imageData);
         } catch (IOException e) {
-            throw new FaceException("错误的图像", e);
+            throw new RuntimeException(e);
         }
+        R<FaceQualityResult> detectionResponseR = evaluateBrightness(imageDjl, rectangle, keyPoints);
+        ImageUtils.releaseOpenCVMat(imageDjl);
+        return detectionResponseR;
     }
 
     @Override
     public R<FaceQualityResult> evaluateClarity(BufferedImage image, DetectionRectangle rectangle, List<Point> keyPoints) {
-        //参数检查
-        if(!ImageUtils.isImageValid(image)){
-            return R.fail(R.Status.INVALID_IMAGE);
-        }
-        if(Objects.isNull(rectangle)){
-            return R.fail(R.Status.PARAM_ERROR.getCode(), "rectangle为空");
-        }
-        if(Objects.isNull(keyPoints) || keyPoints.isEmpty()){
-            return R.fail(R.Status.PARAM_ERROR.getCode(), "keyPoints为空");
-        }
-        QualityOfClarity qualityOfClarity = null;
-        try {
-            if(Objects.isNull(this.qualityOfClarityPool)){
-                this.qualityOfClarityPool = new QualityOfClarityPool(new SeetaConfSetting());
-                qualityOfClarityPool.setMaxTotal(predictorPoolSize);
-            }
-            qualityOfClarity = qualityOfClarityPool.borrowObject();
-            SeetaImageData imageData = new SeetaImageData(image.getWidth(), image.getHeight(), 3);
-            imageData.data = ImageUtils.getMatrixBGR(image);
-            SeetaRect seetaRect = FaceUtils.convertToSeetaRect(rectangle);
-            SeetaPointF[] pointFS = FaceUtils.convertToSeetaPointF(keyPoints);
-            float[] scores = new float[1];
-            QualityOfClarity.QualityLevel level = qualityOfClarity.check(imageData, seetaRect, pointFS, scores);
-            FaceQualityResult result = new FaceQualityResult(scores[0], QualityGrade.valueOf(level.name()));
-            return R.ok(result);
-        } catch (Exception e) {
-            throw new FaceException("清晰度评估错误", e);
-        } finally {
-            if (qualityOfClarity != null) {
-                try {
-                    qualityOfClarityPool.returnObject(qualityOfClarity);
-                } catch (Exception e) {
-                    log.warn("归还Predictor失败", e);
-                }
-            }
-        }
+        Image imageDjl = SmartImageFactory.getInstance().fromBufferedImage(image);
+        R<FaceQualityResult> detectionResponseR = evaluateClarity(imageDjl, rectangle, keyPoints);
+        ImageUtils.releaseOpenCVMat(imageDjl);
+        return detectionResponseR;
     }
 
     @Override
@@ -208,14 +157,16 @@ public class Seetaface6QualityModel implements FaceQualityModel {
         if(!FileUtils.isFileExists(imagePath)){
             return R.fail(R.Status.FILE_NOT_FOUND);
         }
-        // 将图片路径转换为 BufferedImage
-        BufferedImage image = null;
+        Image image = null;
         try {
-            image = ImageIO.read(new File(Paths.get(imagePath).toAbsolutePath().toString()));
+            image = SmartImageFactory.getInstance().fromFile(imagePath);
+            R<FaceQualityResult> detectionResponseR = evaluateClarity(image, rectangle, keyPoints);
+            return detectionResponseR;
         } catch (IOException e) {
             throw new FaceException("无效图片路径", e);
+        }finally {
+            ImageUtils.releaseOpenCVMat(image);
         }
-        return evaluateClarity(image, rectangle, keyPoints);
     }
 
     @Override
@@ -223,51 +174,23 @@ public class Seetaface6QualityModel implements FaceQualityModel {
         if(Objects.isNull(imageData)){
             return R.fail(R.Status.INVALID_IMAGE);
         }
+        Image imageDjl = null;
         try {
-            return evaluateClarity(ImageIO.read(new ByteArrayInputStream(imageData)), rectangle, keyPoints);
+            imageDjl = SmartImageFactory.getInstance().fromBytes(imageData);
         } catch (IOException e) {
-            throw new FaceException("错误的图像", e);
+            throw new RuntimeException(e);
         }
+        R<FaceQualityResult> detectionResponseR = evaluateClarity(imageDjl, rectangle, keyPoints);
+        ImageUtils.releaseOpenCVMat(imageDjl);
+        return detectionResponseR;
     }
 
     @Override
     public R<FaceQualityResult> evaluateCompleteness(BufferedImage image, DetectionRectangle rectangle, List<Point> keyPoints) {
-        //参数检查
-        if(!ImageUtils.isImageValid(image)){
-            return R.fail(R.Status.INVALID_IMAGE);
-        }
-        if(Objects.isNull(rectangle)){
-            return R.fail(R.Status.PARAM_ERROR.getCode(), "rectangle为空");
-        }
-        if(Objects.isNull(keyPoints) || keyPoints.isEmpty()){
-            return R.fail(R.Status.PARAM_ERROR.getCode(), "keyPoints为空");
-        }
-        QualityOfIntegrity qualityOfIntegrity = null;
-        try {
-            if(Objects.isNull(this.qualityOfIntegrityPool)){
-                this.qualityOfIntegrityPool = new QualityOfIntegrityPool(new SeetaConfSetting());
-                qualityOfIntegrityPool.setMaxTotal(predictorPoolSize);
-            }
-            qualityOfIntegrity = qualityOfIntegrityPool.borrowObject();
-            SeetaImageData imageData = new SeetaImageData(image.getWidth(), image.getHeight(), 3);
-            imageData.data = ImageUtils.getMatrixBGR(image);
-            SeetaRect seetaRect = FaceUtils.convertToSeetaRect(rectangle);
-            SeetaPointF[] pointFS = FaceUtils.convertToSeetaPointF(keyPoints);
-            float[] scores = new float[1];
-            QualityOfIntegrity.QualityLevel level = qualityOfIntegrity.check(imageData, seetaRect, pointFS, scores);
-            FaceQualityResult result = new FaceQualityResult(scores[0], QualityGrade.valueOf(level.name()));
-            return R.ok(result);
-        } catch (Exception e) {
-            throw new FaceException("完整度评估错误", e);
-        } finally {
-            if (qualityOfIntegrity != null) {
-                try {
-                    qualityOfIntegrityPool.returnObject(qualityOfIntegrity);
-                } catch (Exception e) {
-                    log.warn("归还Predictor失败", e);
-                }
-            }
-        }
+        Image imageDjl = SmartImageFactory.getInstance().fromBufferedImage(image);
+        R<FaceQualityResult> detectionResponseR = evaluateCompleteness(imageDjl, rectangle, keyPoints);
+        ImageUtils.releaseOpenCVMat(imageDjl);
+        return detectionResponseR;
     }
 
     @Override
@@ -275,14 +198,16 @@ public class Seetaface6QualityModel implements FaceQualityModel {
         if(!FileUtils.isFileExists(imagePath)){
             return R.fail(R.Status.FILE_NOT_FOUND);
         }
-        // 将图片路径转换为 BufferedImage
-        BufferedImage image = null;
+        Image image = null;
         try {
-            image = ImageIO.read(new File(Paths.get(imagePath).toAbsolutePath().toString()));
+            image = SmartImageFactory.getInstance().fromFile(imagePath);
+            R<FaceQualityResult> detectionResponseR = evaluateCompleteness(image, rectangle, keyPoints);
+            return detectionResponseR;
         } catch (IOException e) {
             throw new FaceException("无效图片路径", e);
+        }finally {
+            ImageUtils.releaseOpenCVMat(image);
         }
-        return evaluateCompleteness(image, rectangle, keyPoints);
     }
 
     @Override
@@ -290,51 +215,23 @@ public class Seetaface6QualityModel implements FaceQualityModel {
         if(Objects.isNull(imageData)){
             return R.fail(R.Status.INVALID_IMAGE);
         }
+        Image imageDjl = null;
         try {
-            return evaluateCompleteness(ImageIO.read(new ByteArrayInputStream(imageData)), rectangle, keyPoints);
+            imageDjl = SmartImageFactory.getInstance().fromBytes(imageData);
         } catch (IOException e) {
-            throw new FaceException("错误的图像", e);
+            throw new RuntimeException(e);
         }
+        R<FaceQualityResult> detectionResponseR = evaluateCompleteness(imageDjl, rectangle, keyPoints);
+        ImageUtils.releaseOpenCVMat(imageDjl);
+        return detectionResponseR;
     }
 
     @Override
     public R<FaceQualityResult> evaluatePose(BufferedImage image, DetectionRectangle rectangle, List<Point> keyPoints) {
-        //参数检查
-        if(!ImageUtils.isImageValid(image)){
-            return R.fail(R.Status.INVALID_IMAGE);
-        }
-        if(Objects.isNull(rectangle)){
-            return R.fail(R.Status.PARAM_ERROR.getCode(), "rectangle为空");
-        }
-        if(Objects.isNull(keyPoints) || keyPoints.isEmpty()){
-            return R.fail(R.Status.PARAM_ERROR.getCode(), "keyPoints为空");
-        }
-        QualityOfPose qualityOfPose = null;
-        try {
-            if(Objects.isNull(this.qualityOfPosePool)){
-                this.qualityOfPosePool = new QualityOfPosePool(new SeetaConfSetting());
-                qualityOfPosePool.setMaxTotal(predictorPoolSize);
-            }
-            qualityOfPose = qualityOfPosePool.borrowObject();
-            SeetaImageData imageData = new SeetaImageData(image.getWidth(), image.getHeight(), 3);
-            imageData.data = ImageUtils.getMatrixBGR(image);
-            SeetaRect seetaRect = FaceUtils.convertToSeetaRect(rectangle);
-            SeetaPointF[] pointFS = FaceUtils.convertToSeetaPointF(keyPoints);
-            float[] scores = new float[1];
-            QualityOfPose.QualityLevel level = qualityOfPose.check(imageData, seetaRect, pointFS, scores);
-            FaceQualityResult result = new FaceQualityResult(scores[0], QualityGrade.valueOf(level.name()));
-            return R.ok(result);
-        } catch (Exception e) {
-            throw new FaceException("姿态评估错误", e);
-        } finally {
-            if (qualityOfPose != null) {
-                try {
-                    qualityOfPosePool.returnObject(qualityOfPose);
-                } catch (Exception e) {
-                    log.warn("归还Predictor失败", e);
-                }
-            }
-        }
+        Image imageDjl = SmartImageFactory.getInstance().fromBufferedImage(image);
+        R<FaceQualityResult> detectionResponseR = evaluatePose(imageDjl, rectangle, keyPoints);
+        ImageUtils.releaseOpenCVMat(imageDjl);
+        return detectionResponseR;
     }
 
     @Override
@@ -342,14 +239,16 @@ public class Seetaface6QualityModel implements FaceQualityModel {
         if(!FileUtils.isFileExists(imagePath)){
             return R.fail(R.Status.FILE_NOT_FOUND);
         }
-        // 将图片路径转换为 BufferedImage
-        BufferedImage image = null;
+        Image image = null;
         try {
-            image = ImageIO.read(new File(Paths.get(imagePath).toAbsolutePath().toString()));
+            image = SmartImageFactory.getInstance().fromFile(imagePath);
+            R<FaceQualityResult> detectionResponseR = evaluatePose(image, rectangle, keyPoints);
+            return detectionResponseR;
         } catch (IOException e) {
             throw new FaceException("无效图片路径", e);
+        }finally {
+            ImageUtils.releaseOpenCVMat(image);
         }
-        return evaluatePose(image, rectangle, keyPoints);
     }
 
     @Override
@@ -357,51 +256,23 @@ public class Seetaface6QualityModel implements FaceQualityModel {
         if(Objects.isNull(imageData)){
             return R.fail(R.Status.INVALID_IMAGE);
         }
+        Image imageDjl = null;
         try {
-            return evaluatePose(ImageIO.read(new ByteArrayInputStream(imageData)), rectangle, keyPoints);
+            imageDjl = SmartImageFactory.getInstance().fromBytes(imageData);
         } catch (IOException e) {
-            throw new FaceException("错误的图像", e);
+            throw new RuntimeException(e);
         }
+        R<FaceQualityResult> detectionResponseR = evaluatePose(imageDjl, rectangle, keyPoints);
+        ImageUtils.releaseOpenCVMat(imageDjl);
+        return detectionResponseR;
     }
 
     @Override
     public R<FaceQualityResult> evaluateResolution(BufferedImage image, DetectionRectangle rectangle, List<Point> keyPoints) {
-        //参数检查
-        if(!ImageUtils.isImageValid(image)){
-            return R.fail(R.Status.INVALID_IMAGE);
-        }
-        if(Objects.isNull(rectangle)){
-            return R.fail(R.Status.PARAM_ERROR.getCode(), "rectangle为空");
-        }
-        if(Objects.isNull(keyPoints) || keyPoints.isEmpty()){
-            return R.fail(R.Status.PARAM_ERROR.getCode(), "keyPoints为空");
-        }
-        QualityOfResolution qualityOfResolution = null;
-        try {
-            if(Objects.isNull(this.qualityOfResolutionPool)){
-                this.qualityOfResolutionPool = new QualityOfResolutionPool(new SeetaConfSetting());
-                qualityOfResolutionPool.setMaxTotal(predictorPoolSize);
-            }
-            qualityOfResolution = qualityOfResolutionPool.borrowObject();
-            SeetaImageData imageData = new SeetaImageData(image.getWidth(), image.getHeight(), 3);
-            imageData.data = ImageUtils.getMatrixBGR(image);
-            SeetaRect seetaRect = FaceUtils.convertToSeetaRect(rectangle);
-            SeetaPointF[] pointFS = FaceUtils.convertToSeetaPointF(keyPoints);
-            float[] scores = new float[1];
-            QualityOfResolution.QualityLevel level = qualityOfResolution.check(imageData, seetaRect, pointFS, scores);
-            FaceQualityResult result = new FaceQualityResult(scores[0], QualityGrade.valueOf(level.name()));
-            return R.ok(result);
-        } catch (Exception e) {
-            throw new FaceException("姿态评估错误", e);
-        } finally {
-            if (qualityOfResolution != null) {
-                try {
-                    qualityOfResolutionPool.returnObject(qualityOfResolution);
-                } catch (Exception e) {
-                    log.warn("归还Predictor失败", e);
-                }
-            }
-        }
+        Image imageDjl = SmartImageFactory.getInstance().fromBufferedImage(image);
+        R<FaceQualityResult> detectionResponseR = evaluateResolution(imageDjl, rectangle, keyPoints);
+        ImageUtils.releaseOpenCVMat(imageDjl);
+        return detectionResponseR;
     }
 
     @Override
@@ -409,14 +280,16 @@ public class Seetaface6QualityModel implements FaceQualityModel {
         if(!FileUtils.isFileExists(imagePath)){
             return R.fail(R.Status.FILE_NOT_FOUND);
         }
-        // 将图片路径转换为 BufferedImage
-        BufferedImage image = null;
+        Image image = null;
         try {
-            image = ImageIO.read(new File(Paths.get(imagePath).toAbsolutePath().toString()));
+            image = SmartImageFactory.getInstance().fromFile(imagePath);
+            R<FaceQualityResult> detectionResponseR = evaluateResolution(image, rectangle, keyPoints);
+            return detectionResponseR;
         } catch (IOException e) {
             throw new FaceException("无效图片路径", e);
+        }finally {
+            ImageUtils.releaseOpenCVMat(image);
         }
-        return evaluateResolution(image, rectangle, keyPoints);
     }
 
     @Override
@@ -424,17 +297,21 @@ public class Seetaface6QualityModel implements FaceQualityModel {
         if(Objects.isNull(imageData)){
             return R.fail(R.Status.INVALID_IMAGE);
         }
+        Image imageDjl = null;
         try {
-            return evaluateResolution(ImageIO.read(new ByteArrayInputStream(imageData)), rectangle, keyPoints);
+            imageDjl = SmartImageFactory.getInstance().fromBytes(imageData);
         } catch (IOException e) {
-            throw new FaceException("错误的图像", e);
+            throw new RuntimeException(e);
         }
+        R<FaceQualityResult> detectionResponseR = evaluateResolution(imageDjl, rectangle, keyPoints);
+        ImageUtils.releaseOpenCVMat(imageDjl);
+        return detectionResponseR;
     }
 
 
-    public R<ClarityDLResult> evaluateClarityWithDL(BufferedImage image, List<Point> keyPoints) {
+    public R<ClarityDLResult> evaluateClarityWithDL(Image image, List<Point> keyPoints) {
         //参数检查
-        if(!ImageUtils.isImageValid(image)){
+        if(Objects.isNull(image)){
             return R.fail(R.Status.INVALID_IMAGE);
         }
         if(Objects.isNull(keyPoints) || keyPoints.isEmpty()){
@@ -456,7 +333,7 @@ public class Seetaface6QualityModel implements FaceQualityModel {
             qualityOfLBN = qualityOfLBNPool.borrowObject();
             SeetaImageData imageData = new SeetaImageData(image.getWidth(), image.getHeight(), 3);
             imageData.data = ImageUtils.getMatrixBGR(image);
-            SeetaPointF[] pointFS = FaceUtils.convertToSeetaPointF(keyPoints);
+            SeetaPointF[] pointFS = Seetaface6Utils.convertToSeetaPointF(keyPoints);
             int[] light = new int[1];
             int[] blur = new int[1];
             int[] noise = new int[1];
@@ -476,34 +353,9 @@ public class Seetaface6QualityModel implements FaceQualityModel {
     }
 
 
-    public R<ClarityDLResult> evaluateClarityWithDL(String imagePath, List<Point> keyPoints) {
-        if(!FileUtils.isFileExists(imagePath)){
-            return R.fail(R.Status.FILE_NOT_FOUND);
-        }
-        // 将图片路径转换为 BufferedImage
-        BufferedImage image = null;
-        try {
-            image = ImageIO.read(new File(Paths.get(imagePath).toAbsolutePath().toString()));
-        } catch (IOException e) {
-            throw new FaceException("无效图片路径", e);
-        }
-        return evaluateClarityWithDL(image, keyPoints);
-    }
-
-    public R<ClarityDLResult> evaluateClarityWithDL(byte[] imageData, List<Point> keyPoints) {
-        if(Objects.isNull(imageData)){
-            return R.fail(R.Status.INVALID_IMAGE);
-        }
-        try {
-            return evaluateClarityWithDL(ImageIO.read(new ByteArrayInputStream(imageData)), keyPoints);
-        } catch (IOException e) {
-            throw new FaceException("错误的图像", e);
-        }
-    }
-
-    public R<FaceQualityResult> evaluatePoseWithDL(BufferedImage image, DetectionRectangle rectangle, List<Point> keyPoints) {
+    public R<FaceQualityResult> evaluatePoseWithDL(Image image, DetectionRectangle rectangle, List<Point> keyPoints) {
         //参数检查
-        if(!ImageUtils.isImageValid(image)){
+        if(Objects.isNull(image)){
             return R.fail(R.Status.INVALID_IMAGE);
         }
         if(Objects.isNull(rectangle)){
@@ -528,8 +380,8 @@ public class Seetaface6QualityModel implements FaceQualityModel {
             qualityOfPoseEx = qualityOfPoseExPool.borrowObject();
             SeetaImageData imageData = new SeetaImageData(image.getWidth(), image.getHeight(), 3);
             imageData.data = ImageUtils.getMatrixBGR(image);
-            SeetaPointF[] pointFS = FaceUtils.convertToSeetaPointF(keyPoints);
-            SeetaRect seetaRect = FaceUtils.convertToSeetaRect(rectangle);
+            SeetaPointF[] pointFS = Seetaface6Utils.convertToSeetaPointF(keyPoints);
+            SeetaRect seetaRect = Seetaface6Utils.convertToSeetaRect(rectangle);
             float[] scores = new float[1];
             QualityOfPoseEx.QualityLevel level = qualityOfPoseEx.check(imageData, seetaRect, pointFS, scores);
             FaceQualityResult result = new FaceQualityResult(scores[0], QualityGrade.valueOf(level.name()));
@@ -547,30 +399,6 @@ public class Seetaface6QualityModel implements FaceQualityModel {
         }
     }
 
-    public R<FaceQualityResult> evaluatePoseWithDL(String imagePath, DetectionRectangle rectangle, List<Point> keyPoints) {
-        if(!FileUtils.isFileExists(imagePath)){
-            return R.fail(R.Status.FILE_NOT_FOUND);
-        }
-        // 将图片路径转换为 BufferedImage
-        BufferedImage image = null;
-        try {
-            image = ImageIO.read(new File(Paths.get(imagePath).toAbsolutePath().toString()));
-        } catch (IOException e) {
-            throw new FaceException("无效图片路径", e);
-        }
-        return evaluatePoseWithDL(image, rectangle, keyPoints);
-    }
-
-    public R<FaceQualityResult> evaluatePoseWithDL(byte[] imageData, DetectionRectangle rectangle, List<Point> keyPoints) {
-        if(Objects.isNull(imageData)){
-            return R.fail(R.Status.INVALID_IMAGE);
-        }
-        try {
-            return evaluatePoseWithDL(ImageIO.read(new ByteArrayInputStream(imageData)), rectangle, keyPoints);
-        } catch (IOException e) {
-            throw new FaceException("错误的图像", e);
-        }
-    }
 
     /**
      * 获取清晰度模型配置(深度学习)
@@ -613,20 +441,246 @@ public class Seetaface6QualityModel implements FaceQualityModel {
         if(!FileUtils.isFileExists(imagePath)){
             return R.fail(R.Status.FILE_NOT_FOUND);
         }
-        // 将图片路径转换为 BufferedImage
-        BufferedImage image = null;
+        Image image = null;
         try {
-            image = ImageIO.read(new File(Paths.get(imagePath).toAbsolutePath().toString()));
+            image = SmartImageFactory.getInstance().fromFile(imagePath);
+            R<FaceQualitySummary> detectionResponseR = evaluateAll(image, rectangle, keyPoints);
+            return detectionResponseR;
         } catch (IOException e) {
             throw new FaceException("无效图片路径", e);
+        }finally {
+            ImageUtils.releaseOpenCVMat(image);
         }
-        return evaluateAll(image, rectangle, keyPoints);
     }
 
     @Override
     public R<FaceQualitySummary> evaluateAll(BufferedImage image, DetectionRectangle rectangle, List<Point> keyPoints) {
+        Image imageDjl = SmartImageFactory.getInstance().fromBufferedImage(image);
+        R<FaceQualitySummary> detectionResponseR = evaluateAll(imageDjl, rectangle, keyPoints);
+        ImageUtils.releaseOpenCVMat(imageDjl);
+        return detectionResponseR;
+    }
+
+    @Override
+    public R<FaceQualitySummary> evaluateAll(byte[] imageData, DetectionRectangle rectangle, List<Point> keyPoints) {
+        if(Objects.isNull(imageData)){
+            return R.fail(R.Status.INVALID_IMAGE);
+        }
+        Image imageDjl = null;
+        try {
+            imageDjl = SmartImageFactory.getInstance().fromBytes(imageData);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        R<FaceQualitySummary> detectionResponseR = evaluateAll(imageDjl, rectangle, keyPoints);
+        ImageUtils.releaseOpenCVMat(imageDjl);
+        return detectionResponseR;
+    }
+
+    @Override
+    public R<FaceQualityResult> evaluateBrightness(Image image, DetectionRectangle rectangle, List<Point> keyPoints) {
         //参数检查
-        if(!ImageUtils.isImageValid(image)){
+        if(Objects.isNull(image)){
+            return R.fail(R.Status.INVALID_IMAGE);
+        }
+        if(Objects.isNull(rectangle)){
+            return R.fail(R.Status.PARAM_ERROR.getCode(), "rectangle为空");
+        }
+        if(Objects.isNull(keyPoints) || keyPoints.isEmpty()){
+            return R.fail(R.Status.PARAM_ERROR.getCode(), "keyPoints为空");
+        }
+        QualityOfBrightness qualityOfBrightness = null;
+        try {
+            if(Objects.isNull(this.qualityOfBrightnessPool)){
+                this.qualityOfBrightnessPool = new QualityOfBrightnessPool(new SeetaConfSetting());
+                qualityOfBrightnessPool.setMaxTotal(predictorPoolSize);
+            }
+            qualityOfBrightness = qualityOfBrightnessPool.borrowObject();
+            SeetaImageData imageData = new SeetaImageData(image.getWidth(), image.getHeight(), 3);
+            imageData.data = ImageUtils.getMatrixBGR(image);
+            SeetaRect seetaRect = Seetaface6Utils.convertToSeetaRect(rectangle);
+            SeetaPointF[] pointFS = Seetaface6Utils.convertToSeetaPointF(keyPoints);
+            float[] scores = new float[1];
+            QualityOfBrightness.QualityLevel level = qualityOfBrightness.check(imageData, seetaRect, pointFS, scores);
+            FaceQualityResult result = new FaceQualityResult(scores[0], QualityGrade.valueOf(level.name()));
+            return R.ok(result);
+        } catch (Exception e) {
+            throw new FaceException("亮度评估错误", e);
+        } finally {
+            if (qualityOfBrightness != null) {
+                try {
+                    qualityOfBrightnessPool.returnObject(qualityOfBrightness);
+                } catch (Exception e) {
+                    log.warn("归还Predictor失败", e);
+                }
+            }
+        }
+    }
+
+    @Override
+    public R<FaceQualityResult> evaluateClarity(Image image, DetectionRectangle rectangle, List<Point> keyPoints) {
+        //参数检查
+        if(Objects.isNull(image)){
+            return R.fail(R.Status.INVALID_IMAGE);
+        }
+        if(Objects.isNull(rectangle)){
+            return R.fail(R.Status.PARAM_ERROR.getCode(), "rectangle为空");
+        }
+        if(Objects.isNull(keyPoints) || keyPoints.isEmpty()){
+            return R.fail(R.Status.PARAM_ERROR.getCode(), "keyPoints为空");
+        }
+        QualityOfClarity qualityOfClarity = null;
+        try {
+            if(Objects.isNull(this.qualityOfClarityPool)){
+                this.qualityOfClarityPool = new QualityOfClarityPool(new SeetaConfSetting());
+                qualityOfClarityPool.setMaxTotal(predictorPoolSize);
+            }
+            qualityOfClarity = qualityOfClarityPool.borrowObject();
+            SeetaImageData imageData = new SeetaImageData(image.getWidth(), image.getHeight(), 3);
+            imageData.data = ImageUtils.getMatrixBGR(image);
+            SeetaRect seetaRect = Seetaface6Utils.convertToSeetaRect(rectangle);
+            SeetaPointF[] pointFS = Seetaface6Utils.convertToSeetaPointF(keyPoints);
+            float[] scores = new float[1];
+            QualityOfClarity.QualityLevel level = qualityOfClarity.check(imageData, seetaRect, pointFS, scores);
+            FaceQualityResult result = new FaceQualityResult(scores[0], QualityGrade.valueOf(level.name()));
+            return R.ok(result);
+        } catch (Exception e) {
+            throw new FaceException("清晰度评估错误", e);
+        } finally {
+            if (qualityOfClarity != null) {
+                try {
+                    qualityOfClarityPool.returnObject(qualityOfClarity);
+                } catch (Exception e) {
+                    log.warn("归还Predictor失败", e);
+                }
+            }
+        }
+    }
+
+    @Override
+    public R<FaceQualityResult> evaluateCompleteness(Image image, DetectionRectangle rectangle, List<Point> keyPoints) {
+        //参数检查
+        if(Objects.isNull(image)){
+            return R.fail(R.Status.INVALID_IMAGE);
+        }
+        if(Objects.isNull(rectangle)){
+            return R.fail(R.Status.PARAM_ERROR.getCode(), "rectangle为空");
+        }
+        if(Objects.isNull(keyPoints) || keyPoints.isEmpty()){
+            return R.fail(R.Status.PARAM_ERROR.getCode(), "keyPoints为空");
+        }
+        QualityOfIntegrity qualityOfIntegrity = null;
+        try {
+            if(Objects.isNull(this.qualityOfIntegrityPool)){
+                this.qualityOfIntegrityPool = new QualityOfIntegrityPool(new SeetaConfSetting());
+                qualityOfIntegrityPool.setMaxTotal(predictorPoolSize);
+            }
+            qualityOfIntegrity = qualityOfIntegrityPool.borrowObject();
+            SeetaImageData imageData = new SeetaImageData(image.getWidth(), image.getHeight(), 3);
+            imageData.data = ImageUtils.getMatrixBGR(image);
+            SeetaRect seetaRect = Seetaface6Utils.convertToSeetaRect(rectangle);
+            SeetaPointF[] pointFS = Seetaface6Utils.convertToSeetaPointF(keyPoints);
+            float[] scores = new float[1];
+            QualityOfIntegrity.QualityLevel level = qualityOfIntegrity.check(imageData, seetaRect, pointFS, scores);
+            FaceQualityResult result = new FaceQualityResult(scores[0], QualityGrade.valueOf(level.name()));
+            return R.ok(result);
+        } catch (Exception e) {
+            throw new FaceException("完整度评估错误", e);
+        } finally {
+            if (qualityOfIntegrity != null) {
+                try {
+                    qualityOfIntegrityPool.returnObject(qualityOfIntegrity);
+                } catch (Exception e) {
+                    log.warn("归还Predictor失败", e);
+                }
+            }
+        }
+    }
+
+    @Override
+    public R<FaceQualityResult> evaluatePose(Image image, DetectionRectangle rectangle, List<Point> keyPoints) {
+        //参数检查
+        if(Objects.isNull(image)){
+            return R.fail(R.Status.INVALID_IMAGE);
+        }
+        if(Objects.isNull(rectangle)){
+            return R.fail(R.Status.PARAM_ERROR.getCode(), "rectangle为空");
+        }
+        if(Objects.isNull(keyPoints) || keyPoints.isEmpty()){
+            return R.fail(R.Status.PARAM_ERROR.getCode(), "keyPoints为空");
+        }
+        QualityOfPose qualityOfPose = null;
+        try {
+            if(Objects.isNull(this.qualityOfPosePool)){
+                this.qualityOfPosePool = new QualityOfPosePool(new SeetaConfSetting());
+                qualityOfPosePool.setMaxTotal(predictorPoolSize);
+            }
+            qualityOfPose = qualityOfPosePool.borrowObject();
+            SeetaImageData imageData = new SeetaImageData(image.getWidth(), image.getHeight(), 3);
+            imageData.data = ImageUtils.getMatrixBGR(image);
+            SeetaRect seetaRect = Seetaface6Utils.convertToSeetaRect(rectangle);
+            SeetaPointF[] pointFS = Seetaface6Utils.convertToSeetaPointF(keyPoints);
+            float[] scores = new float[1];
+            QualityOfPose.QualityLevel level = qualityOfPose.check(imageData, seetaRect, pointFS, scores);
+            FaceQualityResult result = new FaceQualityResult(scores[0], QualityGrade.valueOf(level.name()));
+            return R.ok(result);
+        } catch (Exception e) {
+            throw new FaceException("姿态评估错误", e);
+        } finally {
+            if (qualityOfPose != null) {
+                try {
+                    qualityOfPosePool.returnObject(qualityOfPose);
+                } catch (Exception e) {
+                    log.warn("归还Predictor失败", e);
+                }
+            }
+        }
+    }
+
+    @Override
+    public R<FaceQualityResult> evaluateResolution(Image image, DetectionRectangle rectangle, List<Point> keyPoints) {
+        //参数检查
+        if(Objects.isNull(image)){
+            return R.fail(R.Status.INVALID_IMAGE);
+        }
+        if(Objects.isNull(rectangle)){
+            return R.fail(R.Status.PARAM_ERROR.getCode(), "rectangle为空");
+        }
+        if(Objects.isNull(keyPoints) || keyPoints.isEmpty()){
+            return R.fail(R.Status.PARAM_ERROR.getCode(), "keyPoints为空");
+        }
+        QualityOfResolution qualityOfResolution = null;
+        try {
+            if(Objects.isNull(this.qualityOfResolutionPool)){
+                this.qualityOfResolutionPool = new QualityOfResolutionPool(new SeetaConfSetting());
+                qualityOfResolutionPool.setMaxTotal(predictorPoolSize);
+            }
+            qualityOfResolution = qualityOfResolutionPool.borrowObject();
+            SeetaImageData imageData = new SeetaImageData(image.getWidth(), image.getHeight(), 3);
+            imageData.data = ImageUtils.getMatrixBGR(image);
+            SeetaRect seetaRect = Seetaface6Utils.convertToSeetaRect(rectangle);
+            SeetaPointF[] pointFS = Seetaface6Utils.convertToSeetaPointF(keyPoints);
+            float[] scores = new float[1];
+            QualityOfResolution.QualityLevel level = qualityOfResolution.check(imageData, seetaRect, pointFS, scores);
+            FaceQualityResult result = new FaceQualityResult(scores[0], QualityGrade.valueOf(level.name()));
+            return R.ok(result);
+        } catch (Exception e) {
+            throw new FaceException("姿态评估错误", e);
+        } finally {
+            if (qualityOfResolution != null) {
+                try {
+                    qualityOfResolutionPool.returnObject(qualityOfResolution);
+                } catch (Exception e) {
+                    log.warn("归还Predictor失败", e);
+                }
+            }
+        }
+    }
+
+    @Override
+    public R<FaceQualitySummary> evaluateAll(Image image, DetectionRectangle rectangle, List<Point> keyPoints) {
+        //参数检查
+        if(Objects.isNull(image)){
             return R.fail(R.Status.INVALID_IMAGE);
         }
         if(Objects.isNull(rectangle)){
@@ -669,8 +723,8 @@ public class Seetaface6QualityModel implements FaceQualityModel {
             qualityOfResolution = qualityOfResolutionPool.borrowObject();
             SeetaImageData imageData = new SeetaImageData(image.getWidth(), image.getHeight(), 3);
             imageData.data = ImageUtils.getMatrixBGR(image);
-            SeetaRect seetaRect = FaceUtils.convertToSeetaRect(rectangle);
-            SeetaPointF[] pointFS = FaceUtils.convertToSeetaPointF(keyPoints);
+            SeetaRect seetaRect = Seetaface6Utils.convertToSeetaRect(rectangle);
+            SeetaPointF[] pointFS = Seetaface6Utils.convertToSeetaPointF(keyPoints);
             float[] scoresBrightness = new float[1];
             QualityOfBrightness.QualityLevel level = qualityOfBrightness.check(imageData, seetaRect, pointFS, scoresBrightness);
             summary.setBrightness(new FaceQualityResult(scoresBrightness[0], QualityGrade.valueOf(level.name())));
@@ -695,18 +749,6 @@ public class Seetaface6QualityModel implements FaceQualityModel {
             PoolUtils.returnToPool(qualityOfIntegrityPool, qualityOfIntegrity);
             PoolUtils.returnToPool(qualityOfPosePool, qualityOfPose);
             PoolUtils.returnToPool(qualityOfResolutionPool, qualityOfResolution);
-        }
-    }
-
-    @Override
-    public R<FaceQualitySummary> evaluateAll(byte[] imageData, DetectionRectangle rectangle, List<Point> keyPoints) {
-        if(Objects.isNull(imageData)){
-            return R.fail(R.Status.INVALID_IMAGE);
-        }
-        try {
-            return evaluateAll(ImageIO.read(new ByteArrayInputStream(imageData)), rectangle, keyPoints);
-        } catch (IOException e) {
-            throw new FaceException("错误的图像", e);
         }
     }
 
@@ -740,6 +782,9 @@ public class Seetaface6QualityModel implements FaceQualityModel {
 
     @Override
     public void close() throws Exception {
+        if (fromFactory) {
+            FaceQualityModelFactory.removeFromCache(config.getModelEnum());
+        }
         if(Objects.nonNull(qualityOfBrightnessPool)){
             qualityOfBrightnessPool.close();
         }
@@ -761,5 +806,15 @@ public class Seetaface6QualityModel implements FaceQualityModel {
         if(Objects.nonNull(qualityOfResolutionPool)){
             qualityOfResolutionPool.close();
         }
+    }
+
+    private boolean fromFactory = false;
+
+    @Override
+    public void setFromFactory(boolean fromFactory) {
+        this.fromFactory = fromFactory;
+    }
+    public boolean isFromFactory() {
+        return fromFactory;
     }
 }

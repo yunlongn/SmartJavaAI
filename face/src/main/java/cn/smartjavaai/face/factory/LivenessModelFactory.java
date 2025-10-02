@@ -2,6 +2,7 @@ package cn.smartjavaai.face.factory;
 
 import cn.smartjavaai.common.config.Config;
 import cn.smartjavaai.face.config.LivenessConfig;
+import cn.smartjavaai.face.enums.FaceRecModelEnum;
 import cn.smartjavaai.face.enums.LivenessModelEnum;
 import cn.smartjavaai.face.exception.FaceException;
 import cn.smartjavaai.face.model.liveness.CommonLivenessModel;
@@ -87,6 +88,7 @@ public class LivenessModelFactory {
             throw new FaceException(e);
         }
         model.loadModel(config);
+        model.setFromFactory(true);
         return model;
     }
 
@@ -97,6 +99,28 @@ public class LivenessModelFactory {
         registerModel(LivenessModelEnum.MINI_VISION_MODEL, MiniVisionLivenessModel.class);
         registerModel(LivenessModelEnum.IIC_FL_MODEL, CommonLivenessModel.class);
         log.debug("缓存目录：{}", Config.getCachePath());
+    }
+
+    /**
+     * 关闭所有已加载的模型
+     */
+    public void closeAll() {
+        modelMap.values().forEach(model -> {
+            try {
+                model.close();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
+        modelMap.clear();
+    }
+
+    /**
+     * 移除缓存的模型
+     * @param modelEnum
+     */
+    public static void removeFromCache(LivenessModelEnum modelEnum) {
+        modelMap.remove(modelEnum);
     }
 
 }

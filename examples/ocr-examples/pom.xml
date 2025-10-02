@@ -12,7 +12,7 @@
         <maven.compiler.source>11</maven.compiler.source>
         <maven.compiler.target>11</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <smartjavaai.version>1.0.24</smartjavaai.version>
+        <smartjavaai.version>1.0.25</smartjavaai.version>
         <!--如果打包运行，需要替换成你的main-->
         <exec.mainClass>smartai.examples.ocr.common.OcrRecognizeDemo</exec.mainClass>
 
@@ -217,39 +217,6 @@
             <version>2.5.1</version>
             <scope>runtime</scope>
         </dependency>
-
-
-        <!-- linux aarch64 平台 (保留对应平台的配置，可以减小包大小)-->
-        <dependency>
-            <groupId>org.bytedeco</groupId>
-            <artifactId>javacpp</artifactId>
-            <version>${javacv.version}</version>
-            <classifier>${javacv.platform.linux-arm64}</classifier>
-        </dependency>
-
-        <dependency>
-            <groupId>org.bytedeco</groupId>
-            <artifactId>ffmpeg</artifactId>
-            <version>6.1.1-1.5.10</version>
-            <classifier>${javacv.platform.linux-arm64}</classifier>
-        </dependency>
-
-        <dependency>
-            <groupId>org.bytedeco</groupId>
-            <artifactId>openblas</artifactId>
-            <version>0.3.26-1.5.10</version>
-            <classifier>${javacv.platform.linux-arm64}</classifier>
-        </dependency>
-
-        <dependency>
-            <groupId>org.bytedeco</groupId>
-            <artifactId>opencv</artifactId>
-            <version>4.9.0-1.5.10</version>
-            <classifier>${javacv.platform.linux-arm64}</classifier>
-        </dependency>
-
-
-
 
 
     </dependencies>

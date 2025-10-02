@@ -35,6 +35,7 @@ import cn.smartjavaai.translation.entity.BeamBatchTensorList;
 import cn.smartjavaai.translation.entity.GreedyBatchTensorList;
 import cn.smartjavaai.translation.entity.TranslateParam;
 import cn.smartjavaai.translation.exception.TranslationException;
+import cn.smartjavaai.translation.factory.TranslationModelFactory;
 import cn.smartjavaai.translation.model.translator.NllbDecoder2Translator;
 import cn.smartjavaai.translation.model.translator.NllbDecoderTranslator;
 import cn.smartjavaai.translation.model.translator.NllbEncoderTranslator;
@@ -403,6 +404,9 @@ public class OpusMtModel implements TranslationModel{
 
     @Override
     public void close() throws Exception {
+        if (fromFactory) {
+            TranslationModelFactory.removeFromCache(config.getModelEnum());
+        }
         try {
             if (model != null) {
                 model.close();
@@ -438,5 +442,15 @@ public class OpusMtModel implements TranslationModel{
         } catch (Exception e) {
             log.warn("关闭 decode2PredictorPool 失败", e);
         }
+    }
+
+    private boolean fromFactory = false;
+
+    @Override
+    public void setFromFactory(boolean fromFactory) {
+        this.fromFactory = fromFactory;
+    }
+    public boolean isFromFactory() {
+        return fromFactory;
     }
 }

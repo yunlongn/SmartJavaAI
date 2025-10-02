@@ -4,22 +4,20 @@ import ai.djl.MalformedModelException;
 import ai.djl.engine.Engine;
 import ai.djl.inference.Predictor;
 import ai.djl.modality.cv.Image;
-import ai.djl.modality.cv.ImageFactory;
-import ai.djl.modality.cv.output.BoundingBox;
 import ai.djl.modality.cv.output.DetectedObjects;
 import ai.djl.repository.zoo.Criteria;
 import ai.djl.repository.zoo.ModelNotFoundException;
 import ai.djl.repository.zoo.ZooModel;
+import cn.smartjavaai.common.cv.SmartImageFactory;
 import cn.smartjavaai.common.entity.DetectionResponse;
-import cn.smartjavaai.common.entity.R;
 import cn.smartjavaai.common.pool.PredictorFactory;
+import cn.smartjavaai.common.utils.BufferedImageUtils;
 import cn.smartjavaai.common.utils.FileUtils;
 import cn.smartjavaai.common.utils.ImageUtils;
 import cn.smartjavaai.common.utils.OpenCVUtils;
 import cn.smartjavaai.objectdetection.config.DetectorModelConfig;
 import cn.smartjavaai.objectdetection.criteria.CriteriaBuilderFactory;
 import cn.smartjavaai.objectdetection.exception.DetectionException;
-import cn.smartjavaai.vision.utils.CategoryMaskFilter;
 import cn.smartjavaai.vision.utils.DetectedObjectsFilter;
 import cn.smartjavaai.vision.utils.DetectorUtils;
 import lombok.extern.slf4j.Slf4j;
@@ -31,8 +29,6 @@ import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.*;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Objects;
 
 /**
@@ -86,23 +82,21 @@ public class DetectorModel implements AutoCloseable{
      * @return
      * @throws Exception
      */
+    @Deprecated
     public DetectionResponse detect(String imagePath){
         if(!FileUtils.isFileExists(imagePath)){
             throw new DetectionException("图像文件不存在");
         }
         Image image = null;
         try {
-            image = ImageFactory.getInstance().fromFile(Paths.get(imagePath));
-            DetectedObjects detectedObjects = detect(image);
+            image = SmartImageFactory.getInstance().fromFile(Paths.get(imagePath));
+            DetectedObjects detectedObjects = detectCore(image);
             return DetectorUtils.convertToDetectionResponse(detectedObjects, image);
         } catch (Exception e) {
             throw new DetectionException(e);
         } finally {
-            if (image != null){
-                ((Mat)image.getWrappedImage()).release();
-            }
+            ImageUtils.releaseOpenCVMat(image);
         }
-
     }
 
 
@@ -117,8 +111,8 @@ public class DetectorModel implements AutoCloseable{
         }
         Image img = null;
         try {
-            img = ImageFactory.getInstance().fromFile(Paths.get(imagePath));
-            DetectedObjects detectedObjects = detect(img);
+            img = SmartImageFactory.getInstance().fromFile(Paths.get(imagePath));
+            DetectedObjects detectedObjects = detectCore(img);
             if(Objects.isNull(detectedObjects) || detectedObjects.getNumberOfObjects() == 0){
                 throw new DetectionException("未检测到图片中的物体");
             }
@@ -129,9 +123,7 @@ public class DetectorModel implements AutoCloseable{
         } catch (IOException e) {
             throw new DetectionException(e);
         } finally {
-            if (img != null){
-                ((Mat)img.getWrappedImage()).release();
-            }
+            ImageUtils.releaseOpenCVMat(img);
         }
     }
 
@@ -140,6 +132,7 @@ public class DetectorModel implements AutoCloseable{
      * @param imageData
      * @return
      */
+    @Deprecated
     public DetectionResponse detect(byte[] imageData){
         if(Objects.isNull(imageData)){
             throw new DetectionException("图像无效");
@@ -159,21 +152,20 @@ public class DetectorModel implements AutoCloseable{
      * @param image
      * @return
      */
+    @Deprecated
     public DetectionResponse detect(BufferedImage image){
-        if(!ImageUtils.isImageValid(image)){
+        if(!BufferedImageUtils.isImageValid(image)){
             throw new DetectionException("图像无效");
         }
         Image img = null;
         try {
-            img = ImageFactory.getInstance().fromImage(OpenCVUtils.image2Mat(image));
-            DetectedObjects detectedObjects = detect(img);
+            img = SmartImageFactory.getInstance().fromBufferedImage(image);
+            DetectedObjects detectedObjects = detectCore(img);
             return DetectorUtils.convertToDetectionResponse(detectedObjects, img);
         } catch (Exception e) {
             throw new DetectionException(e);
         } finally {
-            if (img != null) {
-                ((Mat)img.getWrappedImage()).release();
-            }
+            ImageUtils.releaseOpenCVMat(img);
         }
 
     }
@@ -183,30 +175,20 @@ public class DetectorModel implements AutoCloseable{
      * @param sourceImage
      * @return
      */
+    @Deprecated
     public BufferedImage detectAndDraw(BufferedImage sourceImage){
-        if(!ImageUtils.isImageValid(sourceImage)){
+        if(!BufferedImageUtils.isImageValid(sourceImage)){
             throw new DetectionException("图像无效");
         }
-        Image img = ImageFactory.getInstance().fromImage(OpenCVUtils.image2Mat(sourceImage));
-        DetectedObjects detectedObjects = detect(img);
+        Image img = SmartImageFactory.getInstance().fromBufferedImage(sourceImage);
+        DetectedObjects detectedObjects = detectCore(img);
         if(Objects.isNull(detectedObjects) || detectedObjects.getNumberOfObjects() == 0){
             throw new DetectionException("未检测到图片中的物体");
         }
         img.drawBoundingBoxes(detectedObjects);
-        try {
-            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-            // 调用 save 方法将 Image 写入字节流
-            img.save(outputStream, "png");
-            // 将字节流转换为 BufferedImage
-            byte[] imageBytes = outputStream.toByteArray();
-            return ImageIO.read(new ByteArrayInputStream(imageBytes));
-        } catch (IOException e) {
-            throw new DetectionException("导出图片失败", e);
-        } finally {
-            if (img != null) {
-                ((Mat)img.getWrappedImage()).release();
-            }
-        }
+        BufferedImage drawnImage = ImageUtils.toBufferedImage(img);
+        ImageUtils.releaseOpenCVMat(img);
+        return drawnImage;
     }
 
     /**
@@ -214,7 +196,35 @@ public class DetectorModel implements AutoCloseable{
      * @param image
      * @return
      */
-    public DetectedObjects detect(Image image){
+    public DetectionResponse detect(Image image){
+        DetectedObjects detectedObjects = detectCore(image);
+        return DetectorUtils.convertToDetectionResponse(detectedObjects, image);
+    }
+
+
+    /**
+     * 检测并绘制
+     * @param image
+     * @return
+     */
+    public DetectionResponse detectAndDraw(Image image){
+        DetectedObjects detectedObjects = detectCore(image);
+        if(Objects.isNull(detectedObjects) || detectedObjects.getNumberOfObjects() == 0){
+            throw new DetectionException("未检测到图片中的物体");
+        }
+        Image img = ImageUtils.copy(image);
+        DetectionResponse detectionResponse = DetectorUtils.convertToDetectionResponse(detectedObjects, img);
+        img.drawBoundingBoxes(detectedObjects);
+        detectionResponse.setDrawnImage(img);
+        return detectionResponse;
+    }
+
+    /**
+     * 目标检测
+     * @param image
+     * @return
+     */
+    public DetectedObjects detectCore(Image image){
         Predictor<Image, DetectedObjects> predictor = null;
         try {
             predictor = predictorPool.borrowObject();

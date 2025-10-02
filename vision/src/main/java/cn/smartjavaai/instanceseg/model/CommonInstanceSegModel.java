@@ -8,10 +8,12 @@ import ai.djl.modality.cv.output.DetectedObjects;
 import ai.djl.repository.zoo.Criteria;
 import ai.djl.repository.zoo.ModelNotFoundException;
 import ai.djl.repository.zoo.ZooModel;
+import cn.smartjavaai.action.model.ActionRecModelFactory;
 import cn.smartjavaai.common.cv.SmartImageFactory;
 import cn.smartjavaai.common.entity.DetectionResponse;
 import cn.smartjavaai.common.entity.R;
 import cn.smartjavaai.common.pool.PredictorFactory;
+import cn.smartjavaai.common.utils.ImageUtils;
 import cn.smartjavaai.instanceseg.config.InstanceSegModelConfig;
 import cn.smartjavaai.instanceseg.criteria.InstanceSegCriteriaFactory;
 import cn.smartjavaai.instanceseg.exception.InstanceSegException;
@@ -124,8 +126,9 @@ public class CommonInstanceSegModel implements InstanceSegModel {
 
     @Override
     public R<DetectionResponse> detectAndDraw(String imagePath, String outputPath) {
+        Image img = null;
         try {
-            Image img = SmartImageFactory.getInstance().fromFile(Paths.get(imagePath));
+            img = SmartImageFactory.getInstance().fromFile(Paths.get(imagePath));
             DetectedObjects detectedObjects = detectCore(img);
             if(Objects.isNull(detectedObjects) || detectedObjects.getNumberOfObjects() == 0){
                 return R.fail(R.Status.NO_OBJECT_DETECTED);
@@ -136,11 +139,16 @@ public class CommonInstanceSegModel implements InstanceSegModel {
             return R.ok(detectionResponse);
         } catch (IOException e) {
             throw new InstanceSegException(e);
+        } finally {
+            ImageUtils.releaseOpenCVMat(img);
         }
     }
 
     @Override
     public void close() throws Exception {
+        if (fromFactory) {
+            InstanceSegModelFactory.removeFromCache(config.getModelEnum());
+        }
         try {
             if (predictorPool != null) {
                 predictorPool.close();
@@ -155,5 +163,15 @@ public class CommonInstanceSegModel implements InstanceSegModel {
         } catch (Exception e) {
             log.warn("关闭 model 失败", e);
         }
+    }
+
+    private boolean fromFactory = false;
+
+    @Override
+    public void setFromFactory(boolean fromFactory) {
+        this.fromFactory = fromFactory;
+    }
+    public boolean isFromFactory() {
+        return fromFactory;
     }
 }

@@ -4,6 +4,7 @@ import cn.smartjavaai.common.config.Config;
 import cn.smartjavaai.face.config.FaceRecConfig;
 import cn.smartjavaai.face.constant.FaceDetectConstant;
 import cn.smartjavaai.face.enums.FaceRecModelEnum;
+import cn.smartjavaai.face.enums.QualityModelEnum;
 import cn.smartjavaai.face.exception.FaceException;
 import cn.smartjavaai.face.model.facerec.*;
 import lombok.extern.slf4j.Slf4j;
@@ -79,14 +80,15 @@ public class FaceRecModelFactory {
         if(clazz == null){
             throw new FaceException("Unsupported model");
         }
-        FaceRecModel algorithm = null;
+        FaceRecModel model = null;
         try {
-            algorithm = (FaceRecModel) clazz.newInstance();
+            model = (FaceRecModel) clazz.newInstance();
         } catch (InstantiationException | IllegalAccessException e) {
             throw new FaceException(e);
         }
-        algorithm.loadModel(config);
-        return algorithm;
+        model.loadModel(config);
+        model.setFromFactory(true);
+        return model;
     }
 
 
@@ -98,7 +100,36 @@ public class FaceRecModelFactory {
         registerAlgorithm(FaceRecModelEnum.ELASTIC_FACE_MODEL, CommonFaceRecModel.class);
         registerAlgorithm(FaceRecModelEnum.SEETA_FACE6_MODEL, SeetaFace6FaceRecModel.class);
         registerAlgorithm(FaceRecModelEnum.SEETA_FACE6_LIGHT_MODEL, SeetaFace6FaceRecModel.class);
+        registerAlgorithm(FaceRecModelEnum.DREAM_IJBA_RES18_NAIVE, CommonFaceRecModel.class);
+        registerAlgorithm(FaceRecModelEnum.VGG_FACE, CommonFaceRecModel.class);
+        registerAlgorithm(FaceRecModelEnum.SPHERE_FACE_20A_ONNX, CommonFaceRecModel.class);
+        registerAlgorithm(FaceRecModelEnum.SPHERE_FACE_20A_PT, CommonFaceRecModel.class);
+        registerAlgorithm(FaceRecModelEnum.EVOLVE_FACE_IR50, CommonFaceRecModel.class);
+        registerAlgorithm(FaceRecModelEnum.EVOLVE_FACE_IR50_ASIA, CommonFaceRecModel.class);
+        registerAlgorithm(FaceRecModelEnum.EVOLVE_FACE_IR152, CommonFaceRecModel.class);
         log.debug("缓存目录：{}", Config.getCachePath());
+    }
+
+    /**
+     * 关闭所有已加载的模型
+     */
+    public void closeAll() {
+        modelMap.values().forEach(model -> {
+            try {
+                model.close();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
+        modelMap.clear();
+    }
+
+    /**
+     * 移除缓存的模型
+     * @param modelEnum
+     */
+    public static void removeFromCache(FaceRecModelEnum modelEnum) {
+        modelMap.remove(modelEnum);
     }
 
 }

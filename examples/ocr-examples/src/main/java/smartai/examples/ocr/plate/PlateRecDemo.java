@@ -1,7 +1,9 @@
 package smartai.examples.ocr.plate;
 
+import ai.djl.modality.cv.Image;
 import ai.djl.util.JsonUtils;
 import cn.smartjavaai.common.config.Config;
+import cn.smartjavaai.common.cv.SmartImageFactory;
 import cn.smartjavaai.common.entity.R;
 import cn.smartjavaai.common.enums.DeviceEnum;
 import cn.smartjavaai.common.utils.ImageUtils;
@@ -38,6 +40,7 @@ public class PlateRecDemo {
 
     @BeforeClass
     public static void beforeAll() throws IOException {
+        SmartImageFactory.setEngine(SmartImageFactory.Engine.OPENCV);
         //修改缓存路径
 //        Config.setCachePath("/Users/xxx/smartjavaai_cache");
     }
@@ -68,6 +71,7 @@ public class PlateRecDemo {
         recModelConfig.setModelPath("/Users/wenjie/Documents/develop/model/plate/plate_rec_color.onnx");
         //指定车牌检测模型
         recModelConfig.setPlateDetModel(getPlateDetModel());
+        recModelConfig.setDevice(device);
         return PlateModelFactory.getInstance().getRecModel(recModelConfig);
     }
 
@@ -75,10 +79,12 @@ public class PlateRecDemo {
      * 车牌识别
      */
     @Test
-    public void testDetect() {
+    public void testDetect() throws IOException {
         PlateRecModel plateRecModel = getPlateRecModel();
+        //创建Image对象，可以从文件、url、InputStream创建、BufferedImage、Base64创建，具体使用方法可以查看文档
+        Image image = SmartImageFactory.getInstance().fromFile("src/main/resources/plate/Quicker_20220930_180856.png");
         //识别车号
-        R<List<PlateInfo>> result = plateRecModel.recognize("src/main/resources/plate/Quicker_20220930_180856.png");
+        R<List<PlateInfo>> result = plateRecModel.recognize(image);
         if(result.isSuccess()){
             log.info("车牌识别结果：{}", JsonUtils.toJson(result.getData()));
         }else{
@@ -109,14 +115,14 @@ public class PlateRecDemo {
     public void recognizeAndDraw2() {
         try {
             PlateRecModel plateRecModel = getPlateRecModel();
-            BufferedImage image = null;
             String imagePath = "src/main/resources/plate/Quicker_20220930_180856.png";
-            image = ImageIO.read(new File(Paths.get(imagePath).toAbsolutePath().toString()));
+            //创建Image对象，可以从文件、url、InputStream创建、BufferedImage、Base64创建，具体使用方法可以查看文档
+            Image image = SmartImageFactory.getInstance().fromFile(imagePath);
             //可以根据后续业务场景使用detectedImage
-            R<BufferedImage> detectedImage = plateRecModel.recognizeAndDraw(image);
+            R<Image> detectedImage = plateRecModel.recognizeAndDraw(image);
             if(detectedImage.isSuccess()){
                 log.info("车牌识别成功");
-                ImageUtils.saveImage(detectedImage.getData(), "output/plate_recognized2.jpg");
+                ImageUtils.save(detectedImage.getData(), "output/plate_recognized3.jpg");
             }else{
                 log.error("车牌识别失败：{}", detectedImage.getMessage());
             }

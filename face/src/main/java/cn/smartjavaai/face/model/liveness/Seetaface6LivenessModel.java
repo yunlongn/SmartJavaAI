@@ -1,21 +1,27 @@
 package cn.smartjavaai.face.model.liveness;
 
 import ai.djl.engine.Engine;
+import ai.djl.modality.cv.Image;
+import cn.smartjavaai.common.cv.SmartImageFactory;
 import cn.smartjavaai.common.entity.*;
 import cn.smartjavaai.common.entity.face.FaceInfo;
 import cn.smartjavaai.common.entity.face.LivenessResult;
 import cn.smartjavaai.common.enums.DeviceEnum;
+import cn.smartjavaai.common.utils.BufferedImageUtils;
 import cn.smartjavaai.common.utils.FileUtils;
 import cn.smartjavaai.common.utils.ImageUtils;
 import cn.smartjavaai.face.config.LivenessConfig;
 import cn.smartjavaai.common.enums.face.LivenessStatus;
 import cn.smartjavaai.face.constant.LivenessConstant;
 import cn.smartjavaai.face.exception.FaceException;
+import cn.smartjavaai.face.factory.LivenessModelFactory;
 import cn.smartjavaai.face.seetaface.NativeLoader;
 import cn.smartjavaai.face.utils.FaceUtils;
+import cn.smartjavaai.face.utils.Seetaface6Utils;
 import com.seeta.pool.*;
 import com.seeta.sdk.*;
 import lombok.extern.slf4j.Slf4j;
+import nu.pattern.OpenCV;
 import org.apache.commons.lang3.StringUtils;
 import org.bytedeco.javacv.FFmpegFrameGrabber;
 import org.bytedeco.javacv.Frame;
@@ -43,6 +49,11 @@ public class Seetaface6LivenessModel implements LivenessDetModel{
     private FaceLandmarkerPool faceLandmarkerPool;
 
     private LivenessConfig config;
+
+    static {
+        //视频功能需要
+        OpenCV.loadLocally();
+    }
 
     @Override
     public void loadModel(LivenessConfig config) {
@@ -129,10 +140,7 @@ public class Seetaface6LivenessModel implements LivenessDetModel{
     }
 
 
-    private R<LivenessResult> detect(BufferedImage image, DetectionRectangle faceDetectionRectangle, List<Point> keyPoints, boolean isImage) {
-        if(!ImageUtils.isImageValid(image)){
-            return R.fail(R.Status.INVALID_IMAGE);
-        }
+    private R<LivenessResult> detect(Image image, DetectionRectangle faceDetectionRectangle, List<Point> keyPoints, boolean isImage) {
         if(Objects.isNull(faceDetectionRectangle)){
             return R.fail(R.Status.NO_FACE_DETECTED);
         }
@@ -145,8 +153,8 @@ public class Seetaface6LivenessModel implements LivenessDetModel{
             faceAntiSpoofing = faceAntiSpoofingPool.borrowObject();
             SeetaImageData imageData = new SeetaImageData(image.getWidth(), image.getHeight(), 3);
             imageData.data = ImageUtils.getMatrixBGR(image);
-            SeetaRect seetaRect = FaceUtils.convertToSeetaRect(faceDetectionRectangle);
-            SeetaPointF[] landmarks = FaceUtils.convertToSeetaPointF(keyPoints);
+            SeetaRect seetaRect = Seetaface6Utils.convertToSeetaRect(faceDetectionRectangle);
+            SeetaPointF[] landmarks = Seetaface6Utils.convertToSeetaPointF(keyPoints);
             //检测图片
             if(isImage){
                 status = faceAntiSpoofing.Predict(imageData, seetaRect, landmarks);
@@ -154,7 +162,7 @@ public class Seetaface6LivenessModel implements LivenessDetModel{
                 //检测视频
                 status = faceAntiSpoofing.PredictVideo(imageData, seetaRect, landmarks);
             }
-            return R.ok(new LivenessResult(FaceUtils.convertToLivenessStatus(status)));
+            return R.ok(new LivenessResult(Seetaface6Utils.convertToLivenessStatus(status)));
         } catch (Exception e) {
             throw new FaceException("活体检测错误", e);
         } finally {
@@ -168,38 +176,61 @@ public class Seetaface6LivenessModel implements LivenessDetModel{
         }
     }
 
-    @Override
-    public R<DetectionResponse> detect(String imagePath) {
-        if(!FileUtils.isFileExists(imagePath)){
-            return R.fail(R.Status.FILE_NOT_FOUND);
-        }
-        // 将图片路径转换为 BufferedImage
-        BufferedImage image = null;
+
+    private R<LivenessResult> detectVideo(FFmpegFrameGrabber grabber) {
+        FaceAntiSpoofing faceAntiSpoofing = null;
         try {
-            image = ImageIO.read(new File(Paths.get(imagePath).toAbsolutePath().toString()));
-        } catch (IOException e) {
-            throw new FaceException("无效图片路径", e);
+            faceAntiSpoofing = faceAntiSpoofingPool.borrowObject();
+            //重置视频
+            faceAntiSpoofing.ResetVideo();
+            grabber.start();
+            // 获取视频总帧数
+            int totalFrames = grabber.getLengthInFrames();
+            int videoFrameCountConfig = faceAntiSpoofing.GetVideoFrameCount();
+            log.debug("视频总帧数：{}，检测帧数：{}", totalFrames, videoFrameCountConfig);
+            if(totalFrames < videoFrameCountConfig){
+                return R.fail(1001, "视频帧数低于检测帧数");
+            }
+            // 逐帧处理视频
+            for (int frameIndex = 0; frameIndex < totalFrames; frameIndex++) {
+                if(frameIndex >= config.getMaxVideoDetectFrames()){
+                    return R.fail(10002, "超出最大检测帧数：" + config.getMaxVideoDetectFrames());
+                }
+                // 获取当前帧
+                Frame frame = grabber.grabImage();
+                if (frame != null) {
+                    BufferedImage bufferedImage = Java2DFrameUtils.toBufferedImage(frame);
+                    Image image = SmartImageFactory.getInstance().fromBufferedImage(bufferedImage);
+                    R<LivenessResult> livenessStatus = detectTopFace(image, false);
+                    if(!livenessStatus.isSuccess()){
+                        log.debug("第" + frameIndex + "帧处理失败：" + livenessStatus.getMessage());
+                        continue;
+                    }
+                    //满足检测帧数之后停止检测
+                    if(livenessStatus.getData().getStatus() != LivenessStatus.DETECTING){
+                        return livenessStatus;
+                    }
+                }
+            }
+            grabber.stop();
+        } catch (FFmpegFrameGrabber.Exception e) {
+            throw new FaceException(e);
+        } catch (Exception e) {
+            throw new FaceException(e);
+        } finally {
+            if (faceAntiSpoofing != null) {
+                try {
+                    faceAntiSpoofingPool.returnObject(faceAntiSpoofing);
+                } catch (Exception e) {
+                    log.warn("归还Predictor失败", e);
+                }
+            }
         }
-        return detect(image);
+        return R.fail(1000, "有效帧数量不足，无法完成活体检测");
     }
 
     @Override
-    public R<DetectionResponse> detect(byte[] imageData) {
-        if(Objects.isNull(imageData)){
-            return R.fail(R.Status.INVALID_IMAGE);
-        }
-        try {
-            return detect(ImageIO.read(new ByteArrayInputStream(imageData)));
-        } catch (IOException e) {
-            throw new FaceException("错误的图像", e);
-        }
-    }
-
-    @Override
-    public R<DetectionResponse> detect(BufferedImage image) {
-        if(!ImageUtils.isImageValid(image)){
-            return R.fail(R.Status.INVALID_IMAGE);
-        }
+    public R<DetectionResponse> detect(Image image) {
         FaceAntiSpoofing faceAntiSpoofing = null;
         FaceLandmarker faceLandmarker = null;
         FaceDetector detectPredictor = null;
@@ -224,9 +255,9 @@ public class Seetaface6LivenessModel implements LivenessDetModel{
                     seetaPointFSList.add(landmarks);
                     //检测图片
                     FaceAntiSpoofing.Status status = faceAntiSpoofing.Predict(imageData, seetaRect, landmarks);
-                    livenessStatusList.add(FaceUtils.convertToLivenessStatus(status));
+                    livenessStatusList.add(Seetaface6Utils.convertToLivenessStatus(status));
                 }
-                return R.ok(FaceUtils.convertToDetectionResponse(seetaResult, seetaPointFSList, livenessStatusList));
+                return R.ok(Seetaface6Utils.convertToDetectionResponse(seetaResult, seetaPointFSList, livenessStatusList));
             }else{
                 R<DetectionResponse> faceDetectionResponse = config.getDetectModel().detect(image);
                 if(Objects.isNull(faceDetectionResponse.getData()) || Objects.isNull(faceDetectionResponse.getData().getDetectionInfoList()) || faceDetectionResponse.getData().getDetectionInfoList().isEmpty()){
@@ -272,26 +303,7 @@ public class Seetaface6LivenessModel implements LivenessDetModel{
     }
 
     @Override
-    public R<List<LivenessResult>> detect(String imagePath, DetectionResponse faceDetectionResponse) {
-        if(!FileUtils.isFileExists(imagePath)){
-            return R.fail(R.Status.FILE_NOT_FOUND);
-        }
-        // 将图片路径转换为 BufferedImage
-        BufferedImage image = null;
-        try {
-            image = ImageIO.read(new File(Paths.get(imagePath).toAbsolutePath().toString()));
-        } catch (IOException e) {
-            throw new FaceException("无效图片路径", e);
-        }
-        return detect(image, faceDetectionResponse);
-    }
-
-
-    @Override
-    public R<List<LivenessResult>> detect(BufferedImage image, DetectionResponse faceDetectionResponse) {
-        if(!ImageUtils.isImageValid(image)){
-            return R.fail(R.Status.INVALID_IMAGE);
-        }
+    public R<List<LivenessResult>> detect(Image image, DetectionResponse faceDetectionResponse) {
         if(Objects.isNull(faceDetectionResponse) || Objects.isNull(faceDetectionResponse.getDetectionInfoList()) || faceDetectionResponse.getDetectionInfoList().isEmpty()){
             return R.fail(R.Status.NO_FACE_DETECTED);
         }
@@ -310,73 +322,17 @@ public class Seetaface6LivenessModel implements LivenessDetModel{
         return R.ok(livenessStatusList);
     }
 
-
-
     @Override
-    public R<List<LivenessResult>> detect(byte[] imageData, DetectionResponse faceDetectionResponse) {
-        if(Objects.isNull(imageData)){
-            return R.fail(R.Status.INVALID_IMAGE);
-        }
-        try {
-            return detect(ImageIO.read(new ByteArrayInputStream(imageData)), faceDetectionResponse);
-        } catch (IOException e) {
-            throw new FaceException("错误的图像", e);
-        }
-    }
-
-    @Override
-    public R<LivenessResult> detect(String imagePath, DetectionRectangle faceDetectionRectangle, List<Point> keyPoints) {
-        if(!FileUtils.isFileExists(imagePath)){
-            return R.fail(R.Status.FILE_NOT_FOUND);
-        }
-        // 将图片路径转换为 BufferedImage
-        BufferedImage image = null;
-        try {
-            image = ImageIO.read(new File(Paths.get(imagePath).toAbsolutePath().toString()));
-        } catch (IOException e) {
-            throw new FaceException("无效图片路径", e);
-        }
-        return detect(image, faceDetectionRectangle, keyPoints);
-    }
-
-    @Override
-    public R<LivenessResult> detect(BufferedImage image, DetectionRectangle faceDetectionRectangle, List<Point> keyPoints) {
+    public R<LivenessResult> detect(Image image, DetectionRectangle faceDetectionRectangle, List<Point> keyPoints) {
         return detect(image, faceDetectionRectangle, keyPoints, true);
     }
 
     @Override
-    public R<LivenessResult> detect(byte[] imageData, DetectionRectangle faceDetectionRectangle, List<Point> keyPoints) {
-        if(Objects.isNull(imageData)){
-            return R.fail(R.Status.INVALID_IMAGE);
-        }
-        try {
-            return detect(ImageIO.read(new ByteArrayInputStream(imageData)), faceDetectionRectangle, keyPoints);
-        } catch (IOException e) {
-            throw new FaceException("错误的图像", e);
-        }
+    public R<LivenessResult> detectTopFace(Image image) {
+        return detectTopFace(image, true);
     }
 
-
-    @Override
-    public R<LivenessResult> detectTopFace(String imagePath) {
-        if(!FileUtils.isFileExists(imagePath)){
-            return R.fail(R.Status.FILE_NOT_FOUND);
-        }
-        // 将图片路径转换为 BufferedImage
-        BufferedImage image = null;
-        try {
-            image = ImageIO.read(new File(Paths.get(imagePath).toAbsolutePath().toString()));
-        } catch (IOException e) {
-            throw new FaceException("无效图片路径", e);
-        }
-        return detectTopFace(image);
-    }
-
-
-    private R<LivenessResult> detectTopFace(BufferedImage image, boolean isImage) {
-        if(!ImageUtils.isImageValid(image)){
-            return R.fail(R.Status.INVALID_IMAGE);
-        }
+    private R<LivenessResult> detectTopFace(Image image, boolean isImage) {
         FaceAntiSpoofing faceAntiSpoofing = null;
         FaceLandmarker faceLandmarker = null;
         FaceDetector detectPredictor = null;
@@ -402,14 +358,15 @@ public class Seetaface6LivenessModel implements LivenessDetModel{
                 }else{
                     status = faceAntiSpoofing.PredictVideo(imageData, seetaResult[0], landmarks);
                 }
-                return R.ok(new LivenessResult(FaceUtils.convertToLivenessStatus(status)));
+                return R.ok(new LivenessResult(Seetaface6Utils.convertToLivenessStatus(status)));
             }else{
                 R<DetectionResponse> faceDetectionResponse = config.getDetectModel().detect(image);
                 if(Objects.isNull(faceDetectionResponse.getData()) || Objects.isNull(faceDetectionResponse.getData().getDetectionInfoList()) || faceDetectionResponse.getData().getDetectionInfoList().isEmpty()){
                     return R.fail(R.Status.NO_FACE_DETECTED);
                 }
                 DetectionInfo detectionInfo = faceDetectionResponse.getData().getDetectionInfoList().get(0);
-                return detect(image, detectionInfo.getDetectionRectangle(), detectionInfo.getFaceInfo().getKeyPoints(), isImage);
+                R<LivenessResult> detectionResponseR = detect(image, detectionInfo.getDetectionRectangle(), detectionInfo.getFaceInfo().getKeyPoints(), isImage);
+                return detectionResponseR;
             }
         } catch (Exception e) {
             throw new FaceException("活体检测错误", e);
@@ -438,58 +395,6 @@ public class Seetaface6LivenessModel implements LivenessDetModel{
         }
     }
 
-
-    @Override
-    public R<LivenessResult> detectTopFace(BufferedImage image) {
-        return detectTopFace(image, true);
-    }
-
-    @Override
-    public R<LivenessResult> detectTopFace(byte[] imageData) {
-        if(Objects.isNull(imageData)){
-            return R.fail(R.Status.INVALID_IMAGE);
-        }
-        try {
-            return detectTopFace(ImageIO.read(new ByteArrayInputStream(imageData)));
-        } catch (IOException e) {
-            throw new FaceException("错误的图像", e);
-        }
-    }
-
-
-    public R<LivenessResult> detectVideoByFrame(BufferedImage frameImage, DetectionRectangle faceDetectionRectangle, List<Point> keyPoints) {
-        if(!ImageUtils.isImageValid(frameImage)){
-            return R.fail(R.Status.INVALID_IMAGE);
-        }
-        return detect(frameImage,faceDetectionRectangle, keyPoints,false);
-    }
-
-    public R<LivenessResult> detectVideoByFrame(byte[] frameData, DetectionRectangle faceDetectionRectangle, List<Point> keyPoints) {
-        if(Objects.isNull(frameData)){
-            return R.fail(R.Status.INVALID_IMAGE);
-        }
-        try {
-            return detect(ImageIO.read(new ByteArrayInputStream(frameData)), faceDetectionRectangle, keyPoints, false);
-        } catch (IOException e) {
-            throw new FaceException("错误的图像", e);
-        }
-    }
-
-    public R<LivenessResult> detectVideoByFrame(byte[] frameImageData) {
-        if(Objects.isNull(frameImageData)){
-            return R.fail(R.Status.INVALID_IMAGE);
-        }
-        try {
-            return detectVideoByFrame(ImageIO.read(new ByteArrayInputStream(frameImageData)));
-        } catch (IOException e) {
-            throw new FaceException("错误的图像", e);
-        }
-    }
-
-    public R<LivenessResult> detectVideoByFrame(BufferedImage frameImageData) {
-        return detectTopFace(frameImageData, false);
-    }
-
     @Override
     public R<LivenessResult> detectVideo(InputStream videoInputStream) {
         if(Objects.isNull(videoInputStream)){
@@ -506,57 +411,6 @@ public class Seetaface6LivenessModel implements LivenessDetModel{
         return detectVideo(new FFmpegFrameGrabber(videoPath));
     }
 
-    private R<LivenessResult> detectVideo(FFmpegFrameGrabber grabber) {
-        FaceAntiSpoofing faceAntiSpoofing = null;
-        try {
-            faceAntiSpoofing = faceAntiSpoofingPool.borrowObject();
-            //重置视频
-            faceAntiSpoofing.ResetVideo();
-            grabber.start();
-            // 获取视频总帧数
-            int totalFrames = grabber.getLengthInFrames();
-            int videoFrameCountConfig = faceAntiSpoofing.GetVideoFrameCount();
-            log.debug("视频总帧数：{}，检测帧数：{}", totalFrames, videoFrameCountConfig);
-            if(totalFrames < videoFrameCountConfig){
-                return R.fail(1001, "视频帧数低于检测帧数");
-            }
-            // 逐帧处理视频
-            for (int frameIndex = 0; frameIndex < totalFrames; frameIndex++) {
-                if(frameIndex >= config.getMaxVideoDetectFrames()){
-                    return R.fail(10002, "超出最大检测帧数：" + config.getMaxVideoDetectFrames());
-                }
-                // 获取当前帧
-                Frame frame = grabber.grabImage();
-                if (frame != null) {
-                    BufferedImage bufferedImage = Java2DFrameUtils.toBufferedImage(frame);
-                    R<LivenessResult> livenessStatus = detectVideoByFrame(bufferedImage);
-                    if(!livenessStatus.isSuccess()){
-                        log.debug("第" + frameIndex + "帧处理失败：" + livenessStatus.getMessage());
-                        continue;
-                    }
-                    //满足检测帧数之后停止检测
-                    if(livenessStatus.getData().getStatus() != LivenessStatus.DETECTING){
-                        return livenessStatus;
-                    }
-                }
-            }
-            grabber.stop();
-        } catch (FFmpegFrameGrabber.Exception e) {
-            throw new FaceException(e);
-        } catch (Exception e) {
-            throw new FaceException(e);
-        } finally {
-            if (faceAntiSpoofing != null) {
-                try {
-                    faceAntiSpoofingPool.returnObject(faceAntiSpoofing);
-                } catch (Exception e) {
-                    log.warn("归还Predictor失败", e);
-                }
-            }
-        }
-        return R.fail(1000, "有效帧数量不足，无法完成活体检测");
-    }
-
     public FaceDetectorPool getFaceDetectorPool() {
         return faceDetectorPool;
     }
@@ -571,6 +425,9 @@ public class Seetaface6LivenessModel implements LivenessDetModel{
 
     @Override
     public void close() throws Exception {
+        if (fromFactory) {
+            LivenessModelFactory.removeFromCache(config.getModelEnum());
+        }
         try {
             if (faceDetectorPool != null) {
                 faceDetectorPool.close();
@@ -592,5 +449,15 @@ public class Seetaface6LivenessModel implements LivenessDetModel{
         } catch (Exception e) {
             log.warn("关闭 predictorPool 失败", e);
         }
+    }
+
+    private boolean fromFactory = false;
+
+    @Override
+    public void setFromFactory(boolean fromFactory) {
+        this.fromFactory = fromFactory;
+    }
+    public boolean isFromFactory() {
+        return fromFactory;
     }
 }

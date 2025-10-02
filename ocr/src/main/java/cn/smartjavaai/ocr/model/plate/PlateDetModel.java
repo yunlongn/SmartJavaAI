@@ -32,6 +32,7 @@ public interface PlateDetModel extends AutoCloseable{
      * @param imagePath 图片路径
      * @return
      */
+    @Deprecated
     default R<List<PlateInfo>> detect(String imagePath) {
         throw new UnsupportedOperationException("默认不支持该功能");
     }
@@ -42,6 +43,7 @@ public interface PlateDetModel extends AutoCloseable{
      * @param inputStream
      * @return
      */
+    @Deprecated
     default R<List<PlateInfo>> detect(InputStream inputStream) {
         throw new UnsupportedOperationException("默认不支持该功能");
     }
@@ -52,6 +54,7 @@ public interface PlateDetModel extends AutoCloseable{
      * @param base64Image
      * @return
      */
+    @Deprecated
     default R<List<PlateInfo>> detectBase64(String base64Image){
         throw new UnsupportedOperationException("默认不支持该功能");
     }
@@ -62,6 +65,7 @@ public interface PlateDetModel extends AutoCloseable{
      * @param image BufferedImage
      * @return
      */
+    @Deprecated
     default R<List<PlateInfo>> detect(BufferedImage image) {
         throw new UnsupportedOperationException("默认不支持该功能");
     }
@@ -72,6 +76,7 @@ public interface PlateDetModel extends AutoCloseable{
      * @param imageData 图片字节数组
      * @return
      */
+    @Deprecated
     default R<List<PlateInfo>> detect(byte[] imageData) {
         throw new UnsupportedOperationException("默认不支持该功能");
     }
@@ -81,7 +86,17 @@ public interface PlateDetModel extends AutoCloseable{
      * @param image DJL Image
      * @return
      */
-    default DetectedObjects detect(Image image){
+    default DetectedObjects detectCore(Image image){
+        throw new UnsupportedOperationException("默认不支持该功能");
+    }
+
+
+    /**
+     * 车牌检测
+     * @param image DJL Image
+     * @return
+     */
+    default R<List<PlateInfo>> detect(Image image){
         throw new UnsupportedOperationException("默认不支持该功能");
     }
 
@@ -100,7 +115,17 @@ public interface PlateDetModel extends AutoCloseable{
      * @param sourceImage
      * @return
      */
+    @Deprecated
     default R<BufferedImage> detectAndDraw(BufferedImage sourceImage){
+        throw new UnsupportedOperationException("默认不支持该功能");
+    }
+
+    /**
+     * 检测并绘制结果
+     * @param image
+     * @return
+     */
+    default Image detectAndDraw(Image image){
         throw new UnsupportedOperationException("默认不支持该功能");
     }
 
@@ -109,7 +134,9 @@ public interface PlateDetModel extends AutoCloseable{
     }
 
 
-
+    default void setFromFactory(boolean fromFactory){
+        throw new UnsupportedOperationException("默认不支持该功能");
+    }
 
 
 }

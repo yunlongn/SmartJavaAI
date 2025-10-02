@@ -426,6 +426,7 @@ SmartJavaAI是专为JAVA 开发者打造的一个功能丰富、开箱即用的 
 ### 2、Maven
 
 在项目的 `pom.xml` 的 `dependencies` 中可以一次性引入全部功能（如下所示）。
+ 
 ⚠️ **注意：不推荐直接引入全部依赖**，更推荐根据实际需求，按功能模块单独引入，避免引入不必要的包。
 
 详细引入方式请查看 [文档](http://doc.smartjavaai.cn/install.html)、或查看[示例代码](https://gitee.com/dengwenjie/SmartJavaAI/tree/master/examples)
@@ -434,7 +435,7 @@ SmartJavaAI是专为JAVA 开发者打造的一个功能丰富、开箱即用的 
 <dependency>
     <groupId>cn.smartjavaai</groupId>
     <artifactId>smartjavaai-all</artifactId>
-    <version>1.0.24</version>
+    <version>1.0.25</version>
 </dependency>
 ```
 
@@ -577,6 +578,7 @@ SmartJavaAI是专为JAVA 开发者打造的一个功能丰富、开箱即用的 
 | YOLOV8-SEG  | OnnxRuntime | Ultralytics在COCO 数据集 上训练的模型        | [Github](https://docs.ultralytics.com/zh/tasks/segment/) |
 | YOLOV11-SEG | OnnxRuntime | Ultralytics在COCO 数据集 上训练的模型 |  [Github](https://docs.ultralytics.com/zh/tasks/segment/)        |
 | Mask R-CNN | MXNet | Mask R-CNN 是一种在目标检测基础上，同时为每个物体生成像素级分割区域的深度学习模型 | 无          |
+
 ---
 
 #### OBB旋转框目标检测模型
@@ -732,6 +734,18 @@ SmartJavaAI是专为JAVA 开发者打造的一个功能丰富、开箱即用的 
 6、等待维护者合并
 
 ## 近期更新日志
+
+## [v1.0.25] - 2025-10-02
+- 【人脸检测】新增6个模型(MTCNN、YOLOV5、RetinaFace小尺寸版)，大幅提升性能
+- 【人脸识别】新增Seetaface6轻量模型
+- 【目标检测】支持视频流目标检测（rtsp、视频文件等）
+- 【目标检测】支持tensorflow2目标检测模型
+- 【目标检测】新增行人检测模型(yolo-person)
+- 【通用视觉】新增4个动作识别模型
+- 【通用视觉】新增语义分割模型
+- 【通用视觉】新增5个实例分割模型(含yolov8-seg、yolov11-seg)
+- 【通用视觉】新增yolo-obb11旋转框检测(含yolov11-obb)
+- 【通用视觉】新增5个姿态估计模型(含yolov8-pose、yolov11-pose)
 
 ## [v1.0.24] - 2025-09-07
 - 【人脸检测】新增6个模型(MTCNN、YOLOV5、RetinaFace小尺寸版)，大幅提升性能

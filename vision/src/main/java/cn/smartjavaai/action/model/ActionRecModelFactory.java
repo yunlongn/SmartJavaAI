@@ -76,6 +76,7 @@ public class ActionRecModelFactory {
             throw new DetectionException(e);
         }
         model.loadModel(config);
+        model.setFromFactory(true);
         return model;
     }
 
@@ -90,14 +91,6 @@ public class ActionRecModelFactory {
     }
 
 
-    /**
-     * 移除缓存的模型
-     * @param modelEnum
-     */
-    public static void removeFromCache(ActionRecModelEnum modelEnum) {
-        modelMap.remove(modelEnum);
-    }
-
 
     // 初始化默认算法
     static {
@@ -106,6 +99,28 @@ public class ActionRecModelFactory {
         registerAlgorithm(ActionRecModelEnum.RESNET_V1B_KINETICS400_ONNX, CommonActionRecModel.class);
         registerAlgorithm(ActionRecModelEnum.VIT_BASE_PATCH16_224_DJL, CommonActionRecModel.class);
         log.debug("缓存目录：{}", Config.getCachePath());
+    }
+
+    /**
+     * 关闭所有已加载的模型
+     */
+    public void closeAll() {
+        modelMap.values().forEach(model -> {
+            try {
+                model.close();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
+        modelMap.clear();
+    }
+
+    /**
+     * 移除缓存的模型
+     * @param modelEnum
+     */
+    public static void removeFromCache(ActionRecModelEnum modelEnum) {
+        modelMap.remove(modelEnum);
     }
 }
 

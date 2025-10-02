@@ -11,8 +11,10 @@ import ai.djl.repository.zoo.Criteria;
 import ai.djl.repository.zoo.ModelNotFoundException;
 import ai.djl.repository.zoo.ModelZoo;
 import ai.djl.repository.zoo.ZooModel;
+import cn.smartjavaai.common.cv.SmartImageFactory;
 import cn.smartjavaai.common.entity.R;
 import cn.smartjavaai.common.pool.PredictorFactory;
+import cn.smartjavaai.common.utils.BufferedImageUtils;
 import cn.smartjavaai.common.utils.FileUtils;
 import cn.smartjavaai.common.utils.ImageUtils;
 import cn.smartjavaai.common.utils.OpenCVUtils;
@@ -22,6 +24,8 @@ import cn.smartjavaai.ocr.entity.OcrBox;
 import cn.smartjavaai.ocr.entity.OcrItem;
 import cn.smartjavaai.ocr.entity.TableStructureResult;
 import cn.smartjavaai.ocr.exception.OcrException;
+import cn.smartjavaai.ocr.factory.PlateModelFactory;
+import cn.smartjavaai.ocr.factory.TableRecModelFactory;
 import cn.smartjavaai.ocr.model.table.criteria.StructureCriteriaFactory;
 import cn.smartjavaai.ocr.utils.OcrUtils;
 import lombok.extern.slf4j.Slf4j;
@@ -49,8 +53,11 @@ public class CommonTableStructureModel implements TableStructureModel{
 
     private GenericObjectPool<Predictor<Image, TableStructureResult>> predictorPool;
 
+    private TableStructureConfig config;
+
     @Override
     public void loadModel(TableStructureConfig config) {
+        this.config = config;
         if(StringUtils.isBlank(config.getModelPath())){
             throw new OcrException("modelPath is null");
         }
@@ -74,19 +81,17 @@ public class CommonTableStructureModel implements TableStructureModel{
 
     @Override
     public R<TableStructureResult> detect(BufferedImage image) {
-        if(!ImageUtils.isImageValid(image)){
+        if(!BufferedImageUtils.isImageValid(image)){
             return R.fail(R.Status.INVALID_IMAGE);
         }
         Image img = null;
         try {
-            img = ImageFactory.getInstance().fromImage(OpenCVUtils.image2Mat(image));
+            img = SmartImageFactory.getInstance().fromBufferedImage(image);
             return detect(img);
         } catch (Exception e) {
             throw new OcrException(e);
         } finally {
-            if(Objects.nonNull(img)){
-                ((Mat)img.getWrappedImage()).release();
-            }
+            ImageUtils.releaseOpenCVMat(img);
         }
     }
 
@@ -97,14 +102,12 @@ public class CommonTableStructureModel implements TableStructureModel{
         }
         Image img = null;
         try {
-            img = ImageFactory.getInstance().fromFile(Paths.get(imagePath));
+            img = SmartImageFactory.getInstance().fromFile(Paths.get(imagePath));
             return detect(img);
         } catch (IOException e) {
             throw new OcrException("无效的图片", e);
         } finally {
-            if (Objects.nonNull(img)){
-                ((Mat)img.getWrappedImage()).release();
-            }
+            ImageUtils.releaseOpenCVMat(img);
         }
     }
 
@@ -153,6 +156,9 @@ public class CommonTableStructureModel implements TableStructureModel{
 
     @Override
     public void close() throws Exception {
+        if (fromFactory) {
+            TableRecModelFactory.removeFromCache(config.getModelEnum());
+        }
         try {
             if (predictorPool != null) {
                 predictorPool.close();
@@ -167,5 +173,15 @@ public class CommonTableStructureModel implements TableStructureModel{
         } catch (Exception e) {
             log.warn("关闭 model 失败", e);
         }
+    }
+
+    private boolean fromFactory = false;
+
+    @Override
+    public void setFromFactory(boolean fromFactory) {
+        this.fromFactory = fromFactory;
+    }
+    public boolean isFromFactory() {
+        return fromFactory;
     }
 }
