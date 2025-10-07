@@ -434,7 +434,7 @@ SmartJavaAI是专为JAVA 开发者打造的一个功能丰富、开箱即用的 
 ```xml
 <dependency>
     <groupId>cn.smartjavaai</groupId>
-    <artifactId>smartjavaai-all</artifactId>
+    <artifactId>all</artifactId>
     <version>1.0.25</version>
 </dependency>
 ```
@@ -471,13 +471,17 @@ SmartJavaAI是专为JAVA 开发者打造的一个功能丰富、开箱即用的 
 **人脸识别模型(FaceRecognition)**
 
 
-| 模型名称                          | 引擎      | 模型简介                                                                                 | 模型开源网站                                                                                 |
-|-------------------------------|---------|--------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------|
-| InsightFace_IR-SE50(高精度)      | PyTorch | 这是对 ArcFace（论文）和 InsightFace（GitHub）的 PyTorch 重新实现                                   | [Github](https://github.com/TreB1eN/InsightFace_Pytorch)  |
-| InsightFace_Mobilefacenet(极速) | PyTorch | （轻量级）这是对 ArcFace（论文）和 InsightFace（GitHub）的 PyTorch 重新实现                              | [Github](https://github.com/TreB1eN/InsightFace_Pytorch)  |
-| FaceNet(均衡)                   | PyTorch | 基于 PyTorch 的 Inception ResNet（V1）模型仓库                                                | [Github](https://github.com/timesler/facenet-pytorch)  |
-| ElasticFace(高精度)           | PyTorch | 基于 CVPRW2022 论文《ElasticFace: Elastic Margin Loss for Deep Face Recognition》实现的人脸识别模型 | [Github](https://github.com/fdbtrs/ElasticFace) |
-| SeetaFace6(均衡)                    | C++     | 中科视拓最新开放的开源免费的全栈人脸识别工具包                                                              | [Github](https://github.com/seetafaceengine/SeetaFace6)     |
+| 模型名称                          | 引擎                  | 模型简介                                                                                 | 模型开源网站                                                                                 |
+|-------------------------------|---------------------|--------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------|
+| InsightFace_IR-SE50(高精度)      | PyTorch             | 这是对 ArcFace（论文）和 InsightFace（GitHub）的 PyTorch 重新实现                                   | [Github](https://github.com/TreB1eN/InsightFace_Pytorch)  |
+| InsightFace_Mobilefacenet(极速) | PyTorch             | （轻量级）这是对 ArcFace（论文）和 InsightFace（GitHub）的 PyTorch 重新实现                              | [Github](https://github.com/TreB1eN/InsightFace_Pytorch)  |
+| FaceNet                       | PyTorch             | 基于 PyTorch 的 Inception ResNet（V1）模型仓库                                                | [Github](https://github.com/timesler/facenet-pytorch)  |
+| ElasticFace                   | PyTorch             | 基于 CVPRW2022 论文《ElasticFace: Elastic Margin Loss for Deep Face Recognition》实现的人脸识别模型 | [Github](https://github.com/fdbtrs/ElasticFace) |
+| SeetaFace6              | C++                 | 中科视拓最新开放的开源免费的全栈人脸识别工具包           | [Github](https://github.com/seetafaceengine/SeetaFace6)     |
+| SphereFace-20A                | PyTorch+OnnxRuntime | SphereFace:Deep Hypersphere Embedding for Face Recognition        | [Github](https://github.com/wy1iu/sphereface)     |
+| DREAM_IJBA_RES18              | OnnxRuntime | DREAM block for Pose-Robust Face Recognition                           | [Github](https://github.com/penincillin/DREAM)     |
+| face.evoLVe                   | PyTorch | High-Performance Face Recognition Library based on PaddlePaddle & PyTorch                 | [Github](https://github.com/ZhaoJ9014/face.evoLVe)     |
+| VGGFace2                      | PyTorch | PyTorch Face Recognizer based on 'VGGFace2: A dataset for recognising faces across pose and age'.      | [Github](https://github.com/cydonia999/VGGFace2-pytorch)     |
 
 
 **静态活体检测(RGB)模型（Silent face-anti-spoofing、FaceLivenessDetection）**
