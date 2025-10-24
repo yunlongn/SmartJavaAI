@@ -1,6 +1,7 @@
-package cn.smartjavaai.face.utils;
+package cn.smartjavaai.common.utils;
 
-import cn.smartjavaai.face.enums.SimilarityType;
+
+import cn.smartjavaai.common.enums.SimilarityType;
 
 /**
  * 特征相似度计算工具类

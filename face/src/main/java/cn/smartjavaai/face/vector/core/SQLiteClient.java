@@ -2,9 +2,9 @@ package cn.smartjavaai.face.vector.core;
 
 import cn.hutool.core.util.IdUtil;
 import cn.smartjavaai.common.config.Config;
+import cn.smartjavaai.common.utils.SimilarityUtil;
 import cn.smartjavaai.face.dao.FaceDao;
 import cn.smartjavaai.face.entity.FaceSearchParams;
-import cn.smartjavaai.face.utils.SimilarityUtil;
 import cn.smartjavaai.face.vector.config.SQLiteConfig;
 import cn.smartjavaai.face.vector.entity.FaceVector;
 import cn.smartjavaai.common.entity.face.FaceSearchResult;

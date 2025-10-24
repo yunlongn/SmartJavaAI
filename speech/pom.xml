@@ -6,7 +6,7 @@
     <parent>
         <groupId>cn.smartjavaai</groupId>
         <artifactId>smartjavaai-parent</artifactId>
-        <version>1.0.25</version>
+        <version>1.0.26</version>
     </parent>
 
     <artifactId>speech</artifactId>
@@ -48,10 +48,16 @@
             <artifactId>jave-core</artifactId>
             <version>3.5.0</version>
         </dependency>
+
+        <dependency>
+            <groupId>io.gitee.dengwenjie</groupId>
+            <artifactId>sherpa-onnx-java-api</artifactId>
+            <version>1.12.14</version>
+        </dependency>
     </dependencies>
 
 
-    <version>1.0.25</version>
+    <version>1.0.26</version>
     <name>speech</name>
     <description>SmartJavaAI</description>
     <url>https://github.com/geekwenjie/SmartJavaAI</url>

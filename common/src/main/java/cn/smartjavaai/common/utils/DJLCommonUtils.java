@@ -11,6 +11,7 @@ import org.opencv.core.Mat;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
@@ -18,6 +19,16 @@ import java.util.Objects;
  * @author dwj
  */
 public class DJLCommonUtils {
+
+    private static final List<String> SUPPORTED_PROTOCOLS = Arrays.asList(
+            "file://",
+            "http://",
+            "https://",
+            "jar://",
+            "djl://",
+            "s3://",
+            "hdfs://"
+    );
 
     /**
      * 检查模型目录中是否存在 "serving.properties" 文件
@@ -156,6 +167,18 @@ public class DJLCommonUtils {
         List<Double> probabilities = new ArrayList<>();
         List<BoundingBox> boxes = new ArrayList<>();
         return new DetectedObjects(classNames, probabilities, boxes);
+    }
+
+    /**
+     * 判断路径是否以已知协议开头
+     * @param path 模型路径
+     * @return 是否以支持的协议开头
+     */
+    public static boolean hasSupportedProtocol(String path) {
+        if (path == null || path.isEmpty()) {
+            return false;
+        }
+        return SUPPORTED_PROTOCOLS.stream().anyMatch(path::startsWith);
     }
 
 

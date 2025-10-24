@@ -140,6 +140,18 @@ SmartJavaAI是专为JAVA 开发者打造的一个功能丰富、开箱即用的 
         </div>
       </td>
     </tr> 
+  <tr>
+      <td>
+        <div align="left">
+          <p>图像分类<br>(Image Classification)</p>
+        </div>
+      </td>     
+      <td>
+        <div align="center">
+        <img src="https://cdn.jsdelivr.net/gh/geekwenjie/SmartJavaAI-Site/images/vision/cls.png" height = "300px"/>
+        </div>
+      </td>
+    </tr>
    <tr>
       <td>
         <div align="left">
@@ -316,6 +328,33 @@ SmartJavaAI是专为JAVA 开发者打造的一个功能丰富、开箱即用的 
         </div>
       </td>
     </tr>
+  <tr>
+      <td>
+        <div align="left">
+          <p>语音合成(ASR)</p>
+        </div>
+      </td>     
+      <td>
+        <div align="center">
+        <img src="https://cdn.jsdelivr.net/gh/geekwenjie/SmartJavaAI-Site/images/speech/tts.jpg" width = "500px"/>
+        </div>
+      </td>
+    </tr>
+  <tr>
+      <td>
+        <div align="left">
+          <p>CLIP</p>
+          - 文搜图 <br>
+          - 图搜图 <br>
+          - 图搜文<br>
+        </div>
+      </td>     
+      <td>
+        <div align="center">
+        <img src="https://cdn.jsdelivr.net/gh/geekwenjie/SmartJavaAI-Site/images/vision/clip.png" width = "500px"/>
+        </div>
+      </td>
+    </tr>
   </table>
 </div>
 
@@ -351,8 +390,11 @@ SmartJavaAI是专为JAVA 开发者打造的一个功能丰富、开箱即用的 
   - 静默活体检测：图片、视频活体检测
   - 人脸表情识别：7种表情识别
   - 人脸质量评估：亮度评估、清晰度评估、完整度评估、姿态评估、遮挡评估
+- **图像分类**
+  - 支持多种主流模型：集成 YOLOv8、YOLOv11 等分类模型
+  - 支持自定义模型加载：可无缝加载并部署用户自行训练的分类模型
 - **目标检测**
-  - 支持多种主流模型：集成 YOLOv5、YOLOv8、YOLOv11、YOLOv12、Tensorflow Object Detection 等目标检测算法
+  - 支持多种主流模型：集成 YOLOv5、YOLOv8、YOLOv11、YOLOv12、Tensorflow Object Detection 等目标检测模型
   - 支持自定义模型加载：可无缝加载并部署用户自行训练的目标检测模型
   - 集成行人检测模型
 - **语义分割**
@@ -365,6 +407,9 @@ SmartJavaAI是专为JAVA 开发者打造的一个功能丰富、开箱即用的 
   - 支持KINETICS400数据集中400个人类动作识别
 - **姿态估计**
   - 集成YOLOv8-pose、YOLOv11-pose等模型
+- **CLIP**
+  - 支持提取图片及文本特征
+  - 支持文搜图、图搜文、图搜图
 - **OCR文字识别**
   - 支持PaddleOCR 3.0模型：集成最新PP-OCRv5、PP-OCRv4、表格结构识别模型(SLANet_plus)、文本行方向分类模型
   - 支持任意角度识别，方向校准
@@ -373,9 +418,12 @@ SmartJavaAI是专为JAVA 开发者打造的一个功能丰富、开箱即用的 
   - 支持中文车牌识别：单层/双层检测，颜色识别，支持12种中文车牌
 - **机器翻译**
   - 集成NLLB-200模型：支持200+语言互相翻译
-- **语音识别**
+- **语音识别(ASR)**
   - 集成openai的whisper模型：支持100种语言
   - 集成vosk语音识别
+  - 集成sherpa-onnx语音识别
+- **语音合成(TTS)**
+  - 集成sherpa-onnx：支持中文、方言、粤语、英文、德语等多种语言
 
 
 ## 🌟 AI集成方式对比
@@ -404,7 +452,7 @@ SmartJavaAI是专为JAVA 开发者打造的一个功能丰富、开箱即用的 
 | translate | 机器翻译模块                    |
 | speech    | 语音功能模块，包含 ASR 和 TTS       |
 
-可以根据需求对每个模块单独引入，也可以通过引入`smartjavaai-all`方式引入所有模块。
+可以根据需求对每个模块单独引入，也可以通过引入`all`方式引入所有模块。
 
 -------------------------------------------------------------------------------
 
@@ -435,7 +483,7 @@ SmartJavaAI是专为JAVA 开发者打造的一个功能丰富、开箱即用的 
 <dependency>
     <groupId>cn.smartjavaai</groupId>
     <artifactId>all</artifactId>
-    <version>1.0.25</version>
+    <version>1.0.26</version>
 </dependency>
 ```
 
@@ -534,6 +582,16 @@ SmartJavaAI是专为JAVA 开发者打造的一个功能丰富、开箱即用的 
 
 ---
 
+#### 图像分类模型(CLS)
+
+**YOLO 系列**
+
+| 模型名称        | 引擎             | 模型简介       | 模型开源网站                                                               |
+|-------------|----------------|------------|----------------------------------------------------------------------|
+| YOLOV11-cls | OnnxRuntime | 最流行的图像分类模型 | [Github](https://docs.ultralytics.com/zh/models/)                 |
+| YOLOV8-cls      | OnnxRuntime            | 最流行的图像分类模型 | [Github](https://docs.ultralytics.com/zh/models/)              |
+
+
 #### 目标检测模型
 
 **YOLO 系列**
@@ -582,6 +640,14 @@ SmartJavaAI是专为JAVA 开发者打造的一个功能丰富、开箱即用的 
 | YOLOV8-SEG  | OnnxRuntime | Ultralytics在COCO 数据集 上训练的模型        | [Github](https://docs.ultralytics.com/zh/tasks/segment/) |
 | YOLOV11-SEG | OnnxRuntime | Ultralytics在COCO 数据集 上训练的模型 |  [Github](https://docs.ultralytics.com/zh/tasks/segment/)        |
 | Mask R-CNN | MXNet | Mask R-CNN 是一种在目标检测基础上，同时为每个物体生成像素级分割区域的深度学习模型 | 无          |
+
+
+#### CLIP模型(Connecting text and images)
+
+
+| 模型名称        | 引擎          | 模型简介               | 模型开源网站     |
+|-------------|-------------|--------------------|------------|
+| clip-vit-base-patch32  | PyTorch     | openai的图片及文本特征提取模型 | [Github](https://github.com/openai/CLIP) |
 
 ---
 
@@ -694,14 +760,23 @@ SmartJavaAI是专为JAVA 开发者打造的一个功能丰富、开箱即用的 
 
 ---
 
-#### 语音识别模型
+#### 语音识别模型(ASR)
 
 这里仅介绍模型的开源项目，每个开源项目通常包含多个具体模型，本文不逐一列出。
 
-| 模型名称    | 模型简介                     | 模型官网                                          |
-|---------| ------------------------ |-----------------------------------------------|
-| Whisper | OpenAI 开源的通用语音识别（ASR）模型，支持多语言转写和翻译，具有较高的识别精度，尤其在嘈杂环境中表现良好，适合离线和批量音频处理。 | [Github](https://github.com/ggml-org/whisper.cpp) |
-| Vosk    | 一个轻量级离线语音识别工具包，支持多种语言和平台（包括移动端与嵌入式设备），可在低资源环境中运行，适合实时语音识别场景。 | [Github](https://github.com/alphacep/vosk-api) |
+| 模型名称    | 模型简介                                                                    | 模型官网                                          |
+|---------|-------------------------------------------------------------------------|-----------------------------------------------|
+| Whisper | OpenAI 开源的通用语音识别（ASR）模型，支持多语言转写和翻译，具有较高的识别精度，尤其在嘈杂环境中表现良好，适合离线和批量音频处理。  | [Github](https://github.com/ggml-org/whisper.cpp) |
+| Vosk    | 一个轻量级离线语音识别工具包，支持多种语言和平台（包括移动端与嵌入式设备），可在低资源环境中运行，适合实时语音识别场景。            | [Github](https://github.com/alphacep/vosk-api) |
+| sherpa-onnx    | Sherpa-ONNX 是一个基于 ONNX Runtime 的ASR 及 TTS 推理框架 | [Github](https://github.com/k2-fsa/sherpa-onnx) |
+
+#### 语音合成模型(TTS)
+
+这里仅介绍模型的开源项目，每个开源项目通常包含多个具体模型，本文不逐一列出。
+
+| 模型名称    | 模型简介                                                                    | 模型官网                                          |
+|---------|-------------------------------------------------------------------------|-----------------------------------------------|
+| sherpa-onnx    | Sherpa-ONNX 是一个基于 ONNX Runtime 的ASR 及 TTS 推理框架 | [Github](https://github.com/k2-fsa/sherpa-onnx) |
 
 
 ---
@@ -715,7 +790,7 @@ SmartJavaAI是专为JAVA 开发者打造的一个功能丰富、开箱即用的 
 
 ## 联系方式
 
-如您在使用过程中有任何问题或建议，欢迎添加微信，与我们交流并加入用户交流群
+如您在使用过程中有任何问题、建议，或希望进行技术交流与合作，欢迎添加微信与我联系，并加入用户交流群。
 
 - **微信**: deng775747758 （请备注：SmartJavaAI）
 - **Email**: 775747758@qq.com
@@ -738,6 +813,12 @@ SmartJavaAI是专为JAVA 开发者打造的一个功能丰富、开箱即用的 
 6、等待维护者合并
 
 ## 近期更新日志
+
+## [v1.0.26] - 2025-10-24
+- 【通用视觉】集成 OpenAI CLIP 模型，支持以图搜图、以文搜图、以图搜文等功能
+- 【通用视觉】新增 YOLO 图像分类模型支持
+- 【ASR/TTS】集成 Sherpa TTS（语音合成）与 ASR（语音识别）模块，支持中文、粤语、方言、英文等多种语言
+- 【目标检测】优化视频目标检测功能
 
 ## [v1.0.25] - 2025-10-02
 - 【人脸识别】 新增多种人脸识别模型

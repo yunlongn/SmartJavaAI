@@ -8,7 +8,31 @@ public enum AsrModelEnum {
 
     WHISPER,
 
-    VOSK;
+    VOSK,
+
+    SHERPA_PARAFORMER,
+
+    SHERPA_TRANSDUCER,
+
+    SHERPA_WHISPER,
+
+    SHERPA_FIREREDASR,
+
+    SHERPA_MOONSHINE,
+
+    SHERPA_NEMO,
+
+    SHERPA_SENSEVOICE,
+
+    SHERPA_DOLPHIN,
+
+    SHERPA_ZIPFORMERCTC,
+
+    SHERPA_WENETCTC,
+
+    SHERPA_CANARY,
+
+    SHERPA_TELESPEECH;
 
     /**
      * 根据名称获取枚举 (忽略大小写和下划线变体)

@@ -12,15 +12,16 @@ import cn.smartjavaai.common.cv.SmartImageFactory;
 import cn.smartjavaai.common.entity.*;
 import cn.smartjavaai.common.entity.face.FaceInfo;
 import cn.smartjavaai.common.entity.face.FaceSearchResult;
+import cn.smartjavaai.common.enums.SimilarityType;
 import cn.smartjavaai.common.pool.PredictorFactory;
 import cn.smartjavaai.common.utils.BufferedImageUtils;
 import cn.smartjavaai.common.utils.FileUtils;
 import cn.smartjavaai.common.utils.ImageUtils;
+import cn.smartjavaai.common.utils.SimilarityUtil;
 import cn.smartjavaai.face.config.FaceRecConfig;
 import cn.smartjavaai.face.constant.FaceDetectConstant;
 import cn.smartjavaai.face.entity.FaceRegisterInfo;
 import cn.smartjavaai.face.entity.FaceSearchParams;
-import cn.smartjavaai.face.enums.SimilarityType;
 import cn.smartjavaai.face.exception.FaceException;
 import cn.smartjavaai.face.factory.FaceRecModelFactory;
 import cn.smartjavaai.face.model.facerec.criteria.FaceRecCriteriaFactory;
@@ -806,6 +807,35 @@ public class CommonFaceRecModel implements FaceRecModel{
             }
         }
         return detectedResult;
+    }
+
+    @Override
+    public R<float[]> extractFeatures(Image image, DetectionInfo detectionInfo) {
+        float[] features = null;
+        try (NDManager manager = model.getNDManager().newSubManager()) {
+            DJLImageFacePreprocessor djlImagePreprocessor = new DJLImageFacePreprocessor(image, manager);
+            DetectionRectangle rectangle = detectionInfo.getDetectionRectangle();
+            FaceInfo faceInfo = detectionInfo.getFaceInfo();
+            Image subImage = null;
+            //人脸对齐
+            if(config.isAlign()){
+                //人脸对齐
+                double[][] pointsArray = FaceUtils.facePoints(faceInfo.getKeyPoints());
+                djlImagePreprocessor.enableCrop(rectangle).enableAffine(pointsArray, 96, 112);
+                subImage = djlImagePreprocessor.process();
+            }else{
+                //裁剪
+                djlImagePreprocessor.enableCrop(rectangle);
+                if(config.isCropFace()){
+                    subImage = djlImagePreprocessor.process();
+                }
+            }
+            features = featureExtraction(subImage);
+            if (subImage != null && subImage.getWrappedImage() instanceof Mat) {
+                ((Mat)subImage.getWrappedImage()).release();
+            }
+        }
+        return Objects.isNull(features) ? R.fail(R.Status.Unknown) : R.ok(features);
     }
 
     @Override

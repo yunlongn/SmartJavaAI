@@ -2,12 +2,15 @@ package cn.smartjavaai.face.model.facerec;
 
 import ai.djl.engine.Engine;
 import ai.djl.modality.cv.Image;
+import ai.djl.ndarray.NDManager;
 import cn.smartjavaai.common.cv.SmartImageFactory;
 import cn.smartjavaai.common.entity.DetectionInfo;
+import cn.smartjavaai.common.entity.DetectionRectangle;
 import cn.smartjavaai.common.entity.DetectionResponse;
 import cn.smartjavaai.common.entity.R;
 import cn.smartjavaai.common.entity.face.FaceInfo;
 import cn.smartjavaai.common.enums.DeviceEnum;
+import cn.smartjavaai.common.enums.SimilarityType;
 import cn.smartjavaai.common.utils.BufferedImageUtils;
 import cn.smartjavaai.common.utils.FileUtils;
 import cn.smartjavaai.common.utils.ImageUtils;
@@ -17,10 +20,10 @@ import cn.smartjavaai.face.entity.FaceRegisterInfo;
 import cn.smartjavaai.face.entity.FaceResult;
 import cn.smartjavaai.face.entity.FaceSearchParams;
 import cn.smartjavaai.face.enums.FaceRecModelEnum;
-import cn.smartjavaai.face.enums.SimilarityType;
 import cn.smartjavaai.face.exception.FaceException;
 import cn.smartjavaai.face.factory.FaceDetModelFactory;
 import cn.smartjavaai.face.factory.FaceRecModelFactory;
+import cn.smartjavaai.face.preprocess.DJLImageFacePreprocessor;
 import cn.smartjavaai.face.utils.FaceUtils;
 import cn.smartjavaai.face.utils.Seetaface6Utils;
 import cn.smartjavaai.face.vector.config.MilvusConfig;
@@ -37,6 +40,7 @@ import io.milvus.param.MetricType;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.opencv.core.Mat;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
@@ -1076,6 +1080,42 @@ public class SeetaFace6FaceRecModel implements FaceRecModel{
                     log.warn("归还Predictor失败", e);
                 }
             }
+            if (faceRecognizer != null) {
+                try {
+                    faceRecognizerPool.returnObject(faceRecognizer); //归还
+                } catch (Exception e) {
+                    log.warn("归还Predictor失败", e);
+                }
+            }
+        }
+    }
+
+    @Override
+    public R<float[]> extractFeatures(Image image, DetectionInfo detectionInfo) {
+        FaceRecognizer faceRecognizer = null;
+        try {
+            SeetaImageData imageData = new SeetaImageData(image.getWidth(), image.getHeight(), 3);
+            imageData.data = ImageUtils.getMatrixBGR(image);
+            faceRecognizer = faceRecognizerPool.borrowObject();
+
+            //提取特征
+            float[] features = new float[faceRecognizer.GetExtractFeatureSize()];
+            FaceInfo faceInfo = detectionInfo.getFaceInfo();
+            if(Objects.isNull(faceInfo) || Objects.isNull(faceInfo.getKeyPoints())){
+                return R.fail(R.Status.Unknown.getCode(), "未检测到人脸关键点");
+            }
+            SeetaPointF[] pointFS = Seetaface6Utils.convertToSeetaPointF(faceInfo.getKeyPoints());
+            //CropFaceV2 + ExtractCroppedFace 已包含裁剪+人脸对齐
+            boolean isSuccess = faceRecognizer.Extract(imageData, pointFS, features);
+            if(!isSuccess){
+                return R.fail(R.Status.Unknown.getCode(), "人脸特征提取失败");
+            }
+            return Objects.isNull(features) ? R.fail(R.Status.Unknown) : R.ok(features);
+        } catch (FaceException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new FaceException("人脸特征提取异常", e);
+        }finally {
             if (faceRecognizer != null) {
                 try {
                     faceRecognizerPool.returnObject(faceRecognizer); //归还

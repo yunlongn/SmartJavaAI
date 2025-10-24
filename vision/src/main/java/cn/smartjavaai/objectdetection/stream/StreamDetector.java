@@ -69,8 +69,11 @@ public class StreamDetector implements AutoCloseable{
     //空帧数量
     private int nullFrameCount = 0;
 
+
     // 连续多少次空帧认为断联
-    private static final int MAX_NULL_FRAMES = 5;
+    private static final int MAX_NULL_FRAMES = 10;
+
+
 
     public static Builder builder() { return new Builder(); }
 
@@ -161,7 +164,8 @@ public class StreamDetector implements AutoCloseable{
         while (!grabberFinished && isRunning) {
             try {
                 Frame frame = grabber.grabFrame();
-                if (frame == null || frame.image == null) {
+                //空帧
+                if (frame == null) {
                     if(sourceType == VideoSourceType.FILE){
                         log.debug("视频检测结束");
                         grabberFinished = true;
@@ -181,8 +185,13 @@ public class StreamDetector implements AutoCloseable{
                         }
                         continue;
                     }
+                }else{
+                    nullFrameCount = 0; // 只要拿到正常帧就清零
+                    //非视频帧
+                    if(frame.type != Frame.Type.VIDEO){
+                        continue;
+                    }
                 }
-                nullFrameCount = 0; // 只要拿到正常帧就清零
                 frameCount++;
                 if (frameCount % frameDetectionInterval != 0) continue;
                 Frame currentFrame = frame.clone();

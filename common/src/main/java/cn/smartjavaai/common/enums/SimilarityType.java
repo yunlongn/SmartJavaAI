@@ -1,4 +1,4 @@
-package cn.smartjavaai.face.enums;
+package cn.smartjavaai.common.enums;
 
 /**
  * @author dwj

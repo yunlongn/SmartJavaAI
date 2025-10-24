@@ -22,4 +22,6 @@ public class AsrModelConfig extends ModelConfig {
      * 依赖库目录
      */
     private Path libPath;
+
+    private String modelName;
 }

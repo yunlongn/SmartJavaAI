@@ -1,5 +1,6 @@
 package cn.smartjavaai.speech.utils;
 
+import ai.djl.modality.audio.Audio;
 import cn.hutool.core.lang.UUID;
 import cn.smartjavaai.speech.asr.exception.AsrException;
 import ws.schild.jave.Encoder;
@@ -9,6 +10,7 @@ import ws.schild.jave.encode.AudioAttributes;
 import ws.schild.jave.encode.EncodingAttributes;
 import ws.schild.jave.info.MultimediaInfo;
 
+import javax.sound.sampled.AudioFileFormat;
 import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
@@ -205,6 +207,63 @@ public class AudioUtils {
             }
         }
         return getAudioInfo(tempFile);
+    }
+
+
+    /**
+     * 将 float[] 音频数据保存为 WAV 文件
+     */
+    public static void saveToWav(float[] floats, AudioFormat format, String savePath) throws IOException {
+        // 1. 转换为 16-bit PCM
+        byte[] bytes = floatsToPCM16(floats);
+        // 2. 使用 ByteArrayInputStream 封装为音频流
+        try (ByteArrayInputStream bais = new ByteArrayInputStream(bytes);
+             AudioInputStream ais = new AudioInputStream(bais, format, floats.length)) {
+            // 3. 保存到本地文件
+            AudioSystem.write(ais, AudioFileFormat.Type.WAVE, new File(savePath));
+        }
+    }
+
+    /**
+     * 将 float[] 音频数据保存为 WAV 文件
+     */
+    public static void saveToWav(float[] floats, String savePath) throws IOException {
+        // 1. 转换为 16-bit PCM
+        byte[] bytes = floatsToPCM16(floats);
+        // 2. 使用 ByteArrayInputStream 封装为音频流
+        try (ByteArrayInputStream bais = new ByteArrayInputStream(bytes);
+             AudioInputStream ais = new AudioInputStream(bais, getDefaultAudioFormat(), floats.length)) {
+            // 3. 保存到本地文件
+            AudioSystem.write(ais, AudioFileFormat.Type.WAVE, new File(savePath));
+        }
+    }
+
+    public static AudioFormat getDefaultAudioFormat(){
+        return new AudioFormat(
+                AudioFormat.Encoding.PCM_SIGNED,
+                16000,
+                16,
+                1,
+                2,
+                16000,
+                false
+        );
+    }
+
+    /**
+     * 将 float[] 转为 16bit PCM (little endian)
+     */
+    private static byte[] floatsToPCM16(float[] floats) {
+        byte[] bytes = new byte[floats.length * 2];
+        int i = 0;
+        for (float sample : floats) {
+            // 裁剪范围 [-1, 1]
+            sample = Math.max(-1.0f, Math.min(1.0f, sample));
+            short s = (short) (sample * 32767);
+            bytes[i++] = (byte) (s & 0xFF);
+            bytes[i++] = (byte) ((s >> 8) & 0xFF);
+        }
+        return bytes;
     }
 
 

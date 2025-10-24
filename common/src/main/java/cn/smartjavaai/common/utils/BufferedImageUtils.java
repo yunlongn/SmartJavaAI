@@ -573,4 +573,36 @@ public class BufferedImageUtils {
         }
     }
 
+
+    /**
+     * 绘制检测框
+     * @param sourceImage
+     * @param detectionResponse
+     * @throws IOException
+     */
+    public static void drawFaceSearchResult(Graphics2D graphics, DetectionInfo detectionInfo, String text) {
+        graphics.setColor(Color.RED);// 边框颜色
+        graphics.setStroke(new BasicStroke(2));   // 线宽2像素
+        graphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
+                RenderingHints.VALUE_ANTIALIAS_ON); // 抗锯齿
+        int stroke = 2;
+        DetectionRectangle rectangle = detectionInfo.getDetectionRectangle();
+        graphics.setColor(Color.RED);// 边框颜色
+        graphics.drawRect(rectangle.getX(), rectangle.getY(), rectangle.getWidth(),  rectangle.getHeight());
+        //绘制人脸关键点
+        //人脸查询结果
+        if(detectionInfo.getFaceInfo().getFaceSearchResults() != null){
+            for (FaceSearchResult faceSearchResult : detectionInfo.getFaceInfo().getFaceSearchResults()){
+                if(StringUtils.isNotBlank(faceSearchResult.getMetadata())){
+                    JsonObject metadata = GsonUtils.parseToJsonObject(faceSearchResult.getMetadata());
+                    JsonElement nameElement = metadata.get("name");
+                    if(metadata.has("name")){
+                        Graphics2DUtils.drawText(graphics, nameElement.getAsString(), rectangle.getX(), rectangle.getY(), stroke, 4);
+                    }
+                }
+            }
+        }
+        graphics.dispose();
+    }
+
 }

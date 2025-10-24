@@ -45,6 +45,12 @@ public class ModelConfig {
         return clazz.cast(value);
     }
 
+    public <T> T getCustomParam(String key, Class<T> clazz, T defaultValue) {
+        Object value = customParams.getOrDefault(key, defaultValue);
+        return clazz.cast(value);
+    }
+
+
     /**
      * 添加个性化配置项
      */

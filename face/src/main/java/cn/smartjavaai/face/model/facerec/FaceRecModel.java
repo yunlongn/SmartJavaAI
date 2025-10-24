@@ -2,6 +2,7 @@ package cn.smartjavaai.face.model.facerec;
 
 import ai.djl.inference.Predictor;
 import ai.djl.modality.cv.Image;
+import cn.smartjavaai.common.entity.DetectionInfo;
 import cn.smartjavaai.common.entity.DetectionResponse;
 import cn.smartjavaai.common.entity.R;
 import cn.smartjavaai.face.config.FaceRecConfig;
@@ -401,6 +402,10 @@ public interface FaceRecModel extends AutoCloseable{
      */
     @Deprecated
     default R<DetectionResponse> extractFeatures(BufferedImage image){
+        throw new UnsupportedOperationException("默认不支持该功能");
+    }
+
+    default R<float[]> extractFeatures(Image image, DetectionInfo detectionInfo){
         throw new UnsupportedOperationException("默认不支持该功能");
     }
 

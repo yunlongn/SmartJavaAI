@@ -1,6 +1,6 @@
 package cn.smartjavaai.face.vector.config;
 
-import cn.smartjavaai.face.enums.SimilarityType;
+import cn.smartjavaai.common.enums.SimilarityType;
 import cn.smartjavaai.face.enums.VectorDBType;
 import lombok.Data;
 import lombok.EqualsAndHashCode;

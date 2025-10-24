@@ -4,6 +4,7 @@ import cn.smartjavaai.common.config.Config;
 import cn.smartjavaai.speech.asr.config.AsrModelConfig;
 import cn.smartjavaai.speech.asr.enums.AsrModelEnum;
 import cn.smartjavaai.speech.asr.exception.AsrException;
+import cn.smartjavaai.speech.asr.model.SherpaRecognizer;
 import cn.smartjavaai.speech.asr.model.SpeechRecognizer;
 import cn.smartjavaai.speech.asr.model.VoskRecognizer;
 import cn.smartjavaai.speech.asr.model.WhisperRecognizer;
@@ -68,7 +69,7 @@ public class SpeechRecognizerFactory {
             throw new AsrException("未配置语音识别模型枚举");
         }
         return modelMap.computeIfAbsent(config.getModelEnum(), k -> {
-            return createFaceModel(config);
+            return createModel(config);
         });
     }
 
@@ -77,7 +78,7 @@ public class SpeechRecognizerFactory {
      * @param config
      * @return
      */
-    private SpeechRecognizer createFaceModel(AsrModelConfig config) {
+    private SpeechRecognizer createModel(AsrModelConfig config) {
         Class<?> clazz = registry.get(config.getModelEnum());
         if(clazz == null){
             throw new AsrException("Unsupported model");
@@ -98,6 +99,18 @@ public class SpeechRecognizerFactory {
     static {
         registerModel(AsrModelEnum.WHISPER, WhisperRecognizer.class);
         registerModel(AsrModelEnum.VOSK, VoskRecognizer.class);
+        registerModel(AsrModelEnum.SHERPA_PARAFORMER, SherpaRecognizer.class);
+        registerModel(AsrModelEnum.SHERPA_TRANSDUCER, SherpaRecognizer.class);
+        registerModel(AsrModelEnum.SHERPA_WHISPER, SherpaRecognizer.class);
+        registerModel(AsrModelEnum.SHERPA_FIREREDASR, SherpaRecognizer.class);
+        registerModel(AsrModelEnum.SHERPA_MOONSHINE, SherpaRecognizer.class);
+        registerModel(AsrModelEnum.SHERPA_NEMO, SherpaRecognizer.class);
+        registerModel(AsrModelEnum.SHERPA_SENSEVOICE, SherpaRecognizer.class);
+        registerModel(AsrModelEnum.SHERPA_DOLPHIN, SherpaRecognizer.class);
+        registerModel(AsrModelEnum.SHERPA_ZIPFORMERCTC, SherpaRecognizer.class);
+        registerModel(AsrModelEnum.SHERPA_WENETCTC, SherpaRecognizer.class);
+        registerModel(AsrModelEnum.SHERPA_CANARY, SherpaRecognizer.class);
+        registerModel(AsrModelEnum.SHERPA_TELESPEECH, SherpaRecognizer.class);
         log.debug("缓存目录：{}", Config.getCachePath());
     }
 
