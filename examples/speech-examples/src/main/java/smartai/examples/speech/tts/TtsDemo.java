@@ -17,6 +17,12 @@ import org.junit.Test;
 
 import java.io.IOException;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 /**
  * 语音合成demo（TTS）
@@ -133,10 +139,19 @@ public class TtsDemo {
         TtsModel ttsModel = getMatchaZhModel();
         SherpaTtsParams params = new SherpaTtsParams();
         //语速
-        params.setSpeed(1.5f);
+        params.setSpeed(1f);
         //说话人ID
         params.setSpeakerId(0);
-        ttsModel.generate(zhText, params,"/Users/wenjie/Downloads/tts-matcha-zh.wav");
+//        ttsModel.generate(zhText, params,"/Users/wenjie/Downloads/tts-matcha-zh.wav");
+        R<Audio> result = ttsModel.generate(znEnText, params);
+        if (result.isSuccess()){
+            Audio audio = result.getData();
+            AudioUtils.saveToWav(audio,"/Users/wenjie/Downloads/tts-matcha-zh.wav");
+        }else{
+            System.out.println(result.getMessage());
+        }
+
+
     }
 
     /**
@@ -150,7 +165,14 @@ public class TtsDemo {
         params.setSpeed(1f);
         //说话人ID
         params.setSpeakerId(3);
-        ttsModel.generate(znEnText, params, "/Users/wenjie/Downloads/tts-kokoro-zh-en.wav");
+//        ttsModel.generate(znEnText, params, "/Users/wenjie/Downloads/tts-kokoro-zh-en.wav");
+        R<Audio> result = ttsModel.generate(znEnText, params);
+        if (result.isSuccess()){
+            Audio audio = result.getData();
+            AudioUtils.saveToWav(audio,"/Users/wenjie/Downloads/tts-kokoro-zh-en.wav");
+        }else{
+            System.out.println(result.getMessage());
+        }
     }
 
     /**
@@ -161,11 +183,19 @@ public class TtsDemo {
         TtsModel ttsModel = getMatchaEnModel();
         SherpaTtsParams params = new SherpaTtsParams();
         //语速
-        params.setSpeed(1.5f);
+        params.setSpeed(1f);
         //说话人ID
         params.setSpeakerId(0);
-        ttsModel.generate(enText, params, "/Users/wenjie/Downloads/tts-kitten-en.wav");
+//        ttsModel.generate(enText, params, "/Users/wenjie/Downloads/tts-kitten-en.wav");
+        R<Audio> result = ttsModel.generate(enText, params);
+        if (result.isSuccess()){
+            Audio audio = result.getData();
+            AudioUtils.saveToWav(audio,"/Users/wenjie/Downloads/tts-kitten-en.wav");
+        }else{
+            System.out.println(result.getMessage());
+        }
     }
+
 
 
 

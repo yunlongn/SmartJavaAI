@@ -483,7 +483,7 @@ SmartJavaAI是专为JAVA 开发者打造的一个功能丰富、开箱即用的 
 <dependency>
     <groupId>cn.smartjavaai</groupId>
     <artifactId>all</artifactId>
-    <version>1.0.26</version>
+    <version>1.0.27</version>
 </dependency>
 ```
 
@@ -814,7 +814,7 @@ SmartJavaAI是专为JAVA 开发者打造的一个功能丰富、开箱即用的 
 
 ## 近期更新日志
 
-## [v1.0.26] - 2025-10-24
+## [v1.0.27] - 2025-10-24
 - 【通用视觉】集成 OpenAI CLIP 模型，支持以图搜图、以文搜图、以图搜文等功能
 - 【通用视觉】新增 YOLO 图像分类模型支持
 - 【ASR/TTS】集成 Sherpa TTS（语音合成）与 ASR（语音识别）模块，支持中文、粤语、方言、英文等多种语言
