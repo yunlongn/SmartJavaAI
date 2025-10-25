@@ -81,10 +81,10 @@ public class SherpaTtsModel implements TtsModel{
             }
         }
         try {
-            int sid = 100;
+            int sid = 0;
             float speed = 1.0f;
             if(params != null){
-                sid = sherpaTtsParams.getSpeakerId() > 0 ? sherpaTtsParams.getSpeakerId() : 100;
+                sid = sherpaTtsParams.getSpeakerId();
                 speed = sherpaTtsParams.getSpeed() > 0.0f ? sherpaTtsParams.getSpeed() : 1.0f;
             }
             GeneratedAudio audio = null;
@@ -104,7 +104,7 @@ public class SherpaTtsModel implements TtsModel{
     @Override
     public R<Audio> generate(String text, TtsParams params) {
         GeneratedAudio audio = generateCore(text, params);
-        return R.ok(new Audio(audio.getSamples()));
+        return R.ok(new Audio(audio.getSamples(), audio.getSampleRate(), 1));
     }
 
     @Override
