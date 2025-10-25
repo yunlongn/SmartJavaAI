@@ -11,6 +11,7 @@ import cn.smartjavaai.speech.tts.factory.TtsModelFactory;
 import cn.smartjavaai.speech.tts.model.SherpaTtsModel;
 import cn.smartjavaai.speech.tts.model.TtsModel;
 import cn.smartjavaai.speech.utils.AudioUtils;
+import com.k2fsa.sherpa.onnx.GeneratedAudio;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
 
@@ -120,13 +121,8 @@ public class TtsDemo {
         params.setSpeed(1f);
         //说话人ID
         params.setSpeakerId(100);
-        R<Audio> result = ttsModel.generate(zhText, params);
-        if (result.isSuccess()){
-            Audio audio = result.getData();
-            AudioUtils.saveToWav(audio.getData(),"/Users/wenjie/Downloads/tts-vits-zh.wav");
-        }else{
-            System.out.println(result.getMessage());
-        }
+        //生成音频到本地路径
+        ttsModel.generate(zhText, params, "/Users/wenjie/Downloads/tts-vits-zh.wav");
     }
 
     /**
@@ -140,13 +136,7 @@ public class TtsDemo {
         params.setSpeed(1.5f);
         //说话人ID
         params.setSpeakerId(0);
-        R<Audio> result = ttsModel.generate(zhText, params);
-        if (result.isSuccess()){
-            Audio audio = result.getData();
-            AudioUtils.saveToWav(audio.getData(),"/Users/wenjie/Downloads/tts-matcha-zh.wav");
-        }else{
-            System.out.println(result.getMessage());
-        }
+        ttsModel.generate(zhText, params,"/Users/wenjie/Downloads/tts-matcha-zh.wav");
     }
 
     /**
@@ -160,13 +150,7 @@ public class TtsDemo {
         params.setSpeed(1f);
         //说话人ID
         params.setSpeakerId(3);
-        R<Audio> result = ttsModel.generate(znEnText, params);
-        if (result.isSuccess()){
-            Audio audio = result.getData();
-            AudioUtils.saveToWav(audio.getData(),"/Users/wenjie/Downloads/tts-kokoro-zh-en.wav");
-        }else{
-            System.out.println(result.getMessage());
-        }
+        ttsModel.generate(znEnText, params, "/Users/wenjie/Downloads/tts-kokoro-zh-en.wav");
     }
 
     /**
@@ -180,14 +164,11 @@ public class TtsDemo {
         params.setSpeed(1.5f);
         //说话人ID
         params.setSpeakerId(0);
-        R<Audio> result = ttsModel.generate(enText, params);
-        if (result.isSuccess()){
-            Audio audio = result.getData();
-            AudioUtils.saveToWav(audio.getData(),"/Users/wenjie/Downloads/tts-kitten-en.wav");
-        }else{
-            System.out.println(result.getMessage());
-        }
+        ttsModel.generate(enText, params, "/Users/wenjie/Downloads/tts-kitten-en.wav");
     }
+
+
+
 
 
 }
