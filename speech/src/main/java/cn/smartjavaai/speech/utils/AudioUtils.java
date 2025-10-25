@@ -238,6 +238,30 @@ public class AudioUtils {
         }
     }
 
+    /**
+     * 将 float[] 音频数据保存为 WAV 文件
+     */
+    public static void saveToWav(Audio audio, String savePath) throws IOException {
+        AudioFormat audioFormat = new AudioFormat(
+                AudioFormat.Encoding.PCM_SIGNED,
+                audio.getSampleRate(),
+                16,
+                1,
+                2,
+                audio.getSampleRate(),
+                false
+        );
+        // 1. 转换为 16-bit PCM
+        byte[] bytes = floatsToPCM16(audio.getData());
+        // 2. 使用 ByteArrayInputStream 封装为音频流
+        try (ByteArrayInputStream bais = new ByteArrayInputStream(bytes);
+             AudioInputStream ais = new AudioInputStream(bais, audioFormat, audio.getData().length)) {
+            // 3. 保存到本地文件
+            AudioSystem.write(ais, AudioFileFormat.Type.WAVE, new File(savePath));
+        }
+    }
+
+
     public static AudioFormat getDefaultAudioFormat(){
         return new AudioFormat(
                 AudioFormat.Encoding.PCM_SIGNED,
