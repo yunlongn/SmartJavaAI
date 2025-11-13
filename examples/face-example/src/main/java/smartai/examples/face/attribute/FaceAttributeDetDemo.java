@@ -1,11 +1,14 @@
 package smartai.examples.face.attribute;
 
+import ai.djl.modality.cv.Image;
 import cn.smartjavaai.common.config.Config;
+import cn.smartjavaai.common.cv.SmartImageFactory;
 import cn.smartjavaai.common.entity.DetectionInfo;
 import cn.smartjavaai.common.entity.DetectionResponse;
 import cn.smartjavaai.common.entity.R;
 import cn.smartjavaai.common.entity.face.FaceAttribute;
 import cn.smartjavaai.common.entity.face.FaceInfo;
+import cn.smartjavaai.common.utils.ImageUtils;
 import cn.smartjavaai.face.config.FaceAttributeConfig;
 import cn.smartjavaai.face.config.FaceDetConfig;
 import cn.smartjavaai.face.enums.FaceAttributeModelEnum;
@@ -28,6 +31,7 @@ import java.nio.file.Paths;
 /**
  * 人脸属性检测demo
  * 模型下载地址：https://pan.baidu.com/s/10l22x5fRz_gwLr8EAHa1Jg?pwd=1234 提取码: 1234
+ * 文档地址：http://doc.smartjavaai.cn/
  * @author dwj
  */
 @Slf4j
@@ -35,6 +39,8 @@ public class FaceAttributeDetDemo {
 
     @BeforeClass
     public static void beforeAll() throws IOException {
+        //将图片处理的底层引擎切换为 OpenCV
+        SmartImageFactory.setEngine(SmartImageFactory.Engine.OPENCV);
         //修改缓存路径
 //        Config.setCachePath("/Users/xxx/smartjavaai_cache");
     }
@@ -65,10 +71,12 @@ public class FaceAttributeDetDemo {
     public void testFaceAttributeDetect(){
         try {
             FaceAttributeModel faceAttributeModel = getFaceAttributeModel();
-            DetectionResponse detectionResponse = faceAttributeModel.detect("src/main/resources/iu_1.jpg");
+            ////创建Image对象，可以从文件、url、InputStream创建、BufferedImage、Base64创建，具体使用方法可以查看文档
+            Image image = SmartImageFactory.getInstance().fromFile("src/main/resources/iu_1.jpg");
+            DetectionResponse detectionResponse = faceAttributeModel.detect(image);
             //绘制并导出人脸属性图片，小人脸仅有人脸框
-            BufferedImage image = ImageIO.read(new File(Paths.get("src/main/resources/iu_1.jpg").toAbsolutePath().toString()));
-            FaceUtils.drawBoxesWithFaceAttribute(image, detectionResponse,"C:/Users/Administrator/Downloads/double_person_.png");
+            BufferedImage bufferedImage = ImageUtils.toBufferedImage(image);
+            FaceUtils.drawBoxesWithFaceAttribute(bufferedImage, detectionResponse,"C:/Users/Administrator/Downloads/double_person_.png");
             log.info("人脸属性检测结果：{}", JSONObject.toJSONString(detectionResponse));
         } catch (Exception e) {
             e.printStackTrace();
@@ -82,30 +90,15 @@ public class FaceAttributeDetDemo {
     public void testFaceAttributeDetect2(){
         try {
             FaceAttributeModel faceAttributeModel = getFaceAttributeModel();
-            FaceAttribute faceAttribute = faceAttributeModel.detectTopFace("src/main/resources/iu_1.jpg");
+            //创建Image对象，可以从文件、url、InputStream创建、BufferedImage、Base64创建，具体使用方法可以查看文档
+            Image image = SmartImageFactory.getInstance().fromFile("src/main/resources/iu_1.jpg");
+            FaceAttribute faceAttribute = faceAttributeModel.detectTopFace(image);
             log.info("人脸属性检测结果：{}", JSONObject.toJSONString(faceAttribute));
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    /**
-     * 图片多人脸属性检测（基于已检测出的人脸区域和关键点）
-     */
-    @Test
-    public void testFaceAttributeDetect3(){
-        try {
-            FaceAttributeModel faceAttributeModel = getFaceAttributeModel();
-            FaceAttribute faceAttribute = faceAttributeModel.detectTopFace("src/main/resources/iu_1.jpg");
-            log.info("人脸属性检测结果：{}", JSONObject.toJSONString(faceAttribute));
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        //人脸检测
-
-
-
-    }
 
     /**
      * 图片单人脸人脸属性检测（基于已检测出的人脸区域和关键点）
@@ -115,8 +108,8 @@ public class FaceAttributeDetDemo {
         try {
             FaceDetModel faceDetModel = getFaceDetModel();
             FaceAttributeModel faceAttributeModel = getFaceAttributeModel();
-            //人脸检测
-            BufferedImage image = ImageIO.read(new File(Paths.get("src/main/resources/iu_1.jpg").toAbsolutePath().toString()));
+            //创建Image对象，可以从文件、url、InputStream创建、BufferedImage、Base64创建，具体使用方法可以查看文档
+            Image image = SmartImageFactory.getInstance().fromFile("src/main/resources/iu_1.jpg");
             R<DetectionResponse> detectionResponse = faceDetModel.detect(image);
             if(detectionResponse.isSuccess()){
                 log.info("人脸检测结果：{}", JSONObject.toJSONString(detectionResponse.getData()));

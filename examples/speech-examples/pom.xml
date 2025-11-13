@@ -12,7 +12,7 @@
         <maven.compiler.source>11</maven.compiler.source>
         <maven.compiler.target>11</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <smartjavaai.version>1.0.23</smartjavaai.version>
+        <smartjavaai.version>1.0.27</smartjavaai.version>
         <!--如果打包运行，需要替换成你的main-->
         <exec.mainClass>smartai.examples.speech.asr.common.OcrRecognizeDemo</exec.mainClass>
 
@@ -22,7 +22,7 @@
         <dependencies>
             <dependency>
                 <groupId>cn.smartjavaai</groupId>
-                <artifactId>smartjavaai-bom</artifactId>
+                <artifactId>bom</artifactId>
                 <version>${smartjavaai.version}</version>
                 <type>pom</type>
                 <!-- 注意这里是import -->
@@ -44,11 +44,6 @@
             <version>2.17.0</version>
         </dependency>
         <dependency>
-            <groupId>org.apache.logging.log4j</groupId>
-            <artifactId>log4j-slf4j2-impl</artifactId>
-            <version>2.24.1</version>
-        </dependency>
-        <dependency>
             <groupId>org.testng</groupId>
             <artifactId>testng</artifactId>
             <version>7.10.2</version>
@@ -61,11 +56,7 @@
             <artifactId>logback-classic</artifactId>
             <version>1.2.3</version>
         </dependency>
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-api</artifactId>
-            <version>1.7.30</version>
-        </dependency>
+
 
         <dependency>
             <groupId>com.alibaba</groupId>
@@ -84,7 +75,7 @@
         <!--语音识别模块-->
         <dependency>
             <groupId>cn.smartjavaai</groupId>
-            <artifactId>smartjavaai-speech</artifactId>
+            <artifactId>speech</artifactId>
             <exclusions>
                 <exclusion>
                     <groupId>com.microsoft.onnxruntime</groupId>
@@ -192,16 +183,22 @@
     </build>
 
     <repositories>
+<!--        <repository>-->
+<!--            <id>aliyunmaven</id>-->
+<!--            <name>阿里云公共仓库</name>-->
+<!--            <url>https://maven.aliyun.com/repository/public</url>-->
+<!--            <releases>-->
+<!--                <enabled>true</enabled>-->
+<!--            </releases>-->
+<!--            <snapshots>-->
+<!--                <enabled>false</enabled>-->
+<!--            </snapshots>-->
+<!--        </repository>-->
+
+
         <repository>
-            <id>aliyunmaven</id>
-            <name>阿里云公共仓库</name>
-            <url>https://maven.aliyun.com/repository/public</url>
-            <releases>
-                <enabled>true</enabled>
-            </releases>
-            <snapshots>
-                <enabled>false</enabled>
-            </snapshots>
+            <id>central</id>
+            <url>https://repo1.maven.org/maven2/</url>
         </repository>
     </repositories>
 

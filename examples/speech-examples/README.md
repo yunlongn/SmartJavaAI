@@ -1,11 +1,4 @@
-# OCR文字识别示例
-
-
-我来为你写一个 `speech-examples` 项目的 README.md 文件。
-
-## 🎤 语音识别示例
-
-本项目展示了如何使用 SmartJavaAI SDK 进行语音识别，支持 Whisper 和 Vosk 两种语音识别引擎。
+# 语音识别ASR+语音合成TTS示例
 
 ## 📁 项目结构
 
@@ -13,25 +6,27 @@
 src
 ├── main
 │   ├── java
-│   │   └── smartai/examples/speech/asr
-│   │       └── SpeechRecognizeDemo.java  # 语音识别示例
-│   └── resources
-│       ├── logback.xml                  # 日志配置文件
-│       ├── speech_zh.mp3                # 中文测试音频
-│       ├── lff_zh.mp3                   # 中文测试音频
-│       └── jfk_en.wav                   # 英文测试音频
-└── test
+│   │   └── smartai/examples/speech
+│   │       ├── asr
+│   │       │   ├── SherpaAsrDemo.java     # sherpa-onnx 语音识别ASR 示例
+│   │       │   ├── SpeechRecognizeDemo.java  # 其他模型的 语音识别ASR 示例
+│   │       └── tts
+│   │           └── TtsDemo.java         # tts语音合成示例
 ```
 
 ## 🚀 快速开始
 
-1. 克隆项目到本地：
+如果你只想运行某个示例，请按以下方式操作：
 
-2. 导入项目至 IntelliJ IDEA。
+1. 打开 IDEA（或你喜欢的 IDE）
+2. 选择 **“Open”**，然后仅导入 `examples` 目录下对应的示例项目，例如：
 
-3. 根据需要修改模型路径（见各 demo 中注释）。
-
-4. 运行对应的 JUnit 测试类方法即可体验各项功能。
+   ```
+   examples/speech-example
+   ```
+3. IDEA 会自动识别并加载依赖。若首次导入，请等待 Maven 下载依赖完成。
+4. 请从我们提供的 百度网盘 中下载模型及其附带文件，并在示例代码中将模型路径修改为您本地的实际路径。
+5. 可通过查看每个 Java 文件顶部的注释了解对应功能，或参考 README 文件中对各 Java 文件功能的说明，运行相应的测试方法进行体验。
 
 ---
 
