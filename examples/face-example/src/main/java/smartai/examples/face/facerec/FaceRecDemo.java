@@ -7,7 +7,6 @@ import cn.smartjavaai.common.entity.R;
 import cn.smartjavaai.common.entity.face.FaceSearchResult;
 import cn.smartjavaai.common.enums.DeviceEnum;
 import cn.smartjavaai.common.enums.SimilarityType;
-import cn.smartjavaai.common.utils.BufferedImageUtils;
 import cn.smartjavaai.common.utils.ImageUtils;
 import cn.smartjavaai.face.config.FaceDetConfig;
 import cn.smartjavaai.face.config.FaceRecConfig;
@@ -30,7 +29,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.util.List;
 
@@ -547,7 +545,7 @@ public class FaceRecDemo {
     }
     
     @Test
-    public void searchFace3(){
+    public void searchFace4(){
         try (FaceRecModel faceRecModel = getFaceRecModelWithSQLiteConfig3()){
             //等待加载人脸库结束
             while (!faceRecModel.isLoadFaceCompleted()){
