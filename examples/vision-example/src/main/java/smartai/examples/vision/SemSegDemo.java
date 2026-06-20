@@ -23,7 +23,7 @@ import java.util.Arrays;
 /**
  * 语义分割 Demo 通过网盘分享的文件：语义分割（semantic_segmentation）
  * 模型下载地址：https://pan.baidu.com/s/18gs9E5h_d9imPmNLHuDo9A?pwd=1234 提取码: 1234
- * 文档地址：http://doc.smartjavaai.cn/
+ * 文档地址：http://doc.numberone.ink/
  * @author dwj
  */
 @Slf4j
@@ -45,7 +45,7 @@ public class SemSegDemo {
     /**
      * 获取语义分割模型
      * 注意事项：
-     * 1、更多模型请查看文档：http://doc.smartjavaai.cn
+     * 1、更多模型请查看文档：http://doc.numberone.ink
      */
     public SemSegModel getModel(){
         SemSegModelConfig config = new SemSegModelConfig();

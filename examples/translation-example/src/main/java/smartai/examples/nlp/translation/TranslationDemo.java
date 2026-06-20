@@ -20,7 +20,7 @@ import java.io.IOException;
 /**
  * 机器翻译Demo
  * 模型下载地址：https://pan.baidu.com/s/1wf7btnb4cyBFv7DB7baHnw?pwd=1234 提取码: 1234
- * 开发文档：http://doc.smartjavaai.cn/
+ * 开发文档：http://doc.numberone.ink/
  * @author dwj
  */
 @Slf4j

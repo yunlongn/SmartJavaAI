@@ -25,7 +25,7 @@ import java.util.Arrays;
 /**
  * obb旋转框检测demo
  * 模型下载地址：https://pan.baidu.com/s/1-tC0u-aha3tnMQwy8FKy1Q?pwd=1234 提取码: 1234
- * 文档地址：http://doc.smartjavaai.cn/
+ * 文档地址：http://doc.numberone.ink/
  * @author dwj
  */
 @Slf4j
@@ -45,7 +45,7 @@ public class ObbDetDemo {
     /**
      * 获取旋转框检测模型
      * 注意事项：
-     * 1、更多模型请查看文档：http://doc.smartjavaai.cn
+     * 1、更多模型请查看文档：http://doc.numberone.ink
      * 2、模型可检测物体请查看：模型同目录文件synset.txt
      */
     public ObbDetModel getModel(){

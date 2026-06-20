@@ -35,7 +35,7 @@ import java.nio.file.Paths;
 /**
  * 语音识别demo（Vosk、Whisper）
  * 模型下载网盘：https://pan.baidu.com/s/1kiMF5MF641R7LTn1GpB2lQ?pwd=1234 提取码: 1234
- * 文档地址：http://doc.smartjavaai.cn/
+ * 文档地址：http://doc.numberone.ink/
  * @author dwj
  */
 @Slf4j

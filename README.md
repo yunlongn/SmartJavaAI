@@ -6,7 +6,7 @@
 	<em>像Hutool一样简单易用的Java AI工具箱</em>
 </p>
 <p align="center">
-	👉 <a href="http://smartjavaai.cn/">http://smartjavaai.cn/</a> 👈
+	👉 <a href="http://numberone.ink/">http://numberone.ink/</a> 👈
 </p>
 <p align="center">
 	<a target="_blank" href="https://central.sonatype.com/artifact/ink.numberone/smartjavaai-all">
@@ -31,7 +31,7 @@
 
 -------------------------------------------------------------------------------
 
-[**开发文档**](http://doc.smartjavaai.cn)
+[**开发文档**](http://doc.numberone.ink)
 
 -------------------------------------------------------------------------------
 
@@ -535,7 +535,7 @@ SmartJavaAI是专为JAVA 开发者打造的一个功能丰富、开箱即用的 
 
 ⚠️ **注意：不推荐直接引入全部依赖**，更推荐根据实际需求，按功能模块单独引入，避免引入不必要的包。
 
-详细引入方式请查看 [文档](http://doc.smartjavaai.cn/install.html)、或查看[示例代码](https://gitee.com/dengwenjie/SmartJavaAI/tree/master/examples)
+详细引入方式请查看 [文档](http://doc.numberone.ink/install.html)、或查看[示例代码](https://gitee.com/dengwenjie/SmartJavaAI/tree/master/examples)
 
 ```xml
 <dependency>
@@ -575,7 +575,7 @@ SmartJavaAI是专为JAVA 开发者打造的一个功能丰富、开箱即用的 
 
 ### 4、文档地址
 
-[开发文档](http://doc.smartjavaai.cn)
+[开发文档](http://doc.numberone.ink)
 
 ### 5、模型简介及下载
 

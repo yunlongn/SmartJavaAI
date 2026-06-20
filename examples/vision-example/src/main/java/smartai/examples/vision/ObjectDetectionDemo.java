@@ -45,7 +45,7 @@ import java.util.concurrent.CountDownLatch;
 /**
  * 目标检测模型demo
  * 模型下载地址：https://pan.baidu.com/s/10aTOLBlR6EG-sq6g0OkAWg?pwd=1234 提取码: 1234
- * 文档地址：http://doc.smartjavaai.cn/
+ * 文档地址：http://doc.numberone.ink/
  * @author dwj
  */
 @Slf4j
@@ -66,7 +66,7 @@ public class ObjectDetectionDemo {
     /**
      * 获取目标检测模型
      * 注意事项：
-     * 1、更多模型请查看文档：http://doc.smartjavaai.cn/objectdetect.html
+     * 1、更多模型请查看文档：http://doc.numberone.ink/objectdetect.html
      */
     public DetectorModel getModel(){
         DetectorModelConfig config = new DetectorModelConfig();
@@ -147,7 +147,7 @@ public class ObjectDetectionDemo {
             DetectorModelConfig config = new DetectorModelConfig();
             //目标检测模型，切换模型需要同时修改modelEnum及modelPath
             config.setModelEnum(DetectorModelEnum.YOLOV12_CUSTOM_ONNX);
-            //模型所在路径，synset.txt也需要放在同目录下(分类文件，具体请看文档：http://doc.smartjavaai.cn/objectdetect.html#%E4%BD%BF%E7%94%A8%E8%87%AA%E5%B7%B1%E8%AE%AD%E7%BB%83%E7%9A%84%E6%A8%A1%E5%9E%8B%E6%A3%80%E6%B5%8B)
+            //模型所在路径，synset.txt也需要放在同目录下(分类文件，具体请看文档：http://doc.numberone.ink/objectdetect.html#%E4%BD%BF%E7%94%A8%E8%87%AA%E5%B7%B1%E8%AE%AD%E7%BB%83%E7%9A%84%E6%A8%A1%E5%9E%8B%E6%A3%80%E6%B5%8B)
             config.setModelPath("/Users/xxx/Documents/develop/fire_model/best.onnx");
             //模型训练时图片宽度
             config.putCustomParam("width", 640);//resize 宽
