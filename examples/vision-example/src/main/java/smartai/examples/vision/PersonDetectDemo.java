@@ -21,7 +21,7 @@ import java.nio.file.Paths;
 /**
  * 行人检测案例
  * 模型下载地址：https://pan.baidu.com/s/1EWfExw7pYjKEH5uR5wf3Rw?pwd=1234 提取码: 1234
- * 文档地址：http://doc.smartjavaai.cn/
+ * 文档地址：http://doc.numberone.ink/
  * @author dwj
  */
 @Slf4j

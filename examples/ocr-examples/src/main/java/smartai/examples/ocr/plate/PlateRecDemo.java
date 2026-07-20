@@ -29,7 +29,7 @@ import java.util.List;
 /**
  * 车牌识别demo
  * 模型下载地址：https://pan.baidu.com/s/1YEP56UqYcL-Op80M6JAreA?pwd=1234 提取码: 1234
- * 开发文档：http://doc.smartjavaai.cn/
+ * 开发文档：http://doc.numberone.ink/
  * @author dwj
  */
 @Slf4j

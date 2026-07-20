@@ -31,7 +31,7 @@ import java.nio.file.Paths;
 /**
  * 人脸属性检测demo
  * 模型下载地址：https://pan.baidu.com/s/10l22x5fRz_gwLr8EAHa1Jg?pwd=1234 提取码: 1234
- * 文档地址：http://doc.smartjavaai.cn/
+ * 文档地址：http://doc.numberone.ink/
  * @author dwj
  */
 @Slf4j

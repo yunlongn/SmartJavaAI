@@ -35,7 +35,7 @@ import java.nio.file.Paths;
 /**
  * 语音识别demo（Vosk、Whisper）
  * 模型下载网盘：https://pan.baidu.com/s/1kiMF5MF641R7LTn1GpB2lQ?pwd=1234 提取码: 1234
- * 文档地址：http://doc.smartjavaai.cn/
+ * 文档地址：http://doc.numberone.ink/
  * @author dwj
  */
 @Slf4j
@@ -234,6 +234,8 @@ public class SpeechRecognizeDemo {
     @Test
     public void testVosk() {
         try {
+            //解决中文乱码问题
+            System.setProperty("jna.encoding","utf-8");
             SpeechRecognizer recognizer = geVoskRecognizer();
             //建议上传 WAV 格式音频。其他格式将自动转换为 WAV，可能影响处理速度
             R<AsrResult> result = recognizer.recognize("src/main/resources/lff_zh.mp3");
@@ -289,6 +291,8 @@ public class SpeechRecognizeDemo {
     @Test
     public void testVoskAdvanced() {
         try {
+            //解决中文乱码问题
+            System.setProperty("jna.encoding","utf-8");
             VoskRecognizer recognizer = (VoskRecognizer)geVoskRecognizer();
             //使用vosk内部接口，需要指定识别音频的采样率
             Recognizer voskRecognizer = recognizer.createAdvancedRecognizer(16000);
@@ -318,6 +322,8 @@ public class SpeechRecognizeDemo {
     @Test
     public void testVoskRealTime() {
         try {
+            //解决中文乱码问题
+            System.setProperty("jna.encoding","utf-8");
             VoskRecognizer recognizer = (VoskRecognizer)geVoskRecognizer();
             //使用vosk内部接口，需要指定识别音频的采样率
             Recognizer voskRecognizer = recognizer.createAdvancedRecognizer(16000);

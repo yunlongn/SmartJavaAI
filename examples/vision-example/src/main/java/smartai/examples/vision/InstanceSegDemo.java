@@ -28,7 +28,7 @@ import java.nio.file.Paths;
 /**
  * 实例分割 Demo
  * 模型下载地址：https://pan.baidu.com/s/12nRRY9JFNDwLeg63jfBerA?pwd=1234 提取码: 1234
- * 文档地址：http://doc.smartjavaai.cn/
+ * 文档地址：http://doc.numberone.ink/
  * @author dwj
  */
 @Slf4j
@@ -50,7 +50,7 @@ public class InstanceSegDemo {
     /**
      * 获取实例分割模型
      * 注意事项：
-     * 1、更多模型请查看文档：http://doc.smartjavaai.cn
+     * 1、更多模型请查看文档：http://doc.numberone.ink
      */
     public InstanceSegModel getModel(){
         InstanceSegModelConfig config = new InstanceSegModelConfig();

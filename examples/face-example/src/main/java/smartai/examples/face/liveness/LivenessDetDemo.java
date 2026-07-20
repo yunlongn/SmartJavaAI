@@ -31,9 +31,6 @@ import cn.smartjavaai.face.utils.FaceUtils;
 import com.alibaba.fastjson.JSONObject;
 import lombok.extern.slf4j.Slf4j;
 import nu.pattern.OpenCV;
-import org.bytedeco.javacv.FFmpegFrameGrabber;
-import org.bytedeco.javacv.Frame;
-import org.bytedeco.javacv.Java2DFrameUtils;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.opencv.core.Mat;
@@ -55,7 +52,7 @@ import java.util.List;
 /**
  * 静态活体检测demo
  * 模型下载地址：https://pan.baidu.com/s/10l22x5fRz_gwLr8EAHa1Jg?pwd=1234 提取码: 1234
- * 文档地址：http://doc.smartjavaai.cn/
+ * 文档地址：http://doc.numberone.ink/
  * @author dwj
  */
 @Slf4j

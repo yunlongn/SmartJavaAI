@@ -35,7 +35,7 @@ import java.util.List;
 /**
  * 人脸识别模型demo
  * 模型下载地址：https://pan.baidu.com/s/10l22x5fRz_gwLr8EAHa1Jg?pwd=1234 提取码: 1234
- * 文档地址：http://doc.smartjavaai.cn/
+ * 文档地址：http://doc.numberone.ink/
  * @author dwj
  */
 @Slf4j
@@ -76,7 +76,7 @@ public class FaceRecDemo {
      * 获取人脸检测模型（高精度模型）
      * 注意事项：
      * 1、高精度模型，识别准确度高，速度慢
-     * 2、具体其他模型参数可以查看文档：http://doc.smartjavaai.cn/face.html
+     * 2、具体其他模型参数可以查看文档：http://doc.numberone.ink/face.html
      * @return
      */
     public FaceDetModel getProFaceDetModel(){
@@ -96,7 +96,7 @@ public class FaceRecDemo {
      * 获取人脸检测模型（极速模型）
      * 注意事项：
      * 1、极速模型，识别准确度低，速度快
-     * 2、具体其他模型参数可以查看文档：http://doc.smartjavaai.cn/face.html
+     * 2、具体其他模型参数可以查看文档：http://doc.numberone.ink/face.html
      * @return
      */
     public FaceDetModel getFastFaceDetModel(){
@@ -116,7 +116,7 @@ public class FaceRecDemo {
     /**
      * 获取人脸识别模型（高精度，速度慢）
      * 追求准确度可以使用
-     * 也可以使用其他模型，具体其他模型参数可以查看文档：http://doc.smartjavaai.cn/face.html
+     * 也可以使用其他模型，具体其他模型参数可以查看文档：http://doc.numberone.ink/face.html
      * @return
      */
     public FaceRecModel getFaceRecModel(){
@@ -138,7 +138,7 @@ public class FaceRecDemo {
     /**
      * 获取人脸识别模型（高速模型，精度一般）
      * 追求速度可以使用
-     * 也可以使用其他模型，具体其他模型参数可以查看文档：http://doc.smartjavaai.cn/face.html
+     * 也可以使用其他模型，具体其他模型参数可以查看文档：http://doc.numberone.ink/face.html
      * @return
      */
     public FaceRecModel getHighSpeedFaceRecModel(){
@@ -163,7 +163,7 @@ public class FaceRecDemo {
      */
     public FaceRecModel getFaceRecModelWithDbConfig(){
         FaceRecConfig config = new FaceRecConfig();
-        //高精度模型，速度慢,追求速度请更换高速模型，具体其他模型参数可以查看文档：http://doc.smartjavaai.cn/face.html
+        //高精度模型，速度慢,追求速度请更换高速模型，具体其他模型参数可以查看文档：http://doc.numberone.ink/face.html
         config.setModelEnum(FaceRecModelEnum.INSIGHT_FACE_IRSE50_MODEL);
         //模型路径，请下载模型并替换为本地路径：https://pan.baidu.com/s/10l22x5fRz_gwLr8EAHa1Jg?pwd=1234 提取码: 1234
         config.setModelPath("/Users/wenjie/Documents/develop/model/face_model/recognition/InsightFace/model_ir_se50.pt");
@@ -171,7 +171,7 @@ public class FaceRecDemo {
         config.setCropFace(true);
         //开启人脸对齐：适用于人脸不正的场景，开启将提升人脸特征准确度，关闭可以提升性能
         config.setAlign(true);
-        //指定人脸检测模型，可切换人脸检测模型（极速：getFastFaceDetModel，高精度：getProFaceDetModel），具体其他模型参数可以查看文档：http://doc.smartjavaai.cn/face.html
+        //指定人脸检测模型，可切换人脸检测模型（极速：getFastFaceDetModel，高精度：getProFaceDetModel），具体其他模型参数可以查看文档：http://doc.numberone.ink/face.html
         config.setDetectModel(getFaceDetModel());
         config.setDevice(device);
 
@@ -196,7 +196,7 @@ public class FaceRecDemo {
      */
     public FaceRecModel getFaceRecModelWithSQLiteConfig(){
         FaceRecConfig config = new FaceRecConfig();
-        //高精度模型，速度慢, 追求速度请更换高速模型，具体其他模型参数可以查看文档：http://doc.smartjavaai.cn/face.html
+        //高精度模型，速度慢, 追求速度请更换高速模型，具体其他模型参数可以查看文档：http://doc.numberone.ink/face.html
         config.setModelEnum(FaceRecModelEnum.INSIGHT_FACE_IRSE50_MODEL);
         //模型路径，请下载模型并替换为本地路径：https://pan.baidu.com/s/10l22x5fRz_gwLr8EAHa1Jg?pwd=1234 提取码: 1234
         config.setModelPath("/Users/wenjie/Documents/develop/model/face_model/recognition/InsightFace/model_ir_se50.pt");
@@ -204,7 +204,7 @@ public class FaceRecDemo {
         config.setCropFace(true);
         //开启人脸对齐：适用于人脸不正的场景，开启将提升人脸特征准确度，关闭可以提升性能
         config.setAlign(true);
-        //指定人脸检测模型，可切换人脸检测模型（极速：getFastFaceDetModel，高精度：getProFaceDetModel），具体其他模型参数可以查看文档：http://doc.smartjavaai.cn/face.html
+        //指定人脸检测模型，可切换人脸检测模型（极速：getFastFaceDetModel，高精度：getProFaceDetModel），具体其他模型参数可以查看文档：http://doc.numberone.ink/face.html
         config.setDetectModel(getFaceDetModel());
         config.setDevice(device);
 

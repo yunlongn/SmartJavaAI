@@ -45,7 +45,7 @@ import java.util.concurrent.CountDownLatch;
 /**
  * 目标检测模型demo
  * 模型下载地址：https://pan.baidu.com/s/10aTOLBlR6EG-sq6g0OkAWg?pwd=1234 提取码: 1234
- * 文档地址：http://doc.smartjavaai.cn/
+ * 文档地址：http://doc.numberone.ink/
  * @author dwj
  */
 @Slf4j
@@ -66,7 +66,7 @@ public class ObjectDetectionDemo {
     /**
      * 获取目标检测模型
      * 注意事项：
-     * 1、更多模型请查看文档：http://doc.smartjavaai.cn/objectdetect.html
+     * 1、更多模型请查看文档：http://doc.numberone.ink/objectdetect.html
      */
     public DetectorModel getModel(){
         DetectorModelConfig config = new DetectorModelConfig();
@@ -147,7 +147,7 @@ public class ObjectDetectionDemo {
             DetectorModelConfig config = new DetectorModelConfig();
             //目标检测模型，切换模型需要同时修改modelEnum及modelPath
             config.setModelEnum(DetectorModelEnum.YOLOV12_CUSTOM_ONNX);
-            //模型所在路径，synset.txt也需要放在同目录下(分类文件，具体请看文档：http://doc.smartjavaai.cn/objectdetect.html#%E4%BD%BF%E7%94%A8%E8%87%AA%E5%B7%B1%E8%AE%AD%E7%BB%83%E7%9A%84%E6%A8%A1%E5%9E%8B%E6%A3%80%E6%B5%8B)
+            //模型所在路径，synset.txt也需要放在同目录下(分类文件，具体请看文档：http://doc.numberone.ink/objectdetect.html#%E4%BD%BF%E7%94%A8%E8%87%AA%E5%B7%B1%E8%AE%AD%E7%BB%83%E7%9A%84%E6%A8%A1%E5%9E%8B%E6%A3%80%E6%B5%8B)
             config.setModelPath("/Users/xxx/Documents/develop/fire_model/best.onnx");
             //模型训练时图片宽度
             config.putCustomParam("width", 640);//resize 宽
@@ -205,13 +205,16 @@ public class ObjectDetectionDemo {
      */
     @Test
     public void testStream(){
+
         StreamDetector detector = new StreamDetector.Builder()
                 //视频源类型：支持视频流、本地摄像头、视频文件
                 .sourceType(VideoSourceType.STREAM)
                 //视频流地址，支持rtsp、rtmp、http等常见视频流
-                .streamUrl("rtsp://username:password@ip:port/Streaming/Channels/101")
+                .streamUrl("rtsp://127.0.0.1:8554/stream")
                 //每隔多少帧检测一次（需要根据模型检测速度决定）
                 .frameDetectionInterval(10)
+                //是否打印调试日志
+                .enableDebugLog(false)
                 //目标检测模型
                 .detectorModel(getModel())
                 //回调函数：检测到指定目标时触发（getModel中可指定模型检测的物体）
@@ -246,6 +249,7 @@ public class ObjectDetectionDemo {
                     }
                 }).build();
         detector.startDetection();
+
         //阻塞主线程
         CountDownLatch latch = new CountDownLatch(1);
         try {
@@ -319,8 +323,6 @@ public class ObjectDetectionDemo {
                 .frameDetectionInterval(5)
                 //目标检测模型
                 .detectorModel(getModel())
-                //同物体重复检测时间间隔，单位s
-                .repeatGap(5)
                 //回调函数：检测到指定目标时触发（getModel中可指定模型检测的物体）
                 .listener(new StreamDetectionListener() {
                     @Override

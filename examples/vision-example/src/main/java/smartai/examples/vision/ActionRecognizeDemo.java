@@ -21,7 +21,7 @@ import java.util.Arrays;
 /**
  * 动作识别Demo
  * 模型下载地址：https://pan.baidu.com/s/17doY4pgZM9EbtSIaoCWWCA?pwd=1234 提取码: 1234
- * 文档地址：http://doc.smartjavaai.cn/
+ * 文档地址：http://doc.numberone.ink/
  * @author dwj
  */
 @Slf4j
@@ -41,7 +41,7 @@ public class ActionRecognizeDemo {
     /**
      * 获取动作识别模型
      * 注意事项：
-     * 1、不同模型支持的动作类别不同，请查看文档：http://doc.smartjavaai.cn
+     * 1、不同模型支持的动作类别不同，请查看文档：http://doc.numberone.ink
      */
     public ActionRecModel getModel(){
         ActionRecModelConfig config = new ActionRecModelConfig();
@@ -62,7 +62,7 @@ public class ActionRecognizeDemo {
     /**
      * 动作识别
      * 注意事项：
-     * 1、不同模型支持的动作类别不同，请查看文档：http://doc.smartjavaai.cn
+     * 1、不同模型支持的动作类别不同，请查看文档：http://doc.numberone.ink
      * 2、图片中应该只包含单一动作人物
      * 3、动作识别，只做图片分类，并不做人物定位
      */

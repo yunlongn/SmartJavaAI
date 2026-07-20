@@ -59,6 +59,6 @@ src/main/java/smartai/examples/face/
 ## 📄 文档
 
 有关完整使用说明，请查阅 SmartJavaAI 官方文档：
-[http://doc.smartjavaai.cn](http://doc.smartjavaai.cn)
+[http://doc.numberone.ink](http://doc.numberone.ink)
 
 ---

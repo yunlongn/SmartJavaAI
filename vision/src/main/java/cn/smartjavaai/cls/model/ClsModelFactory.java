@@ -55,7 +55,7 @@ public class ClsModelFactory {
             throw new DetectionException("未配置模型");
         }
         return modelMap.computeIfAbsent(config.getModelEnum(), k -> {
-            return createFaceDetModel(config);
+            return createModel(config);
         });
     }
 
@@ -64,7 +64,7 @@ public class ClsModelFactory {
      * @param config
      * @return
      */
-    private ClsModel createFaceDetModel(ClsModelConfig config) {
+    private ClsModel createModel(ClsModelConfig config) {
         Class<?> clazz = registry.get(config.getModelEnum());
         if(clazz == null){
             throw new DetectionException("Unsupported model");

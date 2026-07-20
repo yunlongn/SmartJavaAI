@@ -6,7 +6,7 @@
 	<em>像Hutool一样简单易用的Java AI工具箱</em>
 </p>
 <p align="center">
-	👉 <a href="http://smartjavaai.cn/">http://smartjavaai.cn/</a> 👈
+	👉 <a href="http://numberone.ink/">http://numberone.ink/</a> 👈
 </p>
 <p align="center">
 	<a target="_blank" href="https://central.sonatype.com/artifact/ink.numberone/smartjavaai-all">
@@ -31,13 +31,29 @@
 
 -------------------------------------------------------------------------------
 
-[**开发文档**](http://doc.smartjavaai.cn)
+[**开发文档**](http://doc.numberone.ink)
 
 -------------------------------------------------------------------------------
 
 ## 📚简介
 
 SmartJavaAI是专为JAVA 开发者打造的一个功能丰富、开箱即用的 JAVA AI算法工具包，致力于帮助JAVA开发者零门槛使用各种AI算法模型，开发者无需深入了解底层实现，即可轻松在 Java 代码中调用人脸识别、目标检测、OCR 等功能。底层支持包括基于 DJL (Deep Java Library) 封装的深度学习模型，以及通过 JNI 接入的 C++/Python 算法，兼容多种主流深度学习框架如 PyTorch、TensorFlow、ONNX、Paddle 等，屏蔽复杂的模型部署与调用细节，开发者无需了解 AI 底层实现即可直接在 Java 项目中集成使用，后续将持续扩展更多算法，目标是构建一个“像 Hutool 一样简单易用”的 JAVA AI 通用工具箱
+
+
+## 📱 SmartJavaAI Android 商业版
+
+**SmartJavaAI 现已支持 Android 移动端！**
+
+如果您有移动端离线人脸识别的需求，我们推出了基于 SmartJavaAI 的 Android SDK 及演示 APP。
+
+* 🚀 **核心能力**：毫秒级离线人脸检测、比对、注册与 1:N 搜索。
+* 📦 **开箱即用**：提供标准 SDK 接口与完整 Demo APK。
+* 💼 **商业授权**：Android 版本为商业授权版本。
+
+👉 **[点击查看 Android 版演示截图、APK 下载及获取方式](./android.md)**
+
+
+
 
 ## 🚀  能力展示
 
@@ -52,7 +68,7 @@ SmartJavaAI是专为JAVA 开发者打造的一个功能丰富、开箱即用的 
       </td>     
       <td>
         <div align="center">
-        <img src="https://cdn.jsdelivr.net/gh/geekwenjie/SmartJavaAI-Site/images/face5point.png" width = "500px"/>
+        <img src="https://cdn.jsdelivr.net/gh/geekwenjie/SmartJavaAI-Site/images/face/face4.jpg" width = "400px"/>
         </div>
       </td>
     </tr>          
@@ -65,7 +81,7 @@ SmartJavaAI是专为JAVA 开发者打造的一个功能丰富、开箱即用的 
       </td>     
       <td>
         <div align="center">
-        <img src="https://cdn.jsdelivr.net/gh/geekwenjie/SmartJavaAI-Site/images/face1-1.jpg" width = "500px"/>
+        <img src="https://cdn.jsdelivr.net/gh/geekwenjie/SmartJavaAI-Site/images/face1-1.jpg" width = "400px"/>
         </div>
       </td>
     </tr>  
@@ -77,7 +93,7 @@ SmartJavaAI是专为JAVA 开发者打造的一个功能丰富、开箱即用的 
       </td>     
       <td>
         <div align="center">
-        <img src="https://cdn.jsdelivr.net/gh/geekwenjie/SmartJavaAI-Site/images/idcard.png" width = "500px"/>
+        <img src="https://cdn.jsdelivr.net/gh/geekwenjie/SmartJavaAI-Site/images/idcard.png" width = "400px"/>
         </div>
       </td>
     </tr>
@@ -93,7 +109,7 @@ SmartJavaAI是专为JAVA 开发者打造的一个功能丰富、开箱即用的 
       </td>     
       <td>
         <div align="center">
-        <img src="https://cdn.jsdelivr.net/gh/geekwenjie/SmartJavaAI-Site/images/face1-n.png" width = "500px"/>
+        <img src="https://cdn.jsdelivr.net/gh/geekwenjie/SmartJavaAI-Site/images/face1-n.png" width = "400px"/>
         </div>
       </td>
     </tr>  
@@ -110,7 +126,7 @@ SmartJavaAI是专为JAVA 开发者打造的一个功能丰富、开箱即用的 
       </td>     
       <td>
         <div align="center">
-        <img src="https://cdn.jsdelivr.net/gh/geekwenjie/SmartJavaAI-Site/images/face_attribute.jpg" width = "500px"/>
+        <img src="https://cdn.jsdelivr.net/gh/geekwenjie/SmartJavaAI-Site/images/face_attribute.jpg" width = "400px"/>
         </div>
       </td>
     </tr> 
@@ -123,7 +139,7 @@ SmartJavaAI是专为JAVA 开发者打造的一个功能丰富、开箱即用的 
       </td>     
       <td>
         <div align="center">
-        <img src="https://cdn.jsdelivr.net/gh/geekwenjie/SmartJavaAI-Site/images/liveness2.jpg" width = "500px"/>
+        <img src="https://cdn.jsdelivr.net/gh/geekwenjie/SmartJavaAI-Site/images/liveness2.jpg" width = "400px"/>
         </div>
       </td>
     </tr> 
@@ -136,7 +152,7 @@ SmartJavaAI是专为JAVA 开发者打造的一个功能丰富、开箱即用的 
       </td>     
       <td>
         <div align="center">
-        <img src="https://cdn.jsdelivr.net/gh/geekwenjie/SmartJavaAI-Site/images/emotion.jpg" width = "500px"/>
+        <img src="https://cdn.jsdelivr.net/gh/geekwenjie/SmartJavaAI-Site/images/emotion.jpg" width = "400px"/>
         </div>
       </td>
     </tr> 
@@ -158,15 +174,10 @@ SmartJavaAI是专为JAVA 开发者打造的一个功能丰富、开箱即用的 
           <p>目标检测(Object Detection)</p>
           - 视频流目标检测：rtsp、摄像头、视频文件等 <br>
         </div>
-      </td>     
-      <td>
-        <div align="center">
-        <img src="https://cdn.jsdelivr.net/gh/geekwenjie/SmartJavaAI-Site/images/objectdect/object_detect_1.jpeg" width = "500px"/>
-        </div>
       </td>
       <td>
         <div align="center">
-        <img src="https://cdn.jsdelivr.net/gh/geekwenjie/SmartJavaAI-Site/images/objectdect/object_detection_detected.jpg" width = "500px"/>
+        <img src="https://cdn.jsdelivr.net/gh/geekwenjie/SmartJavaAI-Site/images/objectdect/object_detection_detected.jpg" width = "400px"/>
         </div>
       </td>
     </tr>
@@ -242,6 +253,19 @@ SmartJavaAI是专为JAVA 开发者打造的一个功能丰富、开箱即用的 
         </div>
       </td>
     </tr>
+ <tr>
+      <td>
+        <div align="left">
+          <p>零样本目标检测<br>(ZeroShot Object Detection)</p>
+      - YOLO-World 模型 <br>
+        </div>
+      </td>     
+      <td>
+        <div align="center">
+        <img src="https://cdn.jsdelivr.net/gh/geekwenjie/SmartJavaAI-Site/images/vision/yolo-world.png" height = "200px"/>
+        </div>
+      </td>
+    </tr>
   <tr>
       <td>
         <div align="left">
@@ -265,7 +289,7 @@ SmartJavaAI是专为JAVA 开发者打造的一个功能丰富、开箱即用的 
       </td>     
       <td>
         <div align="center">
-        <img src="https://cdn.jsdelivr.net/gh/geekwenjie/SmartJavaAI-Site/images/ocr/general_ocr_002_recognized.png" width = "500px"/>
+        <img src="https://cdn.jsdelivr.net/gh/geekwenjie/SmartJavaAI-Site/images/ocr/general_ocr_002_recognized.png" width = "400px"/>
         </div>
       </td>
     </tr> 
@@ -278,7 +302,7 @@ SmartJavaAI是专为JAVA 开发者打造的一个功能丰富、开箱即用的 
       </td>     
       <td>
         <div align="center">
-        <img src="https://cdn.jsdelivr.net/gh/geekwenjie/SmartJavaAI-Site/images/ocr/table.jpg" width = "500px"/>
+        <img src="https://cdn.jsdelivr.net/gh/geekwenjie/SmartJavaAI-Site/images/ocr/table.jpg" width = "400px"/>
         </div>
       </td>
     </tr>
@@ -292,14 +316,44 @@ SmartJavaAI是专为JAVA 开发者打造的一个功能丰富、开箱即用的 
       </td>     
       <td>
         <div align="center">
-        <img src="https://cdn.jsdelivr.net/gh/geekwenjie/SmartJavaAI-Site/images/ocr/plate_recognized.jpg" width = "500px"/>
+        <img src="https://cdn.jsdelivr.net/gh/geekwenjie/SmartJavaAI-Site/images/ocr/plate_recognized.jpg" width = "400px"/>
         </div>
       </td>
+    </tr>
+  <tr>
       <td>
-        <div align="center">
-        <img src="https://cdn.jsdelivr.net/gh/geekwenjie/SmartJavaAI-Site/images/ocr/plate_recognized2.jpg" width = "500px"/>
+        <div align="left">
+          <p>身份证识别<br>(IDCard Recognition)</p>
+          - 正面识别 <br>
         </div>
-      </td>
+      </td>     
+    <td>
+      <div align="center">
+        <img src="https://cdn.jsdelivr.net/gh/geekwenjie/SmartJavaAI-Site/images/ocr/idcard/idcard_front.png" width="500px"/>
+        <pre align="left">{
+      "name": "小氧",
+      "gender": "女",
+      "ethnicity": "汉",
+      "idNumber": "430602200010108888",
+      "birthday": "2000-10-10",
+      "address": "湖南省岳阳市岳阳楼区金鄂中路456号"
+    }</pre>
+      </div>
+    </td>
+    </tr>
+  <tr>
+      <td>
+        <div align="left">
+          <p>身份证识别<br>(IDCard Recognition)</p>
+          - 反面识别 <br>
+        </div>
+      </td>     
+     <td>
+      <div align="center">
+        <img src="https://cdn.jsdelivr.net/gh/geekwenjie/SmartJavaAI-Site/images/ocr/idcard/idcard_back.png" width="500px"/>
+        <pre align="left">{"issuingAuthority":"杭州市公安局江干分局","validFrom":"2015-11-05","validTo":"2025-11-05"}</pre>
+      </div>
+    </td>
     </tr>
     <tr>
       <td>
@@ -310,7 +364,7 @@ SmartJavaAI是专为JAVA 开发者打造的一个功能丰富、开箱即用的 
       </td>     
       <td>
         <div align="center">
-        <img src="https://cdn.jsdelivr.net/gh/geekwenjie/SmartJavaAI-Site/images/translate/translate.png" width = "500px"/>
+        <img src="https://cdn.jsdelivr.net/gh/geekwenjie/SmartJavaAI-Site/images/translate/translate.png" width = "400px"/>
         </div>
       </td>
     </tr>
@@ -324,7 +378,7 @@ SmartJavaAI是专为JAVA 开发者打造的一个功能丰富、开箱即用的 
       </td>     
       <td>
         <div align="center">
-        <img src="https://cdn.jsdelivr.net/gh/geekwenjie/SmartJavaAI-Site/images/speech/asr.png" width = "500px"/>
+        <img src="https://cdn.jsdelivr.net/gh/geekwenjie/SmartJavaAI-Site/images/speech/asr.png" width = "400px"/>
         </div>
       </td>
     </tr>
@@ -336,7 +390,7 @@ SmartJavaAI是专为JAVA 开发者打造的一个功能丰富、开箱即用的 
       </td>     
       <td>
         <div align="center">
-        <img src="https://cdn.jsdelivr.net/gh/geekwenjie/SmartJavaAI-Site/images/speech/tts.jpg" width = "500px"/>
+        <img src="https://cdn.jsdelivr.net/gh/geekwenjie/SmartJavaAI-Site/images/speech/tts.jpg" width = "400px"/>
         </div>
       </td>
     </tr>
@@ -351,7 +405,7 @@ SmartJavaAI是专为JAVA 开发者打造的一个功能丰富、开箱即用的 
       </td>     
       <td>
         <div align="center">
-        <img src="https://cdn.jsdelivr.net/gh/geekwenjie/SmartJavaAI-Site/images/vision/clip.png" width = "500px"/>
+        <img src="https://cdn.jsdelivr.net/gh/geekwenjie/SmartJavaAI-Site/images/vision/clip.png" width = "400px"/>
         </div>
       </td>
     </tr>
@@ -407,6 +461,8 @@ SmartJavaAI是专为JAVA 开发者打造的一个功能丰富、开箱即用的 
   - 支持KINETICS400数据集中400个人类动作识别
 - **姿态估计**
   - 集成YOLOv8-pose、YOLOv11-pose等模型
+- **零样本目标检测**
+  - 集成YOLOv8s_worldv2、owlv2_base_patch16模型
 - **CLIP**
   - 支持提取图片及文本特征
   - 支持文搜图、图搜文、图搜图
@@ -416,6 +472,7 @@ SmartJavaAI是专为JAVA 开发者打造的一个功能丰富、开箱即用的 
   - 支持通用文字识别，通用手写字识别
   - 支持表格识别
   - 支持中文车牌识别：单层/双层检测，颜色识别，支持12种中文车牌
+  - 支持身份证识别：支持身份证正反面字段提取、方向矫正与结构化解析
 - **机器翻译**
   - 集成NLLB-200模型：支持200+语言互相翻译
 - **语音识别(ASR)**
@@ -469,21 +526,22 @@ SmartJavaAI是专为JAVA 开发者打造的一个功能丰富、开箱即用的 
 ### 1、环境要求
 
 - Java 版本：**JDK 8或更高版本**
-- 操作系统：不同模型支持的系统不一样，具体请查看[文档](http://doc.smartjavaai.cn)
+- 操作系统：Windows 64 位 / Linux / macOS M1
+- CPU架构：x86_64、ARM64（aarch64）
 
 ### 2、Maven
 
 在项目的 `pom.xml` 的 `dependencies` 中可以一次性引入全部功能（如下所示）。
- 
+
 ⚠️ **注意：不推荐直接引入全部依赖**，更推荐根据实际需求，按功能模块单独引入，避免引入不必要的包。
 
-详细引入方式请查看 [文档](http://doc.smartjavaai.cn/install.html)、或查看[示例代码](https://gitee.com/dengwenjie/SmartJavaAI/tree/master/examples)
+详细引入方式请查看 [文档](http://doc.numberone.ink/install.html)、或查看[示例代码](https://gitee.com/dengwenjie/SmartJavaAI/tree/master/examples)
 
 ```xml
 <dependency>
     <groupId>cn.smartjavaai</groupId>
     <artifactId>all</artifactId>
-    <version>1.0.27</version>
+    <version>1.1.2</version>
 </dependency>
 ```
 
@@ -517,7 +575,7 @@ SmartJavaAI是专为JAVA 开发者打造的一个功能丰富、开箱即用的 
 
 ### 4、文档地址
 
-[开发文档](http://doc.smartjavaai.cn)
+[开发文档](http://doc.numberone.ink)
 
 ### 5、模型简介及下载
 
@@ -682,6 +740,14 @@ SmartJavaAI是专为JAVA 开发者打造的一个功能丰富、开箱即用的 
 | YOLOV11-OBB | OnnxRuntime | Ultralytics在DOTAv1 数据集 上训练的模型、通过引入一个额外的角度来更准确地定位图像中的对象 | [Github](https://docs.ultralytics.com/zh/tasks/segment/) |
 ---
 
+#### 零样本目标检测模型
+
+| 模型名称        | 引擎      | 模型简介                           | 模型开源网站                                                   |
+|-------------|---------|--------------------------------|----------------------------------------------------------|
+| YOLOv8s-worldv2 | PyTorch | 可根据描述性文本检测图像中的任何物体 | [官网](https://docs.ultralytics.com/zh/models/yolo-world/) |
+| owlv2-base-patch16 | PyTorch | OWLv2是一种多模态模型，通过结合CLIP的骨干和ViT样的Transformer，实现零样本文本对象检测| [官网](https://huggingface.co/google/owlv2-base-patch16) |
+---
+
 #### 行人检测模型
 
 | 模型名称        | 引擎      | 模型开源网站     |
@@ -835,6 +901,5 @@ SmartJavaAI是专为JAVA 开发者打造的一个功能丰富、开箱即用的 
 5、登录Gitee或Github/Gitcode在你首页可以看到一个 pull request 按钮，点击它，填写一些说明信息，然后提交即可。
 
 6、等待维护者合并
-
 
 

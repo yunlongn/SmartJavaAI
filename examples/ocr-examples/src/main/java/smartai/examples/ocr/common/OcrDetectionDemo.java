@@ -30,7 +30,7 @@ import java.util.List;
 /**
  * OCR 文本检测 示例
  * 模型下载地址：https://pan.baidu.com/s/15Noz2xHQzqMQSl1B19BobQ?pwd=1234 提取码: 1234
- * 开发文档：http://doc.smartjavaai.cn/
+ * 开发文档：http://doc.numberone.ink/
  * @author dwj
  */
 @Slf4j
